@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/archiver": "^7.0.0",
+    "@types/node-cron": "^3.0.11",
     "@vercel/postgres": "^0.10.0",
+    "archiver": "^7.0.1",
     "better-sqlite3": "^11.7.0",
     "next": "^15.1.6",
+    "node-cron": "^4.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-pdf": "^9.1.1",
