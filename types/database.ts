@@ -22,6 +22,7 @@ export interface Folder {
   id: number;
   name: string; // フォルダ名
   parent_id: number | null; // 親フォルダID
+  order_index: number; // 表示順序
   created_at: string; // 作成日
 }
 
@@ -44,6 +45,33 @@ export interface TestFolder {
   id: number;
   test_id: number; // テストID
   folder_id: number; // フォルダID
+}
+
+// テスト添付ファイル
+export interface TestAttachment {
+  id: number;
+  test_id: number; // テストID
+  file_name: string; // ファイル名
+  file_path: string; // ファイルパス
+  mime_type: string | null; // MIMEタイプ
+  file_size: number | null; // ファイルサイズ(バイト)
+  uploaded_at: string; // アップロード日時
+}
+
+// 学年マスター
+export interface Grade {
+  id: number;
+  name: string; // 学年名
+  display_order: number; // 表示順
+  created_at: string; // 作成日
+}
+
+// 科目マスター
+export interface Subject {
+  id: number;
+  name: string; // 科目名
+  display_order: number; // 表示順
+  created_at: string; // 作成日
 }
 
 // テスト一覧表示用の拡張型

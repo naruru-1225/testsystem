@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API テスト</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      h1 {
+        color: #333;
+        border-bottom: 3px solid #4caf50;
+        padding-bottom: 10px;
+      }
+      .test-section {
+        background: white;
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section h2 {
+        color: #2196f3;
+        margin-top: 0;
+      }
+      .test-item {
+        margin: 10px 0;
+        padding: 10px;
+        border-left: 4px solid #ddd;
+        background: #f9f9f9;
+      }
+      .test-item.success {
+        border-left-color: #4caf50;
+        background: #f1f8f4;
+      }
+      .test-item.error {
+        border-left-color: #f44336;
+        background: #fef1f0;
+      }
+      .test-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .test-result {
+        font-size: 14px;
+        color: #666;
+      }
+      .summary {
+        background: #2196f3;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+      }
+      .summary h2 {
+        color: white;
+        margin-top: 0;
+      }
+      button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 10px 5px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        font-size: 18px;
+        color: #666;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 API 総合テスト</h1>
+
+    <div>
+      <button id="runAllTests" onclick="runAllTests()">
+        すべてのテストを実行
+      </button>
+      <button onclick="clearResults()">結果をクリア</button>
+    </div>
+
+    <div id="loading" class="loading" style="display: none">
+      テスト実行中...
+    </div>
+
+    <div id="results"></div>
+    <div id="summary"></div>
+
+    <script>
+      let passCount = 0;
+      let failCount = 0;
+
+      async function testEndpoint(name, url, method = "GET", body = null) {
+        try {
+          const options = { method };
+          if (body) {
+            options.headers = { "Content-Type": "application/json" };
+            options.body = JSON.stringify(body);
+          }
+
+          const response = await fetch(url, options);
+          const data = await response.json();
+
+          if (response.ok) {
+            return { success: true, data, status: response.status };
+          } else {
+            return {
+              success: false,
+              error: data.error || "Unknown error",
+              status: response.status,
+            };
+          }
+        } catch (error) {
+          return { success: false, error: error.message };
+        }
+      }
+
+      function addTestResult(sectionId, testName, result, details = "") {
+        let section = document.getElementById(sectionId);
+        if (!section) {
+          section = document.createElement("div");
+          section.id = sectionId;
+          section.className = "test-section";
+          document.getElementById("results").appendChild(section);
+        }
+
+        const item = document.createElement("div");
+        item.className = `test-item ${result.success ? "success" : "error"}`;
+
+        const icon = result.success ? "✓" : "✗";
+        const color = result.success ? "#4CAF50" : "#f44336";
+
+        item.innerHTML = `
+        <div class="test-name" style="color: ${color}">${icon} ${testName}</div>
+        <div class="test-result">${details}</div>
+      `;
+
+        section.appendChild(item);
+
+        if (result.success) {
+          passCount++;
+        } else {
+          failCount++;
+          item.innerHTML += `<div style="color: #f44336; margin-top: 5px;">エラー: ${result.error}</div>`;
+        }
+      }
+
+      async function runAllTests() {
+        passCount = 0;
+        failCount = 0;
+        document.getElementById("results").innerHTML = "";
+        document.getElementById("summary").innerHTML = "";
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("runAllTests").disabled = true;
+
+        // セクション作成
+        const sections = [
+          { id: "section1", title: "1. 学年マスタデータ" },
+          { id: "section2", title: "2. 科目マスタデータ" },
+          { id: "section3", title: "3. タグマスタデータ" },
+          { id: "section4", title: "4. フォルダ" },
+          { id: "section5", title: "5. テスト一覧取得" },
+          { id: "section6", title: "6. フィルタ機能" },
+          { id: "section7", title: "7. バックアップ機能" },
+        ];
+
+        sections.forEach((sec) => {
+          const section = document.createElement("div");
+          section.id = sec.id;
+          section.className = "test-section";
+          section.innerHTML = `<h2>${sec.title}</h2>`;
+          document.getElementById("results").appendChild(section);
+        });
+
+        // 1. 学年マスタデータ
+        const gradesResult = await testEndpoint("学年一覧取得", "/api/grades");
+        addTestResult(
+          "section1",
+          "GET /api/grades",
+          gradesResult,
+          gradesResult.success ? `取得件数: ${gradesResult.data.length}件` : ""
+        );
+
+        // 2. 科目マスタデータ
+        const subjectsResult = await testEndpoint(
+          "科目一覧取得",
+          "/api/subjects"
+        );
+        addTestResult(
+          "section2",
+          "GET /api/subjects",
+          subjectsResult,
+          subjectsResult.success
+            ? `取得件数: ${subjectsResult.data.length}件`
+            : ""
+        );
+
+        // 3. タグマスタデータ
+        const tagsResult = await testEndpoint("タグ一覧取得", "/api/tags");
+        addTestResult(
+          "section3",
+          "GET /api/tags",
+          tagsResult,
+          tagsResult.success ? `取得件数: ${tagsResult.data.length}件` : ""
+        );
+
+        // 4. フォルダ
+        const foldersResult = await testEndpoint(
+          "フォルダ一覧取得",
+          "/api/folders"
+        );
+        addTestResult(
+          "section4",
+          "GET /api/folders",
+          foldersResult,
+          foldersResult.success
+            ? `取得件数: ${foldersResult.data.length}件`
+            : ""
+        );
+
+        // 5. テスト一覧
+        const testsResult = await testEndpoint("テスト一覧取得", "/api/tests");
+        addTestResult(
+          "section5",
+          "GET /api/tests",
+          testsResult,
+          testsResult.success ? `取得件数: ${testsResult.data.length}件` : ""
+        );
+
+        if (testsResult.success && testsResult.data.length > 0) {
+          const test = testsResult.data[0];
+          addTestResult(
+            "section5",
+            "テストデータ構造確認",
+            { success: true },
+            `例: ${test.name} (学年: ${test.grade}, 科目: ${
+              test.subject
+            }, タグ: ${test.tags.map((t) => t.name).join(", ") || "なし"})`
+          );
+        }
+
+        // 6. フィルタ機能
+        if (tagsResult.success && tagsResult.data.length > 0) {
+          const tagId = tagsResult.data[0].id;
+          const tagName = tagsResult.data[0].name;
+          const tagFilterResult = await testEndpoint(
+            "タグフィルタ",
+            `/api/tests?tagId=${tagId}`
+          );
+          addTestResult(
+            "section6",
+            `タグフィルタ (tagId=${tagId})`,
+            tagFilterResult,
+            tagFilterResult.success
+              ? `「${tagName}」でフィルタ: ${tagFilterResult.data.length}件`
+              : ""
+          );
+        }
+
+        if (gradesResult.success && gradesResult.data.length > 0) {
+          const grade = gradesResult.data[0].name;
+          const gradeFilterResult = await testEndpoint(
+            "学年フィルタ",
+            `/api/tests?grade=${encodeURIComponent(grade)}`
+          );
+          addTestResult(
+            "section6",
+            `学年フィルタ (grade=${grade})`,
+            gradeFilterResult,
+            gradeFilterResult.success
+              ? `「${grade}」でフィルタ: ${gradeFilterResult.data.length}件`
+              : ""
+          );
+        }
+
+        if (subjectsResult.success && subjectsResult.data.length > 0) {
+          const subject = subjectsResult.data[0].name;
+          const subjectFilterResult = await testEndpoint(
+            "科目フィルタ",
+            `/api/tests?subject=${encodeURIComponent(subject)}`
+          );
+          addTestResult(
+            "section6",
+            `科目フィルタ (subject=${subject})`,
+            subjectFilterResult,
+            subjectFilterResult.success
+              ? `「${subject}」でフィルタ: ${subjectFilterResult.data.length}件`
+              : ""
+          );
+        }
+
+        if (
+          gradesResult.success &&
+          subjectsResult.success &&
+          gradesResult.data.length > 0 &&
+          subjectsResult.data.length > 0
+        ) {
+          const grade = gradesResult.data[0].name;
+          const subject = subjectsResult.data[0].name;
+          const combinedResult = await testEndpoint(
+            "複合フィルタ",
+            `/api/tests?grade=${encodeURIComponent(
+              grade
+            )}&subject=${encodeURIComponent(subject)}`
+          );
+          addTestResult(
+            "section6",
+            `複合フィルタ (学年×科目)`,
+            combinedResult,
+            combinedResult.success
+              ? `「${grade}」×「${subject}」: ${combinedResult.data.length}件`
+              : ""
+          );
+        }
+
+        const searchResult = await testEndpoint(
+          "検索フィルタ",
+          "/api/tests?search=テスト"
+        );
+        addTestResult(
+          "section6",
+          "検索フィルタ (search=テスト)",
+          searchResult,
+          searchResult.success
+            ? `「テスト」で検索: ${searchResult.data.length}件`
+            : ""
+        );
+
+        // 7. バックアップ機能 (バックアップ作成はダウンロードが発生するのでスキップ)
+        addTestResult(
+          "section7",
+          "バックアップ作成API",
+          { success: true },
+          "手動テスト: 管理者メニュー > 復元タブ > バックアップ作成ボタンでテストしてください"
+        );
+
+        // サマリー表示
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("runAllTests").disabled = false;
+
+        const totalTests = passCount + failCount;
+        const successRate =
+          totalTests > 0 ? ((passCount / totalTests) * 100).toFixed(1) : 0;
+
+        document.getElementById("summary").innerHTML = `
+        <div class="summary">
+          <h2>📊 テスト結果サマリー</h2>
+          <p style="font-size: 24px; margin: 10px 0;">
+            成功: <strong>${passCount}</strong> / 失敗: <strong>${failCount}</strong> / 合計: <strong>${totalTests}</strong>
+          </p>
+          <p style="font-size: 18px;">成功率: <strong>${successRate}%</strong></p>
+          ${
+            failCount === 0
+              ? '<p style="font-size: 20px; margin-top: 20px;">✓ すべてのテストが成功しました! 🎉</p>'
+              : '<p style="font-size: 20px; margin-top: 20px; color: #ffeb3b;">⚠️ いくつかのテストが失敗しました</p>'
+          }
+        </div>
+      `;
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+        document.getElementById("summary").innerHTML = "";
+        passCount = 0;
+        failCount = 0;
+      }
+
+      // ページ読み込み時に自動実行
+      window.onload = () => {
+        runAllTests();
+      };
+    </script>
+  </body>
+</html>

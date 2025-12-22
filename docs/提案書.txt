@@ -1,0 +1,157 @@
+提案書
+
+提案 1: フォルダツリーのインライン・フィルタリング
+機能概要: Sidebar のフォルダリストが長くなった場合（例: 100 フォルダ以上）に備え、フォルダツリーの上部にフィルタ入力欄を設置します。入力すると、フォルダ名を部分一致で検索し、ツリーを動的にフィルタリング表示します。
+
+実装方針:
+
+UI (Sidebar):
+
+Sidebar の useFolders を使っている箇所の上部に <input type="search"> を配置します。
+
+入力値は useState と、既存の useDebounce フックで管理します。
+
+ロジック (utils.ts / Sidebar):
+
+useFolders で取得したフラットなフォルダリストと、デバウンスされた検索クエリを useMemo に渡します。
+
+useMemo の中で、まず既存の buildFolderTree を呼び出します。
+
+次いで、utils.ts に新しく filterFolderTree(nodes: FolderNode[], query: string): FolderNode[] というユーティリティ関数を作成します。
+
+この関数は、query に一致するノード、または 子孫が query に一致する親ノード を含むように、再帰的にツリーをフィルタリングします。
+
+Sidebar はこのフィルタリング済みのツリーを renderFolder に渡します。
+
+アーキテクチャ適合性:
+
+高: Sidebar の複雑さ（コメント 21%）を考慮すると慎重な実装が必要ですが、アーキテクチャには完全に適合します。
+
+既存の useFolders (データ取得)、buildFolderTree (ツリー構築)、useDebounce (入力制御) をすべて再利用し、utils.ts に再利用可能なフィルタリングロジックを追加する形になります。
+
+
+
+
+
+
+提案 2: CSV によるエクスポート機能
+機能概要: TestList で現在表示されている（フィルタリングされた）テストの一覧を、CSVとしてダウンロード（エクスポート）する機能です。
+
+実装方針:
+
+API (新規追加):
+
+GET /api/export/tests: GET /api/tests と同じクエリパラメータ（folderId, q など）を受け付けます。
+
+DB から該当データを取得し、CSV/JSON 形式の文字列に変換して、Content-Disposition: attachment ヘッダと共にレスポンスします。
+
+UI (TestList):
+
+「エクスポート」ボタンを追加します。
+
+クリック時、useTests が現在使用しているクエリパラメータを取得し、window.location.href = '/api/export/tests?folderId=...&q=...' のようにしてダウンロードをトリガーします。
+
+アーキテクチャ適合性:
+
+高: API はリードオンリーであり、既存の GET /api/tests のロジック（クエリ解釈部）を再利用できます。クライアント側のフックへの影響はありません。
+
+
+
+
+
+提案 3: 簡易ダッシュボード機能
+機能概要: システム全体の統計情報（総テスト数、カテゴリ別件数、タグ使用頻度トップ 5 など）を表示するダッシュボードページ、または AdminModal 内のタブを追加します。
+
+実装方針:
+
+API (新規追加):
+
+GET /api/stats/summary: DB に対して COUNT(*) や GROUP BY クエリを実行し、集計済みの JSON データを返す API を新設します。
+
+フック (新規追加):
+
+useStatsSummary() フックを lib/hooks.ts に新設し、ApiResponse<SummaryData> を返します。
+
+UI:
+
+新しいダッシュボードページ (/dashboard など) を作成し、useStatsSummary フックを使ってデータを取得し、グラフ（recharts などを想定）や数値ウィジェットとして表示します。
+
+アーキテクチャ適合性:
+
+高: 既存システムとは完全に分離された、リードオンリーの機能です。新しいフックも既存の ApiResponse<T> 形式に準拠します。
+
+
+
+
+
+提案 4: パンくずリスト (Breadcrumb) ナビゲーション
+機能概要: Sidebar で深い階層のフォルダを選択した際、TestList の上部にパンくずリスト（例: ホーム > 2025年 > 数学 > 応用問題）を表示します。これにより、現在の位置の把握と、親フォルダへの素早い移動が可能になります。
+
+実装方針:
+
+フック (既存の利用): useFolders で取得したフラットなフォルダリスト data と、現在選択中の folderId を useMemo に渡します。
+
+ユーティリティ (新規追加): utils.ts に buildBreadcrumbs(folders: Folder[], currentId: number): Folder[] というユーティリティ関数を新設します。これは parent_id を再帰的に辿り、パンくずリスト用の配列（ルートからカレントまでのフォルダオブジェクト配列）を生成します。
+
+UI: TestList の上部に、useMemo で生成されたパンくずリスト配列を元にリンク (<Link>) のリストを描画します。
+
+アーキテクチャ適合性:
+
+高: API や DB の変更は一切不要です。既存の useFolders フックのデータを再利用し、utils.ts に純粋な（テスト容易な）関数を追加するだけで実現できます。
+
+
+
+
+提案 5: TestList の仮想化 (Virtual Scrolling)
+機能概要: TestList が数千件、数万件のテストデータを表示する際のパフォーマンス低下を防ぐため、仮想スクロールを導入します。画面に表示されている行（例: 20 件）だけを DOM としてレンダリングし、スクロールに応じて DOM を再利用します。
+
+実装方針:
+
+ライブラリ導入: npm install @tanstack/react-virtual などの軽量な仮想化ライブラリを導入します。
+
+UI (TestList): TestList コンポーネントをリファクタリングします。
+
+useTests で取得した data 配列を仮想化フック（例: useVirtualizer）に渡します。
+
+<table> や <ul> でリストを描画する代わりに、ライブラリが要求するラッパー要素と、絶対配置 (position: absolute) された行要素を使って DOM を構築します。
+
+フック (既存の利用): useTests フック自体は変更不要です。仮想化ライブラリは data として完全な配列を受け取るだけで動作します。
+
+アーキテクチャ適合性:
+
+高: TestList コンポーネント内部のレンダリング最適化であり、API、フック、DB への影響は一切ありません。パフォーマンス目安の維持・向上に直接貢献します。
+
+
+
+提案 6: PDF 以外の添付ファイルサポート（画像、Word など）
+機能概要: 添付ファイル機能（提案 2 や提案 51）を拡張し、PDF だけでなく画像 (.png, .jpg) や Word (.docx)、Excel (.xlsx) ファイルもアップロード・管理できるようにします。
+アップロードできるファイルは以下(いずれも10MB以下のみ許可)
+PDF
+HEIC
+jpg
+jpeg
+png
+docx
+xlsx
+
+実装方針:
+
+DB (スキーマ変更): attachments テーブルに mime_type (string) と file_size (integer) カラムを追加します。
+
+API (既存の変更): POST .../attachments API で、アップロードされたファイルの MIME Type とサイズを検知し、DB に保存します。
+
+UI (TestDetail / TestEditForm): useTestAttachments で取得した添付ファイルリストを描画する際、mime_type に応じて表示を切り替えます。
+
+application/pdf: 既存の PdfViewer コンポーネントで表示。
+
+image/*: <img> タグでインライン表示（またはサムネイル表示）。
+
+その他 (.docx, .xlsx など): ファイル種別のアイコンと、ダウンロードリンク (<a>) を表示。
+
+アーキテクチャ適合性:
+
+高: useTestAttachments フックのインターフェース（ApiResponse<Attachment[]>）を変更することなく、返されるデータ（Attachment 型）に mime_type を追加するだけで対応できます。
+
+
+
+

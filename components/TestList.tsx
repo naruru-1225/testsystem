@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
 import PdfViewer from "./PdfViewer";
 import AdminModal from "./AdminModal";
-import type { TestWithTags } from "@/types/database";
+import type { TestWithTags, TestAttachment, Tag } from "@/types/database";
+import { useFolders } from "@/lib/hooks";
+import { buildBreadcrumbs } from "@/lib/utils";
 
 /**
  * テスト一覧コンポーネント
@@ -15,36 +17,55 @@ export default function TestList() {
   const [tests, setTests] = useState<TestWithTags[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<{ grade: string | null; subject: string | null } | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<{
+    grade: string | null;
+    subject: string | null;
+  } | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<TestWithTags | null>(null);
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
+  const [testAttachments, setTestAttachments] = useState<TestAttachment[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
+
+  // フォルダデータを取得してパンくずリスト用に使用
+  const { data: foldersData } = useFolders();
+  const folders = foldersData || [];
+
+  // パンくずリストを構築（useMemoでメモ化）
+  const breadcrumbs = useMemo(() => {
+    if (!selectedFolderId) return [];
+    return buildBreadcrumbs(folders, selectedFolderId);
+  }, [folders, selectedFolderId]);
 
   const fetchTests = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      
-      console.log('Fetching tests with:', {
+
+      console.log("Fetching tests with:", {
         selectedFolderId,
         selectedCategory,
-        searchQuery
+        selectedTagId,
+        searchQuery,
       });
-      
+
       if (selectedFolderId)
         params.append("folderId", selectedFolderId.toString());
       if (selectedCategory?.grade)
         params.append("grade", selectedCategory.grade);
       if (selectedCategory?.subject)
         params.append("subject", selectedCategory.subject);
+      if (selectedTagId) params.append("tagId", selectedTagId.toString());
       if (searchQuery) params.append("search", searchQuery);
 
-      console.log('API URL:', `/api/tests?${params.toString()}`);
+      console.log("API URL:", `/api/tests?${params.toString()}`);
 
       const response = await fetch(`/api/tests?${params}`);
       if (!response.ok) throw new Error("テストの取得に失敗しました");
@@ -57,7 +78,22 @@ export default function TestList() {
     }
   };
 
-  // テスト一覧の取得（フォルダ、カテゴリ、検索の変更時）
+  // タグ一覧の取得
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/tags");
+        if (!response.ok) throw new Error("タグの取得に失敗しました");
+        const data = await response.json();
+        setTags(data);
+      } catch (error) {
+        console.error("タグ取得エラー:", error);
+      }
+    };
+    fetchTags();
+  }, []);
+
+  // テスト一覧の取得(フォルダ、カテゴリ、タグ、検索の変更時)
   useEffect(() => {
     // 検索のみデバウンス処理
     if (searchQuery) {
@@ -69,7 +105,28 @@ export default function TestList() {
       // 検索以外は即座に実行
       fetchTests();
     }
-  }, [selectedFolderId, selectedCategory, searchQuery]);
+  }, [selectedFolderId, selectedCategory, selectedTagId, searchQuery]);
+
+  /**
+   * CSVエクスポート処理
+   * 現在のフィルタ条件でテストデータをCSV形式でダウンロード
+   */
+  const handleExportCSV = () => {
+    const params = new URLSearchParams();
+
+    // 現在のフィルタ条件をクエリパラメータに追加
+    if (selectedFolderId)
+      params.append("folderId", selectedFolderId.toString());
+    if (selectedCategory?.grade) params.append("grade", selectedCategory.grade);
+    if (selectedCategory?.subject)
+      params.append("subject", selectedCategory.subject);
+    if (selectedTagId) params.append("tagId", selectedTagId.toString());
+    if (searchQuery) params.append("search", searchQuery);
+
+    // エクスポートAPIにリダイレクトしてダウンロード
+    const exportUrl = `/api/export/tests?${params.toString()}`;
+    window.location.href = exportUrl;
+  };
 
   // 日付フォーマット
   const formatDate = (dateString: string) => {
@@ -88,30 +145,44 @@ export default function TestList() {
     setDeleting(true);
     try {
       const response = await fetch(`/api/tests/${testId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || '削除に失敗しました');
+        throw new Error(error.error || "削除に失敗しました");
       }
 
       // 成功したら一覧を再取得
       await fetchTests();
       setDeleteConfirm(null);
       // カテゴリを再取得
-      setCategoryRefreshTrigger(prev => prev + 1);
+      setCategoryRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error('削除エラー:', error);
-      alert('テストの削除に失敗しました');
+      console.error("削除エラー:", error);
+      alert("テストの削除に失敗しました");
     } finally {
       setDeleting(false);
     }
   };
 
   // PDFプレビュー表示
-  const handleViewPdf = (pdfPath: string) => {
-    setSelectedPdfUrl(pdfPath);
+  const handleViewPdf = async (test: TestWithTags) => {
+    setSelectedTest(test);
+    setSelectedPdfUrl(test.pdf_path);
+
+    // 添付ファイルを取得
+    try {
+      const response = await fetch(`/api/tests/${test.id}/attachments`);
+      if (response.ok) {
+        const data = await response.json();
+        setTestAttachments(data.attachments || []);
+      }
+    } catch (error) {
+      console.error("添付ファイル取得エラー:", error);
+      setTestAttachments([]);
+    }
+
     setPdfViewerOpen(true);
   };
 
@@ -119,6 +190,8 @@ export default function TestList() {
   const handleClosePdfViewer = () => {
     setPdfViewerOpen(false);
     setSelectedPdfUrl(null);
+    setSelectedTest(null);
+    setTestAttachments([]);
   };
 
   return (
@@ -132,12 +205,14 @@ export default function TestList() {
       )}
 
       {/* サイドバー */}
-      <div className={`
+      <div
+        className={`
         fixed md:static inset-y-0 left-0 z-50
         transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0
-      `}>
+      `}
+      >
         <Sidebar
           onFolderSelect={(folderId) => {
             // 「すべてのテスト」(ID=1)の場合はフィルタをクリア
@@ -162,6 +237,49 @@ export default function TestList() {
 
       {/* メインコンテンツ */}
       <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+        {/* パンくずリスト */}
+        {breadcrumbs.length > 0 && (
+          <div className="bg-gray-50 border-b px-4 md:px-6 py-2">
+            <nav className="flex items-center gap-2 text-sm overflow-x-auto">
+              <button
+                onClick={() => setSelectedFolderId(null)}
+                className="text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
+              >
+                ホーム
+              </button>
+              {breadcrumbs.map((folder, index) => (
+                <div key={folder.id} className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  {index === breadcrumbs.length - 1 ? (
+                    <span className="text-gray-700 font-medium whitespace-nowrap">
+                      {folder.name}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setSelectedFolderId(folder.id)}
+                      className="text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
+                    >
+                      {folder.name}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+        )}
+
         {/* ヘッダー */}
         <div className="bg-white border-b px-4 md:px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -208,6 +326,39 @@ export default function TestList() {
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+
+              {/* タグフィルタ */}
+              <div className="relative">
+                <select
+                  value={selectedTagId ?? ""}
+                  onChange={(e) =>
+                    setSelectedTagId(
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                  className="pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white"
+                >
+                  <option value="">すべてのラベル</option>
+                  {tags.map((tag) => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7l3-3 3 3m0 6l-3 3-3-3"
                   />
                 </svg>
               </div>
@@ -259,8 +410,8 @@ export default function TestList() {
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         学年
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        所属
+                      <th className="px-2 md:px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                        メモ
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         ラベル
@@ -282,7 +433,7 @@ export default function TestList() {
                         <td className="px-4 py-3 text-sm">
                           {test.pdf_path ? (
                             <button
-                              onClick={() => handleViewPdf(test.pdf_path!)}
+                              onClick={() => handleViewPdf(test)}
                               className="text-blue-600 hover:text-blue-800 hover:underline text-left font-medium flex items-center gap-2"
                             >
                               <svg
@@ -304,70 +455,31 @@ export default function TestList() {
                         </td>
                         <td className="px-4 py-3 text-sm">{test.subject}</td>
                         <td className="px-4 py-3 text-sm">{test.grade}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col gap-1">
-                            {/* フォルダ */}
-                            {test.folders && test.folders.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {test.folders.map((folder) => (
-                                  <span
-                                    key={folder.id}
-                                    className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700 flex items-center gap-1"
-                                  >
-                                    <svg
-                                      className="w-3 h-3"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                      />
-                                    </svg>
-                                    {folder.name}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {/* カテゴリ（学年・科目） */}
-                            <div className="flex flex-wrap gap-1">
-                              <span className="px-2 py-1 text-xs rounded bg-green-50 text-green-700 flex items-center gap-1">
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                  />
-                                </svg>
-                                {test.grade}
+                        <td className="px-2 md:px-4 py-3 text-sm">
+                          {test.description ? (
+                            <span
+                              className="text-gray-600 italic text-xs md:text-sm"
+                              title={test.description}
+                            >
+                              <span className="hidden xl:inline">
+                                {test.description.length > 50
+                                  ? `${test.description.substring(0, 50)}...`
+                                  : test.description}
                               </span>
-                              <span className="px-2 py-1 text-xs rounded bg-purple-50 text-purple-700 flex items-center gap-1">
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                  />
-                                </svg>
-                                {test.subject}
+                              <span className="hidden lg:inline xl:hidden">
+                                {test.description.length > 30
+                                  ? `${test.description.substring(0, 30)}...`
+                                  : test.description}
                               </span>
-                            </div>
-                          </div>
+                              <span className="inline lg:hidden">
+                                {test.description.length > 15
+                                  ? `${test.description.substring(0, 15)}...`
+                                  : test.description}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
@@ -403,7 +515,7 @@ export default function TestList() {
                                   disabled={deleting}
                                   className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50"
                                 >
-                                  {deleting ? '削除中...' : '確定'}
+                                  {deleting ? "削除中..." : "確定"}
                                 </button>
                                 <button
                                   onClick={() => setDeleteConfirm(null)}
@@ -434,19 +546,25 @@ export default function TestList() {
       </div>
 
       {/* PDFビューワー */}
-      {pdfViewerOpen && selectedPdfUrl && (
-        <PdfViewer pdfUrl={selectedPdfUrl} onClose={handleClosePdfViewer} />
+      {pdfViewerOpen && selectedPdfUrl && selectedTest && (
+        <PdfViewer
+          pdfUrl={selectedPdfUrl}
+          attachments={testAttachments}
+          testName={selectedTest.name}
+          onClose={handleClosePdfViewer}
+        />
       )}
 
       {/* 管理者モーダル */}
-      <AdminModal 
+      <AdminModal
         isOpen={adminModalOpen}
         onClose={() => setAdminModalOpen(false)}
         onUpdate={() => {
           // フォルダとカテゴリを更新
           fetchTests();
-          setCategoryRefreshTrigger(prev => prev + 1);
+          setCategoryRefreshTrigger((prev) => prev + 1);
         }}
+        onExportCSV={handleExportCSV}
       />
     </div>
   );

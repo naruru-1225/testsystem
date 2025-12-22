@@ -1,231 +1,163 @@
-import { NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { NextResponse } from "next/server";
+import { unlink, rm } from "fs/promises";
+import path from "path";
+import { existsSync } from "fs";
+import { testRepository } from "@/lib/repositories/testRepository";
+import { folderRepository } from "@/lib/repositories/folderRepository";
+import { withErrorHandling, validationError, notFoundError } from "@/lib/api-utils";
 
 /**
  * テスト個別取得API
  * GET /api/tests/[id]
  */
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withErrorHandling(
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const testId = parseInt(id);
 
     if (isNaN(testId)) {
-      return NextResponse.json(
-        { error: '無効なテストIDです' },
-        { status: 400 }
-      );
+      return validationError("無効なテストIDです");
     }
 
-    // テスト情報の取得
-    const test = db.prepare(`
-      SELECT 
-        t.*,
-        f.name as folder_name
-      FROM tests t
-      LEFT JOIN folders f ON t.folder_id = f.id
-      WHERE t.id = ?
-    `).get(testId) as any;
-
+    const test = testRepository.getById(testId);
     if (!test) {
-      return NextResponse.json(
-        { error: 'テストが見つかりません' },
-        { status: 404 }
-      );
+      return notFoundError("テストが見つかりません");
     }
 
-    // タグの取得
-    const tags = db.prepare(`
-      SELECT tg.*
-      FROM tags tg
-      INNER JOIN test_tags tt ON tg.id = tt.tag_id
-      WHERE tt.test_id = ?
-    `).all(testId);
-
-    return NextResponse.json({
-      ...test,
-      tags,
-    });
-  } catch (error) {
-    console.error('テスト取得エラー:', error);
-    return NextResponse.json(
-      { error: 'テストの取得に失敗しました' },
-      { status: 500 }
-    );
+    return NextResponse.json(test);
   }
-}
+);
 
 /**
  * テスト更新API
  * PUT /api/tests/[id]
  */
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withErrorHandling(
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const testId = parseInt(id);
 
     if (isNaN(testId)) {
-      return NextResponse.json(
-        { error: '無効なテストIDです' },
-        { status: 400 }
-      );
+      return validationError("無効なテストIDです");
     }
 
     const body = await request.json();
-    let { 
-      name, 
-      subject, 
-      grade, 
-      folderIds = [], // 配列として受け取る
-      tagIds = [], 
-      pdfPath = null,
-      description = null,
-      totalQuestions = null,
-      totalScore = null
+    let {
+      name,
+      subject,
+      grade,
+      folderIds = [],
+      tagIds,
+      pdfPath,
+      description,
+      totalQuestions,
+      totalScore,
+      attachmentPaths,
+      attachmentFileNames,
     } = body;
 
-    // バリデーション
-    if (!name || !subject || !grade) {
-      return NextResponse.json(
-        { error: '必須項目が入力されていません' },
-        { status: 400 }
-      );
-    }
+    // フォルダ処理ロジック (POSTと同様)
+    const uncategorizedFolder = folderRepository.getUncategorized();
+    const uncategorizedId = uncategorizedFolder?.id || 2;
 
-    // フォルダが空の場合は「未分類」フォルダを取得
     if (folderIds.length === 0) {
-      const uncategorizedFolder = db
-        .prepare("SELECT id FROM folders WHERE name = '未分類'")
-        .get() as { id: number } | undefined;
-      
       if (uncategorizedFolder) {
-        folderIds = [uncategorizedFolder.id];
-        console.log('Auto-assigned to 未分類 folder:', uncategorizedFolder.id);
+        folderIds = [uncategorizedId];
+      }
+    } else if (uncategorizedFolder) {
+      folderIds = folderIds.filter((fid: number) => fid !== uncategorizedId);
+      if (folderIds.length === 0) {
+        folderIds = [uncategorizedId];
       }
     }
 
-    // テストの存在確認
-    const existingTest = db.prepare('SELECT id FROM tests WHERE id = ?').get(testId);
-    if (!existingTest) {
-      return NextResponse.json(
-        { error: 'テストが見つかりません' },
-        { status: 404 }
-      );
+    // 添付ファイルの整形
+    let attachments = undefined;
+    if (attachmentPaths) {
+      attachments = attachmentPaths.map((path: string, index: number) => ({
+        filePath: path,
+        fileName:
+          (attachmentFileNames && attachmentFileNames[index]) ||
+          `attachment_${index + 1}.pdf`,
+      }));
     }
 
-    // テスト情報の更新
-    db.prepare(`
-      UPDATE tests 
-      SET name = ?, subject = ?, grade = ?, folder_id = ?, pdf_path = ?, description = ?, total_questions = ?, total_score = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(name, subject, grade, folderIds[0], pdfPath, description, totalQuestions, totalScore, testId);
-
-    // 既存のフォルダ関連を削除
-    db.prepare('DELETE FROM test_folders WHERE test_id = ?').run(testId);
-
-    // 新しいフォルダ関連を追加
-    if (folderIds.length > 0) {
-      const insertTestFolder = db.prepare('INSERT INTO test_folders (test_id, folder_id) VALUES (?, ?)');
-      for (const folderId of folderIds) {
-        insertTestFolder.run(testId, folderId);
-      }
-    }
-
-    // 既存のタグ関連を削除
-    db.prepare('DELETE FROM test_tags WHERE test_id = ?').run(testId);
-
-    // 新しいタグ関連を追加
-    if (tagIds.length > 0) {
-      const insertTestTag = db.prepare('INSERT INTO test_tags (test_id, tag_id) VALUES (?, ?)');
-      for (const tagId of tagIds) {
-        insertTestTag.run(testId, tagId);
-      }
-    }
-
-    // 更新後のテストを取得
-    const updatedTest = db.prepare(`
-      SELECT 
-        t.*,
-        f.name as folder_name
-      FROM tests t
-      LEFT JOIN folders f ON t.folder_id = f.id
-      WHERE t.id = ?
-    `).get(testId) as any;
-
-    const tags = db.prepare(`
-      SELECT tg.*
-      FROM tags tg
-      INNER JOIN test_tags tt ON tg.id = tt.tag_id
-      WHERE tt.test_id = ?
-    `).all(testId);
-
-    const folders = db.prepare(`
-      SELECT f.*
-      FROM folders f
-      INNER JOIN test_folders tf ON f.id = tf.folder_id
-      WHERE tf.test_id = ?
-    `).all(testId);
-
-    return NextResponse.json({
-      ...updatedTest,
-      tags,
-      folders,
+    const updatedTest = testRepository.update(testId, {
+      name,
+      subject,
+      grade,
+      folderId: folderIds[0],
+      description,
+      pdfPath,
+      tagIds,
+      folderIds,
+      totalQuestions,
+      totalScore,
+      attachments,
     });
-  } catch (error) {
-    console.error('テスト更新エラー:', error);
-    return NextResponse.json(
-      { error: 'テストの更新に失敗しました' },
-      { status: 500 }
-    );
+
+    if (!updatedTest) {
+      return notFoundError("テストが見つかりません");
+    }
+
+    return NextResponse.json(updatedTest);
   }
-}
+);
 
 /**
  * テスト削除API
  * DELETE /api/tests/[id]
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withErrorHandling(
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const testId = parseInt(id);
 
     if (isNaN(testId)) {
-      return NextResponse.json(
-        { error: '無効なテストIDです' },
-        { status: 400 }
-      );
+      return validationError("無効なテストIDです");
     }
 
-    // テストの存在確認
-    const existingTest = db.prepare('SELECT id, name FROM tests WHERE id = ?').get(testId);
+    const existingTest = testRepository.getById(testId);
     if (!existingTest) {
-      return NextResponse.json(
-        { error: 'テストが見つかりません' },
-        { status: 404 }
-      );
+      return notFoundError("テストが見つかりません");
     }
 
-    // テストの削除(カスケード削除により test_tags も自動削除)
-    db.prepare('DELETE FROM tests WHERE id = ?').run(testId);
+    // 添付ファイルの取得
+    const attachments = testRepository.getAttachments(testId);
+
+    // 物理ファイルとフォルダの削除
+    if (attachments.length > 0) {
+      // 各ファイルを削除
+      for (const attachment of attachments) {
+        const filePath = path.join(
+          process.cwd(),
+          "public",
+          attachment.file_path
+        );
+        if (existsSync(filePath)) {
+          await unlink(filePath);
+        }
+      }
+
+      // テスト別フォルダの削除
+      const testFolderPath = path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "pdfs",
+        `test_${testId}`
+      );
+      if (existsSync(testFolderPath)) {
+        await rm(testFolderPath, { recursive: true, force: true });
+      }
+    }
+
+    // テストの削除
+    testRepository.delete(testId);
 
     return NextResponse.json({
-      message: 'テストを削除しました',
+      message: "テストを削除しました",
       deletedTest: existingTest,
     });
-  } catch (error) {
-    console.error('テスト削除エラー:', error);
-    return NextResponse.json(
-      { error: 'テストの削除に失敗しました' },
-      { status: 500 }
-    );
   }
-}
+);

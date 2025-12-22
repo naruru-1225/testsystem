@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">テスト管理システム</string>
+    <string name="title_activity_main">テスト管理システム</string>
+    <string name="package_name">com.yourcompany.testsystem</string>
+    <string name="custom_url_scheme">com.yourcompany.testsystem</string>
+</resources>

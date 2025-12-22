@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import type { Folder, Tag } from '@/types/database';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { Folder, Tag, Grade, Subject } from "@/types/database";
 
 /**
  * テスト登録フォームコンポーネント
@@ -10,71 +10,82 @@ import type { Folder, Tag } from '@/types/database';
  */
 export default function TestCreateForm() {
   const router = useRouter();
-  
+
   // フォーム入力値
-  const [name, setName] = useState('');
-  const [subject, setSubject] = useState('');
-  const [grade, setGrade] = useState('');
-  const [selectedFolderIds, setSelectedFolderIds] = useState<number[]>([1]); // 複数選択対応
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [grade, setGrade] = useState("");
+  const [selectedFolderIds, setSelectedFolderIds] = useState<number[]>([]); // 複数選択対応、初期値は空
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
-  const [description, setDescription] = useState('');
-  const [totalQuestions, setTotalQuestions] = useState<string>('');
-  const [totalScore, setTotalScore] = useState<string>('');
+
+  // 添付PDF用の状態
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [uploadedAttachments, setUploadedAttachments] = useState<{path: string, fileName: string}[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const [description, setDescription] = useState("");
+  const [totalQuestions, setTotalQuestions] = useState<string>("");
+  const [totalScore, setTotalScore] = useState<string>("");
 
   // マスターデータ
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [grades, setGrades] = useState<Grade[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
   // UI状態
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 科目と学年の選択肢
-  const subjects = ['数学', '英語', '国語', '理科', '社会'];
-  const grades = ['中1', '中2', '中3', '高1', '高2', '高3'];
+  // フォルダの展開状態
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
+    new Set()
+  );
 
-  // フォルダを階層的に並べ替える関数
-  const buildFolderHierarchy = () => {
-    const folderMap = new Map<number, Folder>();
+  // フォルダツリーを構築する関数
+  const buildFolderTree = () => {
     const rootFolders: Folder[] = [];
-    
-    // マップを作成
-    folders.forEach(folder => {
-      folderMap.set(folder.id, folder);
-    });
-    
-    // ルートフォルダを取得
-    folders.forEach(folder => {
-      if (!folder.parent_id) {
+    const childMap = new Map<number, Folder[]>();
+
+    // 子フォルダをマップに格納
+    folders.forEach((folder) => {
+      if (folder.parent_id) {
+        const children = childMap.get(folder.parent_id) || [];
+        children.push(folder);
+        childMap.set(folder.parent_id, children);
+      } else {
         rootFolders.push(folder);
       }
     });
-    
-    // 階層的にフォルダを並べる
-    const result: Array<{ folder: Folder; level: number }> = [];
-    
-    const addFolderWithChildren = (folder: Folder, level: number) => {
-      result.push({ folder, level });
-      
-      // 子フォルダを取得
-      const children = folders.filter(f => f.parent_id === folder.id);
-      children.forEach(child => {
-        addFolderWithChildren(child, level + 1);
-      });
-    };
-    
-    rootFolders.forEach(folder => {
-      addFolderWithChildren(folder, 0);
-    });
-    
-    return result;
+
+    return { rootFolders, childMap };
   };
 
-  const hierarchicalFolders = buildFolderHierarchy();
+  const { rootFolders, childMap } = buildFolderTree();
+
+  // フォルダの展開/折りたたみを切り替え
+  const toggleFolder = (folderId: number) => {
+    const newExpanded = new Set(expandedFolderIds);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
+    }
+    setExpandedFolderIds(newExpanded);
+  };
+
+  // フォルダの選択/選択解除を切り替え
+  const toggleFolderSelection = (folderId: number) => {
+    if (selectedFolderIds.includes(folderId)) {
+      setSelectedFolderIds(selectedFolderIds.filter((id) => id !== folderId));
+    } else {
+      setSelectedFolderIds([...selectedFolderIds, folderId]);
+    }
+  };
 
   // マスターデータの取得
   useEffect(() => {
@@ -83,32 +94,133 @@ export default function TestCreateForm() {
 
   const fetchMasterData = async () => {
     try {
-      const [foldersRes, tagsRes] = await Promise.all([
-        fetch('/api/folders'),
-        fetch('/api/tags'),
+      const [foldersRes, tagsRes, gradesRes, subjectsRes] = await Promise.all([
+        fetch("/api/folders"),
+        fetch("/api/tags"),
+        fetch("/api/grades"),
+        fetch("/api/subjects"),
       ]);
 
-      if (!foldersRes.ok || !tagsRes.ok) {
-        throw new Error('マスターデータの取得に失敗しました');
+      if (!foldersRes.ok || !tagsRes.ok || !gradesRes.ok || !subjectsRes.ok) {
+        throw new Error("マスターデータの取得に失敗しました");
       }
 
       const foldersData = await foldersRes.json();
       const tagsData = await tagsRes.json();
+      const gradesData = await gradesRes.json();
+      const subjectsData = await subjectsRes.json();
 
       setFolders(foldersData);
       setTags(tagsData);
+      setGrades(gradesData);
+      setSubjects(subjectsData);
 
-      // 「すべてのテスト」以外の最初のフォルダを初期選択
-      const selectableFolders = foldersData.filter((f: Folder) => f.id !== 1);
-      if (selectableFolders.length > 0) {
-        setSelectedFolderIds([selectableFolders[0].id]);
-      } else {
-        setSelectedFolderIds([]);
-      }
+      // フォルダは初期状態では何も選択しない
+      // (空の場合はAPIで自動的に「未分類」フォルダに割り当てられる)
     } catch (err) {
-      console.error('マスターデータ取得エラー:', err);
-      setError('マスターデータの取得に失敗しました');
+      console.error("マスターデータ取得エラー:", err);
+      setError("マスターデータの取得に失敗しました");
     }
+  };
+
+  // フォルダアイテムを再帰的にレンダリング
+  const renderFolderItem = (
+    folder: Folder,
+    level: number,
+    childMap: Map<number, Folder[]>
+  ): React.ReactElement => {
+    const hasChildren = childMap.has(folder.id);
+    const isExpanded = expandedFolderIds.has(folder.id);
+    const isSelected = selectedFolderIds.includes(folder.id);
+    const children = childMap.get(folder.id) || [];
+
+    return (
+      <div key={folder.id}>
+        <div className="flex items-center gap-1">
+          {/* 展開/折りたたみボタン */}
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={() => toggleFolder(folder.id)}
+              className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
+              disabled={loading || success}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform text-gray-600 ${
+                  isExpanded ? "rotate-90" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-6 flex-shrink-0"></div>
+          )}
+
+          {/* フォルダ選択ボタン */}
+          <button
+            type="button"
+            onClick={() => toggleFolderSelection(folder.id)}
+            disabled={loading || success}
+            className={`flex-1 text-left px-3 py-2 rounded-lg border-2 transition-colors flex items-center gap-2 ${
+              isSelected
+                ? "bg-primary text-white border-primary"
+                : "bg-white text-gray-700 border-gray-300 hover:border-primary"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{ marginLeft: `${level * 1.5}rem` }}
+          >
+            <svg
+              className={`w-5 h-5 flex-shrink-0 ${
+                isSelected ? "text-white" : "text-gray-400"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+              />
+            </svg>
+            <span className="flex-1">{folder.name}</span>
+            {isSelected && (
+              <svg
+                className="w-5 h-5 flex-shrink-0 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* 子フォルダを再帰的にレンダリング */}
+        {hasChildren && isExpanded && (
+          <div className="mt-1 space-y-1">
+            {children.map((child) =>
+              renderFolderItem(child, level + 1, childMap)
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   // タグの選択/解除
@@ -120,20 +232,58 @@ export default function TestCreateForm() {
     );
   };
 
-  // PDFファイル選択時の処理
+  // メインファイル選択時の処理（PDFまたは画像）
   const handlePdfChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // PDFファイルかチェック
-    if (file.type !== 'application/pdf') {
-      setError('PDFファイルのみアップロード可能です');
+    console.log("📎 ファイル選択:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      extension: file.name.split(".").pop()?.toLowerCase(),
+    });
+
+    // ファイル拡張子を取得
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+
+    // 許可する拡張子
+    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+
+    // 許可するMIMEタイプ
+    const allowedTypes = [
+      "application/pdf",
+      "image/heic",
+      "image/heif",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/x-heic",
+      "application/octet-stream",
+      "",
+    ];
+
+    // 拡張子またはMIMEタイプでチェック
+    const isValidExtension = allowedExtensions.includes(fileExt);
+    const isValidMimeType = allowedTypes.includes(file.type);
+
+    if (!isValidExtension && !isValidMimeType) {
+      console.error("❌ ファイルタイプ拒否:", {
+        type: file.type,
+        extension: fileExt,
+      });
+      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
       return;
     }
 
+    console.log("✅ ファイルタイプ承認:", {
+      isValidExtension,
+      isValidMimeType,
+    });
+
     // ファイルサイズチェック(10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError('ファイルサイズは10MB以下にしてください');
+      setError("ファイルサイズは10MB以下にしてください");
       return;
     }
 
@@ -144,6 +294,76 @@ export default function TestCreateForm() {
     await uploadPdf(file);
   };
 
+  // メインファイルドラッグ&ドロップ処理（PDFまたは画像）
+  const handlePdfDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    console.log("📎 ファイルドロップ:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      extension: file.name.split(".").pop()?.toLowerCase(),
+    });
+
+    // ファイル拡張子を取得
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+
+    // 許可する拡張子
+    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+
+    // 許可するMIMEタイプ
+    const allowedTypes = [
+      "application/pdf",
+      "image/heic",
+      "image/heif",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/x-heic",
+      "application/octet-stream",
+      "",
+    ];
+
+    // 拡張子またはMIMEタイプでチェック
+    const isValidExtension = allowedExtensions.includes(fileExt);
+    const isValidMimeType = allowedTypes.includes(file.type);
+
+    if (!isValidExtension && !isValidMimeType) {
+      console.error("❌ ファイルタイプ拒否:", {
+        type: file.type,
+        extension: fileExt,
+      });
+      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+      return;
+    }
+
+    console.log("✅ ファイルタイプ承認:", {
+      isValidExtension,
+      isValidMimeType,
+    });
+
+    // ファイルサイズチェック(10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError("ファイルサイズは10MB以下にしてください");
+      return;
+    }
+
+    setPdfFile(file);
+    setError(null);
+
+    // 即座にアップロード
+    await uploadPdf(file);
+  };
+
+  const handlePdfDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   // PDFアップロード処理
   const uploadPdf = async (file: File) => {
     setUploadingPdf(true);
@@ -151,23 +371,23 @@ export default function TestCreateForm() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'アップロードに失敗しました');
+        throw new Error(errorData.error || "アップロードに失敗しました");
       }
 
       const data = await response.json();
       setPdfPath(data.path);
     } catch (err: any) {
-      console.error('PDFアップロードエラー:', err);
-      setError(err.message || 'PDFのアップロードに失敗しました');
+      console.error("PDFアップロードエラー:", err);
+      setError(err.message || "PDFのアップロードに失敗しました");
       setPdfFile(null);
     } finally {
       setUploadingPdf(false);
@@ -180,6 +400,195 @@ export default function TestCreateForm() {
     setPdfPath(null);
   };
 
+  // 添付ファイル選択時の処理
+  const handleAttachmentChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // 最大4つまで(メインPDFと合わせて5つ)
+    const currentCount = attachmentFiles.length;
+    const remainingSlots = 4 - currentCount;
+
+    if (files.length > remainingSlots) {
+      setError(`添付ファイルは最大4つまでです(残り${remainingSlots}つ)`);
+      return;
+    }
+
+    // 許可する拡張子
+    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+
+    // 許可するMIMEタイプ
+    const allowedTypes = [
+      "application/pdf",
+      "image/heic",
+      "image/heif",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/x-heic",
+      "application/octet-stream",
+      "",
+    ];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+
+      console.log(`📎 添付ファイル ${i + 1}:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        extension: fileExt,
+      });
+
+      const isValidExtension = allowedExtensions.includes(fileExt);
+      const isValidMimeType = allowedTypes.includes(file.type);
+
+      if (!isValidExtension && !isValidMimeType) {
+        console.error("❌ ファイルタイプ拒否:", {
+          type: file.type,
+          extension: fileExt,
+        });
+        setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+        return;
+      }
+
+      // ファイルサイズチェック(10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`${file.name}: ファイルサイズは10MB以下にしてください`);
+        return;
+      }
+    }
+
+    // ファイルを配列に変換
+    const fileArray = Array.from(files);
+    setAttachmentFiles((prev) => [...prev, ...fileArray]);
+    setError(null);
+
+    // 各ファイルをアップロード
+    for (const file of fileArray) {
+      await uploadAttachment(file);
+    }
+  };
+
+  // 添付ファイル ドラッグ&ドロップ処理
+  const handleAttachmentDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // 最大4つまで(メインPDFと合わせて5つ)
+    const currentCount = attachmentFiles.length;
+    const remainingSlots = 4 - currentCount;
+
+    if (files.length > remainingSlots) {
+      setError(`添付ファイルは最大4つまでです(残り${remainingSlots}つ)`);
+      return;
+    }
+
+    // 許可する拡張子
+    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+
+    // 許可するMIMEタイプ
+    const allowedTypes = [
+      "application/pdf",
+      "image/heic",
+      "image/heif",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/x-heic",
+      "application/octet-stream",
+      "",
+    ];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+
+      console.log(`📎 添付ファイル(ドロップ) ${i + 1}:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        extension: fileExt,
+      });
+
+      const isValidExtension = allowedExtensions.includes(fileExt);
+      const isValidMimeType = allowedTypes.includes(file.type);
+
+      if (!isValidExtension && !isValidMimeType) {
+        console.error("❌ ファイルタイプ拒否:", {
+          type: file.type,
+          extension: fileExt,
+        });
+        setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+        return;
+      }
+
+      // ファイルサイズチェック(10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`${file.name}: ファイルサイズは10MB以下にしてください`);
+        return;
+      }
+    }
+
+    // ファイルを配列に変換
+    const fileArray = Array.from(files);
+    setAttachmentFiles((prev) => [...prev, ...fileArray]);
+    setError(null);
+
+    // 各ファイルをアップロード
+    for (const file of fileArray) {
+      await uploadAttachment(file);
+    }
+  };
+
+  const handleAttachmentDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // 添付PDFアップロード処理
+  const uploadAttachment = async (file: File) => {
+    setUploadingAttachment(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "アップロードに失敗しました");
+      }
+
+      const data = await response.json();
+      setUploadedAttachments((prev) => [...prev, { path: data.path, fileName: data.fileName }]);
+    } catch (err: any) {
+      console.error("添付PDFアップロードエラー:", err);
+      setError(err.message || "添付PDFのアップロードに失敗しました");
+      // エラーの場合、ファイルリストから削除
+      setAttachmentFiles((prev) => prev.filter((f) => f !== file));
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
+
+  // 添付PDF削除
+  const handleRemoveAttachment = (index: number) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,25 +597,25 @@ export default function TestCreateForm() {
 
     // バリデーション
     if (!name.trim()) {
-      setError('テスト名を入力してください');
+      setError("テスト名を入力してください");
       return;
     }
     if (!subject) {
-      setError('科目を選択してください');
+      setError("科目を選択してください");
       return;
     }
     if (!grade) {
-      setError('学年を選択してください');
+      setError("学年を選択してください");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch('/api/tests', {
-        method: 'POST',
+      const response = await fetch("/api/tests", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: name.trim(),
@@ -215,6 +624,8 @@ export default function TestCreateForm() {
           folderIds: selectedFolderIds,
           tagIds: selectedTagIds,
           pdfPath,
+          attachmentPaths: uploadedAttachments.map(a => a.path), // 添付PDFのパスを追加
+          attachmentFileNames: uploadedAttachments.map(a => a.fileName), // 添付PDFのファイル名を追加
           description: description.trim() || null,
           totalQuestions: totalQuestions ? parseInt(totalQuestions) : null,
           totalScore: totalScore ? parseInt(totalScore) : null,
@@ -223,18 +634,18 @@ export default function TestCreateForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'テストの作成に失敗しました');
+        throw new Error(errorData.error || "テストの作成に失敗しました");
       }
 
       setSuccess(true);
 
       // 成功メッセージ表示後、一覧画面へリダイレクト
       setTimeout(() => {
-        router.push('/');
+        router.push("/");
       }, 1500);
     } catch (err: any) {
-      console.error('テスト作成エラー:', err);
-      setError(err.message || 'テストの作成に失敗しました');
+      console.error("テスト作成エラー:", err);
+      setError(err.message || "テストの作成に失敗しました");
     } finally {
       setLoading(false);
     }
@@ -242,7 +653,7 @@ export default function TestCreateForm() {
 
   // キャンセル処理
   const handleCancel = () => {
-    router.push('/');
+    router.push("/");
   };
 
   return (
@@ -251,9 +662,7 @@ export default function TestCreateForm() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">新規テスト登録</h1>
-          <p className="mt-2 text-gray-600">
-            テスト情報を入力してください
-          </p>
+          <p className="mt-2 text-gray-600">テスト情報を入力してください</p>
         </div>
 
         {/* エラーメッセージ */}
@@ -303,11 +712,17 @@ export default function TestCreateForm() {
         )}
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 md:p-8">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-lg shadow-md p-6 md:p-8"
+        >
           <div className="space-y-6">
             {/* テスト名 */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 テスト名 <span className="text-red-500">*</span>
               </label>
               <input
@@ -326,8 +741,14 @@ export default function TestCreateForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 科目 */}
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  科目 <span className="text-red-500">*</span> <span className="text-gray-500 text-xs">※カテゴリに自動分類されます</span>
+                <label
+                  htmlFor="subject"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  科目 <span className="text-red-500">*</span>{" "}
+                  <span className="text-gray-500 text-xs">
+                    ※カテゴリに自動分類されます
+                  </span>
                 </label>
                 <select
                   id="subject"
@@ -338,8 +759,8 @@ export default function TestCreateForm() {
                 >
                   <option value="">選択してください</option>
                   {subjects.map((subj) => (
-                    <option key={subj} value={subj}>
-                      {subj}
+                    <option key={subj.id} value={subj.name}>
+                      {subj.name}
                     </option>
                   ))}
                 </select>
@@ -347,8 +768,14 @@ export default function TestCreateForm() {
 
               {/* 学年 */}
               <div>
-                <label htmlFor="grade" className="block text-sm font-medium text-gray-700 mb-2">
-                  学年 <span className="text-red-500">*</span> <span className="text-gray-500 text-xs">※カテゴリに自動分類されます</span>
+                <label
+                  htmlFor="grade"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  学年 <span className="text-red-500">*</span>{" "}
+                  <span className="text-gray-500 text-xs">
+                    ※カテゴリに自動分類されます
+                  </span>
                 </label>
                 <select
                   id="grade"
@@ -359,8 +786,8 @@ export default function TestCreateForm() {
                 >
                   <option value="">選択してください</option>
                   {grades.map((gr) => (
-                    <option key={gr} value={gr}>
-                      {gr}
+                    <option key={gr.id} value={gr.name}>
+                      {gr.name}
                     </option>
                   ))}
                 </select>
@@ -370,73 +797,25 @@ export default function TestCreateForm() {
             {/* フォルダ選択 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                保存先フォルダ <span className="text-gray-500 text-xs">複数選択可 (未選択の場合は「未分類」に保存されます)</span>
+                保存先フォルダ{" "}
+                <span className="text-gray-500 text-xs">
+                  複数選択可 (未選択の場合は「未分類」に保存されます)
+                </span>
               </label>
-              <div className="space-y-2">
-                {hierarchicalFolders
-                  .filter(({ folder }) => folder.id !== 1 && folder.name !== '未分類') // 「すべてのテスト」と「未分類」を除外
-                  .map(({ folder, level }) => {
-                    const isSelected = selectedFolderIds.includes(folder.id);
-                    return (
-                      <button
-                        key={folder.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedFolderIds(selectedFolderIds.filter((id) => id !== folder.id));
-                          } else {
-                            setSelectedFolderIds([...selectedFolderIds, folder.id]);
-                          }
-                        }}
-                        disabled={loading || success}
-                        className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors flex items-center gap-2 ${
-                          isSelected
-                            ? 'bg-primary text-white border-primary'
-                            : level === 0
-                            ? 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-primary'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        style={{ marginLeft: `${level * 1.5}rem` }}
-                      >
-                        <svg
-                          className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-white' : 'text-gray-400'}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                          />
-                        </svg>
-                        <span className="flex-1">{folder.name}</span>
-                        {isSelected && (
-                          <svg
-                            className="w-5 h-5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
+              <div className="border border-gray-300 rounded-lg p-4 bg-white max-h-80 overflow-y-auto">
+                {rootFolders
+                  .filter(
+                    (folder) => folder.id !== 1 && folder.name !== "未分類"
+                  )
+                  .map((folder) => renderFolderItem(folder, 0, childMap))}
               </div>
             </div>
 
             {/* タグ選択 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                ラベル(タグ) <span className="text-gray-500 text-xs">複数選択可</span>
+                ラベル(タグ){" "}
+                <span className="text-gray-500 text-xs">複数選択可</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
@@ -447,15 +826,15 @@ export default function TestCreateForm() {
                     disabled={loading || success}
                     className={`px-4 py-2 rounded-lg border-2 transition-all ${
                       selectedTagIds.includes(tag.id)
-                        ? 'border-transparent'
-                        : 'border-gray-300 bg-white hover:border-gray-400'
+                        ? "border-transparent"
+                        : "border-gray-300 bg-white hover:border-gray-400"
                     }`}
                     style={{
                       backgroundColor: selectedTagIds.includes(tag.id)
                         ? tag.color
                         : undefined,
                       color: selectedTagIds.includes(tag.id)
-                        ? '#FFFFFF'
+                        ? "#FFFFFF"
                         : tag.color,
                     }}
                   >
@@ -468,14 +847,19 @@ export default function TestCreateForm() {
             {/* PDFアップロード */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                PDFファイル <span className="text-gray-500 text-xs">任意</span>
+                メインPDFファイル{" "}
+                <span className="text-gray-500 text-xs">任意</span>
               </label>
-              
+
               {!pdfFile && !pdfPath ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
+                  onDrop={handlePdfDrop}
+                  onDragOver={handlePdfDragOver}
+                >
                   <input
                     type="file"
-                    accept=".pdf,application/pdf"
+                    accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,image/*,application/pdf"
                     onChange={handlePdfChange}
                     disabled={loading || success || uploadingPdf}
                     className="hidden"
@@ -499,10 +883,16 @@ export default function TestCreateForm() {
                       />
                     </svg>
                     <p className="text-sm text-gray-600">
-                      クリックしてPDFファイルを選択
+                      クリックしてファイルを選択
                     </p>
                     <p className="text-xs text-gray-500">
-                      最大10MB
+                      または、ここにファイルをドラッグ&ドロップ
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      対応形式: PDF、HEIC、JPG、PNG（最大10MB）
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      ※ HEICファイルは自動的にJPEGに変換されます
                     </p>
                   </label>
                 </div>
@@ -548,10 +938,12 @@ export default function TestCreateForm() {
                       </svg>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {pdfFile?.name || 'PDFファイル'}
+                          {pdfFile?.name || "PDFファイル"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB` : 'アップロード完了'}
+                          {pdfFile
+                            ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB`
+                            : "アップロード完了"}
                         </p>
                       </div>
                     </div>
@@ -581,9 +973,168 @@ export default function TestCreateForm() {
               )}
             </div>
 
+            {/* 添付ファイルアップロード */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                添付ファイル{" "}
+                <span className="text-gray-500 text-xs">
+                  任意 (最大4つまで・PDF/画像)
+                </span>
+              </label>
+
+              {/* アップロード済み添付ファイル一覧 */}
+              {attachmentFiles.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {attachmentFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <svg
+                            className="w-8 h-8 text-blue-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(index)}
+                          disabled={loading || success}
+                          className="flex-shrink-0 p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          title="削除"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* アップロードボタン(4つ未満の場合のみ表示) */}
+              {attachmentFiles.length < 4 && (
+                <>
+                  {uploadingAttachment ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+                      <div className="flex flex-col items-center gap-3">
+                        <svg
+                          className="animate-spin h-8 w-8 text-primary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <p className="text-sm text-gray-600">
+                          アップロード中...
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
+                      onDrop={handleAttachmentDrop}
+                      onDragOver={handleAttachmentDragOver}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,image/*,application/pdf"
+                        onChange={handleAttachmentChange}
+                        disabled={loading || success || uploadingAttachment}
+                        className="hidden"
+                        id="attachment-upload"
+                        multiple
+                      />
+                      <label
+                        htmlFor="attachment-upload"
+                        className="cursor-pointer flex flex-col items-center gap-2"
+                      >
+                        <svg
+                          className="w-10 h-10 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        <p className="text-sm text-gray-600">
+                          クリックしてファイルを追加
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          または、ここにファイルをドラッグ&ドロップ
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          対応形式: PDF、HEIC、JPG、PNG
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          複数選択可 • 各10MB以下 • 残り
+                          {4 - attachmentFiles.length}つ
+                        </p>
+                      </label>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {attachmentFiles.length >= 4 && (
+                <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm text-gray-600 text-center">
+                    添付ファイルは最大4つまでです
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* 自由記入欄 */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 備考・メモ <span className="text-gray-500 text-xs">任意</span>
               </label>
               <textarea
@@ -596,13 +1147,18 @@ export default function TestCreateForm() {
                 disabled={loading || success}
                 maxLength={500}
               />
-              <p className="mt-1 text-xs text-gray-500">{description.length}/500文字</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {description.length}/500文字
+              </p>
             </div>
 
             {/* 大問数・満点 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="totalQuestions" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="totalQuestions"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   大問数 <span className="text-gray-500 text-xs">任意</span>
                 </label>
                 <input
@@ -619,7 +1175,10 @@ export default function TestCreateForm() {
               </div>
 
               <div>
-                <label htmlFor="totalScore" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="totalScore"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   満点 <span className="text-gray-500 text-xs">任意</span>
                 </label>
                 <input
@@ -649,10 +1208,10 @@ export default function TestCreateForm() {
             </button>
             <button
               type="submit"
-              disabled={loading || success}
+              disabled={loading || success || uploadingPdf || uploadingAttachment}
               className="px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {loading || uploadingPdf || uploadingAttachment ? (
                 <>
                   <svg
                     className="animate-spin h-5 w-5"
@@ -673,7 +1232,7 @@ export default function TestCreateForm() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <span>登録中...</span>
+                  <span>{uploadingPdf || uploadingAttachment ? "アップロード中..." : "登録中..."}</span>
                 </>
               ) : (
                 <span>登録する</span>

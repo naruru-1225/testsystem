@@ -1,72 +1,116 @@
-import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
+import { NextResponse } from "next/server";
+import { fileService } from "@/lib/services/fileService";
+import { testRepository } from "@/lib/repositories/testRepository";
+import { withErrorHandling, validationError } from "@/lib/api-utils";
 
 /**
  * PDFファイルアップロードAPI
  * POST /api/upload
+ * クエリパラメータ: testId (オプション: 既存テストへの添付用)
  */
-export async function POST(request: Request) {
-  try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
+export const POST = withErrorHandling(async (request: Request) => {
+  const formData = await request.formData();
+  const file = formData.get("file") as File;
+  const testIdParam = formData.get("testId") as string | null;
 
-    if (!file) {
-      return NextResponse.json(
-        { error: 'ファイルが選択されていません' },
-        { status: 400 }
-      );
-    }
+  if (!file) {
+    return validationError("ファイルが選択されていません");
+  }
 
-    // PDFファイルかチェック
-    if (file.type !== 'application/pdf') {
-      return NextResponse.json(
-        { error: 'PDFファイルのみアップロード可能です' },
-        { status: 400 }
-      );
-    }
+  // ファイル拡張子を取得
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
 
-    // ファイルサイズチェック(10MB制限)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'ファイルサイズは10MB以下にしてください' },
-        { status: 400 }
-      );
-    }
+  console.log("アップロードファイル情報:", {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    extension: fileExt,
+  });
 
-    // アップロードディレクトリの作成
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'pdfs');
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
+  // 許可する拡張子
+  const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
 
-    // ファイル名の生成(タイムスタンプ + ランダム文字列)
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 15);
-    const fileName = `${timestamp}-${randomStr}.pdf`;
-    const filePath = path.join(uploadDir, fileName);
+  // 許可するファイルタイプ（PDFと画像のみ）
+  const allowedTypes = [
+    "application/pdf",
+    "image/heic",
+    "image/heif",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/x-heic", // 一部ブラウザのHEIC MIMEタイプ
+    "application/octet-stream", // 不明なバイナリファイル
+    "", // 空のMIMEタイプ
+  ];
 
-    // ファイルの保存
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+  // 拡張子が許可リストにあればOK（HEICファイル対応）
+  const isValidExtension = allowedExtensions.includes(fileExt);
+  // MIMEタイプが許可リストにあればOK
+  const isValidMimeType = allowedTypes.includes(file.type);
 
-    // 公開パスを返す
-    const publicPath = `/uploads/pdfs/${fileName}`;
-
-    return NextResponse.json({
-      success: true,
-      path: publicPath,
-      fileName,
-      size: file.size,
+  // 拡張子が有効な場合は、MIMEタイプに関係なくアップロード許可
+  // (HEICファイルは拡張子で判定)
+  if (!isValidExtension && !isValidMimeType) {
+    console.log("❌ ファイルタイプ拒否:", {
+      fileName: file.name,
+      type: file.type,
+      typeLength: file.type.length,
+      extension: fileExt,
+      isValidExtension,
+      isValidMimeType,
     });
-  } catch (error) {
-    console.error('ファイルアップロードエラー:', error);
-    return NextResponse.json(
-      { error: 'ファイルのアップロードに失敗しました' },
-      { status: 500 }
+    return validationError(
+      "PDF、HEIC、JPG、PNGファイルのみアップロード可能です"
     );
   }
-}
+
+  console.log("✅ ファイルタイプ承認:", {
+    fileName: file.name,
+    type: file.type,
+    extension: fileExt,
+    isValidExtension,
+    isValidMimeType,
+  });
+
+  // ファイルサイズチェック(10MB制限)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  if (file.size > MAX_FILE_SIZE) {
+    return validationError("ファイルサイズは10MB以下にしてください");
+  }
+
+  const testId = testIdParam ? parseInt(testIdParam) : undefined;
+
+  // testIdが指定されている場合、添付ファイル数をチェック
+  if (testId) {
+    const count = testRepository.getAttachmentCount(testId);
+    if (count >= 5) {
+      return validationError("添付ファイルは最大5つまでです");
+    }
+  }
+
+  // ファイルを保存
+  const savedFile = await fileService.saveFile(file, testId);
+
+  let attachmentId: number | undefined;
+
+  // データベースに記録 (testIdがある場合)
+  if (testId) {
+    attachmentId = testRepository.addAttachment(
+      testId,
+      savedFile.fileName,
+      savedFile.path,
+      savedFile.mimeType,
+      savedFile.size
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    path: savedFile.path,
+    fileName: savedFile.fileName,
+    size: savedFile.size,
+    mimeType: savedFile.mimeType,
+    attachmentId: attachmentId,
+    converted: savedFile.converted,
+  });
+});

@@ -1,146 +1,53 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import db from "./db-instance";
+import { startBackupScheduler } from "./backupScheduler";
+import { addColumnIfNotExists } from "./db-helpers";
+import {
+  FOLDERS_TABLE_SCHEMA,
+  TESTS_TABLE_SCHEMA,
+  TEST_FOLDERS_TABLE_SCHEMA,
+  TAGS_TABLE_SCHEMA,
+  TEST_TAGS_TABLE_SCHEMA,
+  TEST_ATTACHMENTS_TABLE_SCHEMA,
+} from "./db-schema";
 
 /**
  * データベース管理クラス
  * SQLiteを使用したテスト管理システムのデータベース操作
  */
 
-// データベースファイルのパス
-// Vercel環境では /tmp を使用、ローカル環境では data ディレクトリを使用
-const isVercel = process.env.VERCEL === '1';
-const DB_DIR = isVercel ? '/tmp' : path.join(process.cwd(), "data");
-const DB_PATH = path.join(DB_DIR, "tests.db");
-
-// データディレクトリが存在しない場合は作成(ローカル環境のみ)
-if (!isVercel && !fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
-}
-
-// データベースインスタンス
-const db = new Database(DB_PATH);
-
-// WALモードを有効化(パフォーマンス向上)
-db.pragma('journal_mode = WAL');
-
 /**
  * データベースの初期化
  * テーブルが存在しない場合は作成し、初期データを投入
  */
 export function initializeDatabase() {
-  // フォルダテーブルの作成
+  // テーブル作成
+  db.exec(FOLDERS_TABLE_SCHEMA);
+  db.exec(TESTS_TABLE_SCHEMA);
+  db.exec(TEST_FOLDERS_TABLE_SCHEMA);
+  db.exec(TAGS_TABLE_SCHEMA);
+  db.exec(TEST_TAGS_TABLE_SCHEMA);
+  db.exec(TEST_ATTACHMENTS_TABLE_SCHEMA);
+
+  // 学年・科目マスターテーブル
   db.exec(`
-    CREATE TABLE IF NOT EXISTS folders (
+    CREATE TABLE IF NOT EXISTS grades (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      parent_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (parent_id) REFERENCES folders (id) ON DELETE CASCADE
+      display_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // テストテーブルの作成
   db.exec(`
-    CREATE TABLE IF NOT EXISTS tests (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      grade TEXT NOT NULL,
-      folder_id INTEGER NOT NULL,
-      pdf_path TEXT,
-      description TEXT,
-      total_questions INTEGER,
-      total_score INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE
-    )
-  `);
-
-  // 既存のtestsテーブルに新しいカラムを追加(存在しない場合)
-  try {
-    const tableInfo = db.prepare("PRAGMA table_info(tests)").all() as any[];
-    
-    const hasPdfPath = tableInfo.some((col: any) => col.name === 'pdf_path');
-    if (!hasPdfPath) {
-      console.log('Adding pdf_path column to tests table...');
-      db.exec('ALTER TABLE tests ADD COLUMN pdf_path TEXT');
-      console.log('pdf_path column added successfully.');
-    }
-
-    const hasDescription = tableInfo.some((col: any) => col.name === 'description');
-    if (!hasDescription) {
-      console.log('Adding description column to tests table...');
-      db.exec('ALTER TABLE tests ADD COLUMN description TEXT');
-      console.log('description column added successfully.');
-    }
-
-    const hasTotalQuestions = tableInfo.some((col: any) => col.name === 'total_questions');
-    if (!hasTotalQuestions) {
-      console.log('Adding total_questions column to tests table...');
-      db.exec('ALTER TABLE tests ADD COLUMN total_questions INTEGER');
-      console.log('total_questions column added successfully.');
-    }
-
-    const hasTotalScore = tableInfo.some((col: any) => col.name === 'total_score');
-    if (!hasTotalScore) {
-      console.log('Adding total_score column to tests table...');
-      db.exec('ALTER TABLE tests ADD COLUMN total_score INTEGER');
-      console.log('total_score column added successfully.');
-    }
-  } catch (error) {
-    console.error('Error adding pdf_path column:', error);
-  }
-
-  // 既存のfoldersテーブルに親フォルダカラムを追加(存在しない場合)
-  try {
-    const folderTableInfo = db.prepare("PRAGMA table_info(folders)").all() as any[];
-    
-    const hasParentId = folderTableInfo.some((col: any) => col.name === 'parent_id');
-    if (!hasParentId) {
-      console.log('Adding parent_id column to folders table...');
-      db.exec('ALTER TABLE folders ADD COLUMN parent_id INTEGER REFERENCES folders(id) ON DELETE CASCADE');
-      console.log('parent_id column added successfully.');
-    }
-  } catch (error) {
-    console.error('Error adding parent_id column:', error);
-  }
-
-  // タグテーブルの作成
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS tags (
+    CREATE TABLE IF NOT EXISTS subjects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      color TEXT NOT NULL DEFAULT '#3B82F6'
+      display_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // テストとタグの関連テーブルの作成
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS test_tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      test_id INTEGER NOT NULL,
-      tag_id INTEGER NOT NULL,
-      FOREIGN KEY (test_id) REFERENCES tests (id) ON DELETE CASCADE,
-      FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
-      UNIQUE(test_id, tag_id)
-    )
-  `);
-
-  // テストとフォルダの関連テーブルの作成(多対多)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS test_folders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      test_id INTEGER NOT NULL,
-      folder_id INTEGER NOT NULL,
-      FOREIGN KEY (test_id) REFERENCES tests (id) ON DELETE CASCADE,
-      FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE,
-      UNIQUE(test_id, folder_id)
-    )
-  `);
-
-  // インデックスの作成(検索高速化)
+  // インデックス作成
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tests_folder_id ON tests(folder_id);
     CREATE INDEX IF NOT EXISTS idx_tests_subject ON tests(subject);
@@ -149,66 +56,141 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_test_tags_tag_id ON test_tags(tag_id);
     CREATE INDEX IF NOT EXISTS idx_test_folders_test_id ON test_folders(test_id);
     CREATE INDEX IF NOT EXISTS idx_test_folders_folder_id ON test_folders(folder_id);
+    CREATE INDEX IF NOT EXISTS idx_test_attachments_test_id ON test_attachments(test_id);
+    CREATE INDEX IF NOT EXISTS idx_grades_display_order ON grades(display_order);
+    CREATE INDEX IF NOT EXISTS idx_subjects_display_order ON subjects(display_order);
   `);
 
-  // 初期データの投入(フォルダが存在しない場合)
-  const folderCount = db
-    .prepare("SELECT COUNT(*) as count FROM folders")
-    .get() as { count: number };
+  // マイグレーション: カラム追加
+  addColumnIfNotExists("tests", "pdf_path", "TEXT");
+  addColumnIfNotExists("tests", "description", "TEXT");
+  addColumnIfNotExists("tests", "total_questions", "INTEGER");
+  addColumnIfNotExists("tests", "total_score", "INTEGER");
+  
+  addColumnIfNotExists("folders", "parent_id", "INTEGER REFERENCES folders(id) ON DELETE CASCADE");
+  const addedOrderIndex = addColumnIfNotExists("folders", "order_index", "INTEGER DEFAULT 0");
 
+  addColumnIfNotExists("test_attachments", "mime_type", "TEXT");
+  addColumnIfNotExists("test_attachments", "file_size", "INTEGER");
+
+  addColumnIfNotExists("test_tags", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+  addColumnIfNotExists("test_folders", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+  addColumnIfNotExists("tags", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+  addColumnIfNotExists("tags", "color", "TEXT DEFAULT '#3B82F6'");
+
+  // フォルダのorder_index初期化 (カラム追加時のみ)
+  if (addedOrderIndex) {
+    try {
+      const folders = db.prepare("SELECT id FROM folders ORDER BY id").all() as { id: number }[];
+      const updateStmt = db.prepare("UPDATE folders SET order_index = ? WHERE id = ?");
+      const transaction = db.transaction((folders: { id: number }[]) => {
+        folders.forEach((folder, index) => updateStmt.run(index, folder.id));
+      });
+      transaction(folders);
+      console.log(`Updated order_index for ${folders.length} folders.`);
+    } catch (e) {
+      console.error("Error updating order_index:", e);
+    }
+  }
+
+  // UNIQUE制約チェック
+  try {
+    const schemaInfo = db.prepare(`
+      SELECT sql FROM sqlite_master 
+      WHERE type='table' AND name='folders'
+    `).get() as { sql: string } | undefined;
+    
+    if (schemaInfo && schemaInfo.sql.includes('name TEXT NOT NULL UNIQUE')) {
+      console.log("⚠️  Detected old UNIQUE constraint on folders table.");
+      console.log("   Please run: node scripts/migration/migrate-folder-unique-constraint.mjs");
+    }
+  } catch (error) {
+    console.error("Error checking folder constraints:", error);
+  }
+
+  // 初期データ投入
+  initializeData();
+  
+  // データ移行
+  migrateData();
+}
+
+function initializeData() {
+  // フォルダ
+  const folderCount = db.prepare("SELECT COUNT(*) as count FROM folders").get() as { count: number };
   if (folderCount.count === 0) {
     const insertFolder = db.prepare("INSERT INTO folders (name) VALUES (?)");
     insertFolder.run("すべてのテスト");
     insertFolder.run("未分類");
-  }
-
-  // 「未分類」フォルダが存在しない場合は追加
-  const uncategorizedFolder = db
-    .prepare("SELECT id FROM folders WHERE name = ?")
-    .get("未分類");
-  
-  if (!uncategorizedFolder) {
-    console.log('Adding "未分類" folder...');
-    db.prepare("INSERT INTO folders (name) VALUES (?)").run("未分類");
-    console.log('"未分類" folder added.');
-  }
-
-  // 既存データのマイグレーション: tests.folder_id から test_folders への移行
-  try {
-    console.log('Checking test-folder relationships migration...');
-    
-    // 全テストを取得
-    const allTests = db.prepare("SELECT id, folder_id FROM tests").all() as { id: number; folder_id: number }[];
-    
-    const insertTestFolder = db.prepare("INSERT OR IGNORE INTO test_folders (test_id, folder_id) VALUES (?, ?)");
-    
-    let migratedCount = 0;
-    allTests.forEach(test => {
-      if (test.folder_id) {
-        const result = insertTestFolder.run(test.id, test.folder_id);
-        if (result.changes > 0) {
-          migratedCount++;
-        }
-      }
-    });
-    
-    if (migratedCount > 0) {
-      console.log(`Migrated ${migratedCount} test-folder relationships.`);
-    } else {
-      console.log('All test-folder relationships are already up to date.');
+  } else {
+    // 未分類フォルダ確認
+    const uncategorized = db.prepare("SELECT id FROM folders WHERE name = ?").get("未分類");
+    if (!uncategorized) {
+      db.prepare("INSERT INTO folders (name) VALUES (?)").run("未分類");
     }
-  } catch (error) {
-    console.error('Error migrating test-folder relationships:', error);
   }
 
-  // 初期データの投入(タグが存在しない場合) - サンプルデータは削除
-  // ユーザーが管理者メニューから自由に作成できます
+  // 学年
+  const gradeCount = db.prepare("SELECT COUNT(*) as count FROM grades").get() as { count: number };
+  if (gradeCount.count === 0) {
+    const insertGrade = db.prepare("INSERT INTO grades (name, display_order) VALUES (?, ?)");
+    const grades = [
+      ["小1", 1], ["小2", 2], ["小3", 3], ["小4", 4], ["小5", 5], ["小6", 6],
+      ["中1", 7], ["中2", 8], ["中3", 9],
+      ["高1", 10], ["高2", 11], ["高3", 12]
+    ];
+    const transaction = db.transaction((grades) => {
+      grades.forEach(([name, order]: [string, number]) => insertGrade.run(name, order));
+    });
+    transaction(grades);
+  }
 
-  // サンプルテストデータの投入 - 削除
-  // ユーザーが自由にテストを作成できます
+  // 科目
+  const subjectCount = db.prepare("SELECT COUNT(*) as count FROM subjects").get() as { count: number };
+  if (subjectCount.count === 0) {
+    const insertSubject = db.prepare("INSERT INTO subjects (name, display_order) VALUES (?, ?)");
+    const subjects = [
+      ["国語", 1], ["数学", 2], ["算数", 3], ["英語", 4], ["理科", 5], ["社会", 6],
+      ["物理", 7], ["化学", 8], ["生物", 9], ["地学", 10],
+      ["日本史", 11], ["世界史", 12], ["地理", 13], ["公民", 14]
+    ];
+    const transaction = db.transaction((subjects) => {
+      subjects.forEach(([name, order]: [string, number]) => insertSubject.run(name, order));
+    });
+    transaction(subjects);
+  }
 }
 
-// データベース初期化の実行
+function migrateData() {
+  // tests.folder_id -> test_folders
+  try {
+    const allTests = db.prepare("SELECT id, folder_id FROM tests").all() as { id: number; folder_id: number }[];
+    const insertTestFolder = db.prepare("INSERT OR IGNORE INTO test_folders (test_id, folder_id) VALUES (?, ?)");
+    let migratedCount = 0;
+    
+    const transaction = db.transaction((tests) => {
+      tests.forEach((test: { id: number; folder_id: number }) => {
+        if (test.folder_id) {
+          const result = insertTestFolder.run(test.id, test.folder_id);
+          if (result.changes > 0) migratedCount++;
+        }
+      });
+    });
+    
+    transaction(allTests);
+
+    if (migratedCount > 0) {
+      console.log(`Migrated ${migratedCount} test-folder relationships.`);
+    }
+  } catch (error) {
+    console.error("Error migrating test-folder relationships:", error);
+  }
+}
+
+// 初期化実行
 initializeDatabase();
+
+// バックアップ開始
+startBackupScheduler();
 
 export default db;

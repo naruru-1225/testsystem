@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>テスト管理システム - 機能テストダッシュボード</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 30px;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 10px;
+      }
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .stat-card h3 {
+        font-size: 36px;
+        margin-bottom: 5px;
+      }
+      .stat-card p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+      .test-section {
+        margin-bottom: 30px;
+      }
+      .test-section h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .test-list {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+      }
+      .test-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: white;
+        border-radius: 5px;
+        border-left: 4px solid #ddd;
+      }
+      .test-item.running {
+        border-left-color: #ffc107;
+      }
+      .test-item.success {
+        border-left-color: #28a745;
+      }
+      .test-item.failed {
+        border-left-color: #dc3545;
+      }
+      .test-item.pending {
+        border-left-color: #6c757d;
+      }
+      .test-name {
+        font-weight: 500;
+        color: #333;
+      }
+      .test-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .status-pending {
+        background: #6c757d;
+        color: white;
+      }
+      .status-running {
+        background: #ffc107;
+        color: #333;
+      }
+      .status-success {
+        background: #28a745;
+        color: white;
+      }
+      .status-failed {
+        background: #dc3545;
+        color: white;
+      }
+      .test-button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .test-button:hover {
+        background: #5568d3;
+      }
+      .test-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .result-details {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f1f3f5;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        display: none;
+      }
+      .result-details.show {
+        display: block;
+      }
+      .run-all-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 20px;
+        width: 100%;
+      }
+      .run-all-btn:hover {
+        background: #218838;
+      }
+      .loader {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-left: 10px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 テスト管理システム - 機能テストダッシュボード</h1>
+      <p class="subtitle">
+        開発サーバーが http://localhost:3000
+        で起動している状態で実行してください
+      </p>
+
+      <div class="stats">
+        <div class="stat-card">
+          <h3 id="total-tests">0</h3>
+          <p>総テスト数</p>
+        </div>
+        <div
+          class="stat-card"
+          style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%)"
+        >
+          <h3 id="passed-tests">0</h3>
+          <p>成功</p>
+        </div>
+        <div
+          class="stat-card"
+          style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)"
+        >
+          <h3 id="failed-tests">0</h3>
+          <p>失敗</p>
+        </div>
+        <div
+          class="stat-card"
+          style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)"
+        >
+          <h3 id="success-rate">0%</h3>
+          <p>成功率</p>
+        </div>
+      </div>
+
+      <button class="run-all-btn" onclick="runAllTests()">
+        🚀 すべてのテストを実行
+      </button>
+
+      <!-- Folders API Tests -->
+      <div class="test-section">
+        <h2>📁 Folders API テスト</h2>
+        <div class="test-list" id="folders-tests"></div>
+      </div>
+
+      <!-- Categories API Tests -->
+      <div class="test-section">
+        <h2>📚 Categories API テスト</h2>
+        <div class="test-list" id="categories-tests"></div>
+      </div>
+
+      <!-- Tags API Tests -->
+      <div class="test-section">
+        <h2>🏷️ Tags API テスト</h2>
+        <div class="test-list" id="tags-tests"></div>
+      </div>
+
+      <!-- Tests API Tests -->
+      <div class="test-section">
+        <h2>📝 Tests API テスト</h2>
+        <div class="test-list" id="tests-tests"></div>
+      </div>
+
+      <!-- PDF API Tests -->
+      <div class="test-section">
+        <h2>📄 PDF API テスト</h2>
+        <div class="test-list" id="pdf-tests"></div>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:3000";
+      let totalTests = 0;
+      let passedTests = 0;
+      let failedTests = 0;
+
+      const tests = {
+        folders: [
+          {
+            name: "GET /api/folders - フォルダ一覧を取得",
+            test: testGetFolders,
+          },
+          {
+            name: "GET /api/folders - order_indexでソート",
+            test: testFoldersSort,
+          },
+          {
+            name: "POST /api/folders - 新規フォルダ作成",
+            test: testCreateFolder,
+          },
+          {
+            name: "PUT /api/folders - フォルダ順序更新",
+            test: testUpdateFolderOrder,
+          },
+        ],
+        categories: [
+          {
+            name: "GET /api/categories - カテゴリ一覧取得",
+            test: testGetCategories,
+          },
+          { name: "GET /api/categories - 学年マスター確認", test: testGrades },
+          {
+            name: "GET /api/categories - 科目マスター確認",
+            test: testSubjects,
+          },
+        ],
+        tags: [
+          { name: "GET /api/tags - タグ一覧取得", test: testGetTags },
+          { name: "POST /api/tags - 新規タグ作成", test: testCreateTag },
+        ],
+        tests: [
+          { name: "GET /api/tests - テスト一覧取得", test: testGetTests },
+          {
+            name: "GET /api/tests?folder=1 - フォルダフィルタ",
+            test: testFilterByFolder,
+          },
+          {
+            name: "GET /api/tests?search=テスト - キーワード検索",
+            test: testSearch,
+          },
+        ],
+        pdf: [
+          {
+            name: "GET /api/pdf/[...path] - 404エラー確認",
+            test: testPdfNotFound,
+          },
+        ],
+      };
+
+      function initTests() {
+        for (const [section, sectionTests] of Object.entries(tests)) {
+          const container = document.getElementById(`${section}-tests`);
+          sectionTests.forEach((test, index) => {
+            const testItem = document.createElement("div");
+            testItem.className = "test-item pending";
+            testItem.id = `test-${section}-${index}`;
+            testItem.innerHTML = `
+                        <span class="test-name">${test.name}</span>
+                        <div>
+                            <span class="test-status status-pending" id="status-${section}-${index}">未実行</span>
+                            <button class="test-button" onclick="runTest('${section}', ${index})">実行</button>
+                        </div>
+                        <div class="result-details" id="result-${section}-${index}"></div>
+                    `;
+            container.appendChild(testItem);
+            totalTests++;
+          });
+        }
+        updateStats();
+      }
+
+      async function runTest(section, index) {
+        const testItem = document.getElementById(`test-${section}-${index}`);
+        const statusEl = document.getElementById(`status-${section}-${index}`);
+        const resultEl = document.getElementById(`result-${section}-${index}`);
+
+        testItem.className = "test-item running";
+        statusEl.className = "test-status status-running";
+        statusEl.innerHTML = '実行中... <span class="loader"></span>';
+        resultEl.classList.remove("show");
+
+        try {
+          const result = await tests[section][index].test();
+          testItem.className = "test-item success";
+          statusEl.className = "test-status status-success";
+          statusEl.textContent = "✅ 成功";
+          resultEl.textContent = result.message || "成功";
+          resultEl.style.color = "#28a745";
+          passedTests++;
+        } catch (error) {
+          testItem.className = "test-item failed";
+          statusEl.className = "test-status status-failed";
+          statusEl.textContent = "❌ 失敗";
+          resultEl.textContent = error.message;
+          resultEl.style.color = "#dc3545";
+          failedTests++;
+        }
+
+        resultEl.classList.add("show");
+        updateStats();
+      }
+
+      async function runAllTests() {
+        passedTests = 0;
+        failedTests = 0;
+
+        for (const [section, sectionTests] of Object.entries(tests)) {
+          for (let i = 0; i < sectionTests.length; i++) {
+            await runTest(section, i);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+        }
+      }
+
+      function updateStats() {
+        document.getElementById("total-tests").textContent = totalTests;
+        document.getElementById("passed-tests").textContent = passedTests;
+        document.getElementById("failed-tests").textContent = failedTests;
+        const successRate =
+          totalTests > 0 ? ((passedTests / totalTests) * 100).toFixed(1) : 0;
+        document.getElementById("success-rate").textContent = `${successRate}%`;
+      }
+
+      // Test implementations
+      async function testGetFolders() {
+        const response = await fetch(`${BASE_URL}/api/folders`);
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        if (data.length === 0) throw new Error("フォルダが0件です");
+        return { message: `${data.length}件のフォルダを取得` };
+      }
+
+      async function testFoldersSort() {
+        const response = await fetch(`${BASE_URL}/api/folders`);
+        const data = await response.json();
+        for (let i = 0; i < data.length - 1; i++) {
+          const current = data[i].order_index ?? data[i].id;
+          const next = data[i + 1].order_index ?? data[i + 1].id;
+          if (current > next) {
+            throw new Error(`順序が正しくありません: ${current} > ${next}`);
+          }
+        }
+        return { message: "order_indexでソートされています" };
+      }
+
+      async function testCreateFolder() {
+        const response = await fetch(`${BASE_URL}/api/folders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: `テストフォルダ_${Date.now()}` }),
+        });
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!data.id) throw new Error("IDが返されません");
+
+        // 作成したフォルダを削除
+        await fetch(`${BASE_URL}/api/folders/${data.id}`, { method: "DELETE" });
+        return { message: `フォルダ作成成功 (ID: ${data.id})` };
+      }
+
+      async function testUpdateFolderOrder() {
+        const response = await fetch(`${BASE_URL}/api/folders`);
+        const folders = await response.json();
+        const folderIds = folders.map((f) => f.id);
+
+        const updateResponse = await fetch(`${BASE_URL}/api/folders`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folderIds }),
+        });
+
+        if (!updateResponse.ok)
+          throw new Error(`ステータスコード: ${updateResponse.status}`);
+        const data = await updateResponse.json();
+        if (!data.success) throw new Error("success=trueが返されません");
+        return { message: `${folderIds.length}件のフォルダ順序を更新` };
+      }
+
+      async function testGetCategories() {
+        const response = await fetch(`${BASE_URL}/api/categories`);
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        return { message: `${data.length}件の学年カテゴリを取得` };
+      }
+
+      async function testGrades() {
+        const response = await fetch(`${BASE_URL}/api/categories`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        if (data.length === 0) throw new Error("テストが存在する学年が0件です");
+
+        // 各カテゴリに grade プロパティがあることを確認
+        for (const category of data) {
+          if (!category.grade) {
+            throw new Error("gradeプロパティが見つかりません");
+          }
+        }
+        return { message: `テストが存在する学年: ${data.length}件` };
+      }
+
+      async function testSubjects() {
+        const response = await fetch(`${BASE_URL}/api/categories`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+
+        let totalSubjects = 0;
+        for (const category of data) {
+          if (!Array.isArray(category.subjects)) {
+            throw new Error(
+              `学年「${category.grade}」のsubjectsが配列ではありません`
+            );
+          }
+          totalSubjects += category.subjects.length;
+        }
+
+        if (totalSubjects === 0) throw new Error("科目が1件も見つかりません");
+        return { message: `合計 ${totalSubjects}件の科目を確認` };
+      }
+
+      async function testGetTags() {
+        const response = await fetch(`${BASE_URL}/api/tags`);
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        return { message: `${data.length}件のタグを取得` };
+      }
+
+      async function testCreateTag() {
+        const response = await fetch(`${BASE_URL}/api/tags`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: `テストタグ_${Date.now()}`,
+            color: "#FF5733",
+          }),
+        });
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!data.id) throw new Error("IDが返されません");
+
+        // 作成したタグを削除
+        await fetch(`${BASE_URL}/api/tags/${data.id}`, { method: "DELETE" });
+        return { message: `タグ作成成功 (ID: ${data.id})` };
+      }
+
+      async function testGetTests() {
+        const response = await fetch(`${BASE_URL}/api/tests`);
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        return { message: `${data.length}件のテストを取得` };
+      }
+
+      async function testFilterByFolder() {
+        const response = await fetch(`${BASE_URL}/api/tests?folder=1`);
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        return { message: `フォルダID=1: ${data.length}件のテスト` };
+      }
+
+      async function testSearch() {
+        const response = await fetch(
+          `${BASE_URL}/api/tests?search=${encodeURIComponent("テスト")}`
+        );
+        if (!response.ok)
+          throw new Error(`ステータスコード: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("レスポンスが配列ではありません");
+        return { message: `検索結果: ${data.length}件` };
+      }
+
+      async function testPdfNotFound() {
+        const response = await fetch(
+          `${BASE_URL}/api/pdf/pdfs/nonexistent.pdf`
+        );
+        if (response.status !== 404)
+          throw new Error(`期待: 404, 実際: ${response.status}`);
+        return { message: "404エラーが正しく返されました" };
+      }
+
+      // Initialize
+      initTests();
+    </script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import TestCreateForm from '@/components/TestCreateForm';
+import TestCreateForm from "@/components/TestCreateForm";
 
 /**
  * テスト新規登録ページ
