@@ -290,21 +290,21 @@ export default function PdfViewer({
     }
   }, [activeTab, currentFile, workerReady]);
 
-  // タイムアウト監視: loading状態が5秒以上続く場合、フォールバックモードへ
+  // タイムアウト監視: loading状態が15秒以上続く場合、フォールバックモードへ
   useEffect(() => {
     if (currentFileType !== "pdf" || !workerReady || useFallback) {
       return;
     }
 
     if (loading && currentPdf) {
-      console.log("⏰⏰⏰ [v3.2-FINAL] loading監視開始: 5秒後にタイムアウト");
+      console.log("⏰⏰⏰ [v3.2-FINAL] loading監視開始: 15秒後にタイムアウト");
       const timeoutId = setTimeout(() => {
         console.log("⏱️⏱️⏱️ [v3.2-FINAL] PDF読み込みタイムアウト検出!");
         console.log("⏱️⏱️⏱️ [v3.2-FINAL] フォールバックモード起動");
         console.log("⏱️⏱️⏱️ [v3.2-FINAL] Safari 16検出:", detectOldSafari());
         setUseFallback(true);
         setLoading(false);
-      }, 5000);
+      }, 15000);
 
       return () => {
         console.log("🔄🔄🔄 [v3.2-FINAL] loading状態変化 - タイムアウトクリア");
