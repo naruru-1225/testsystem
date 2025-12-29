@@ -15,7 +15,7 @@ export const PAPER_SIZES = {
 export type PaperSize = keyof typeof PAPER_SIZES;
 
 /**
- * PDFを指定した用紙サイズに変換
+ * PDFを指定した用紙サイズに変換（縦横自動判定対応）
  * @param inputPath 元PDFのパス
  * @param outputPath 出力PDFのパス
  * @param targetSize 変換先の用紙サイズ
@@ -32,7 +32,6 @@ export async function convertPdfSize(
     
     // 新しいPDFを作成
     const newPdf = await PDFDocument.create();
-    const targetDims = PAPER_SIZES[targetSize];
     
     // 各ページを変換
     const pages = pdfDoc.getPages();
@@ -40,6 +39,20 @@ export async function convertPdfSize(
     for (let i = 0; i < pages.length; i++) {
       const originalPage = pages[i];
       const { width: origWidth, height: origHeight } = originalPage.getSize();
+      
+      // 元ページの向きを判定
+      const isOriginalLandscape = origWidth > origHeight;
+      
+      // ターゲットサイズの取得（向きに応じて回転）
+      let targetDims: { width: number; height: number };
+      if (isOriginalLandscape) {
+        // 横向きの場合は幅と高さを入れ替え
+        targetDims = { width: PAPER_SIZES[targetSize].height, height: PAPER_SIZES[targetSize].width };
+      } else {
+        targetDims = { width: PAPER_SIZES[targetSize].width, height: PAPER_SIZES[targetSize].height };
+      }
+      
+      console.log(`[PDF] Page ${i + 1}: Original ${origWidth.toFixed(0)}x${origHeight.toFixed(0)} (${isOriginalLandscape ? 'landscape' : 'portrait'}) -> Target ${targetSize} ${targetDims.width}x${targetDims.height}`);
       
       // スケール計算（余白なしでフィット）
       const scaleX = targetDims.width / origWidth;
@@ -84,9 +97,9 @@ export async function convertPdfSize(
 }
 
 /**
- * 元PDFのサイズを検出
+ * 元PDFのサイズと向きを検出
  * @param pdfPath PDFファイルのパス
- * @returns 検出されたサイズ名、または 'CUSTOM'
+ * @returns 検出されたサイズ名と向き、または 'CUSTOM'
  */
 export async function detectPdfSize(pdfPath: string): Promise<PaperSize | 'CUSTOM'> {
   try {
@@ -98,10 +111,21 @@ export async function detectPdfSize(pdfPath: string): Promise<PaperSize | 'CUSTO
     // 許容誤差（±5pt）
     const tolerance = 5;
     
+    // 縦向きチェック
     for (const [sizeName, dims] of Object.entries(PAPER_SIZES)) {
       if (
         Math.abs(width - dims.width) < tolerance &&
         Math.abs(height - dims.height) < tolerance
+      ) {
+        return sizeName as PaperSize;
+      }
+    }
+    
+    // 横向きチェック（幅と高さを入れ替えて確認）
+    for (const [sizeName, dims] of Object.entries(PAPER_SIZES)) {
+      if (
+        Math.abs(width - dims.height) < tolerance &&
+        Math.abs(height - dims.width) < tolerance
       ) {
         return sizeName as PaperSize;
       }
