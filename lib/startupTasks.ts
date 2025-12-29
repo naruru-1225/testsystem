@@ -37,6 +37,13 @@ export async function runStartupTasks() {
  */
 async function checkAndPerformBackup() {
   try {
+    // データベースファイルが存在しない場合はスキップ（初回起動時）
+    const dbPath = path.join(process.cwd(), 'data', 'tests.db');
+    if (!fs.existsSync(dbPath)) {
+      console.log('[Startup] Database not found. Skipping backup (first startup).');
+      return;
+    }
+    
     const lastBackupTime = getLastBackupTime();
     
     if (lastBackupTime === 0) {
