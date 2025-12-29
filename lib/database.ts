@@ -1,5 +1,5 @@
 import db from "./db-instance";
-import { startBackupScheduler } from "./backupScheduler";
+import { runStartupTasks } from "./startupTasks";
 import { addColumnIfNotExists } from "./db-helpers";
 import {
   FOLDERS_TABLE_SCHEMA,
@@ -190,7 +190,7 @@ function migrateData() {
 // 初期化実行
 initializeDatabase();
 
-// バックアップ開始
-startBackupScheduler();
+// 起動時タスク実行（バックアップチェック、PDFキャッシュクリーンアップ）
+runStartupTasks();
 
 export default db;
