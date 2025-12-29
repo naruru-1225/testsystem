@@ -1,0 +1,115 @@
+import { PDFDocument } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * 用紙サイズの定義（ポイント単位：1pt = 1/72 inch）
+ */
+export const PAPER_SIZES = {
+  A3: { width: 842, height: 1191 },  // 297 x 420 mm
+  A4: { width: 595, height: 842 },   // 210 x 297 mm
+  B4: { width: 729, height: 1032 },  // 257 x 364 mm
+  B5: { width: 516, height: 729 },   // 182 x 257 mm
+} as const;
+
+export type PaperSize = keyof typeof PAPER_SIZES;
+
+/**
+ * PDFを指定した用紙サイズに変換
+ * @param inputPath 元PDFのパス
+ * @param outputPath 出力PDFのパス
+ * @param targetSize 変換先の用紙サイズ
+ */
+export async function convertPdfSize(
+  inputPath: string,
+  outputPath: string,
+  targetSize: PaperSize
+): Promise<void> {
+  try {
+    // 元PDFを読み込み
+    const existingPdfBytes = fs.readFileSync(inputPath);
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    
+    // 新しいPDFを作成
+    const newPdf = await PDFDocument.create();
+    const targetDims = PAPER_SIZES[targetSize];
+    
+    // 各ページを変換
+    const pages = pdfDoc.getPages();
+    
+    for (let i = 0; i < pages.length; i++) {
+      const originalPage = pages[i];
+      const { width: origWidth, height: origHeight } = originalPage.getSize();
+      
+      // スケール計算（余白なしでフィット）
+      const scaleX = targetDims.width / origWidth;
+      const scaleY = targetDims.height / origHeight;
+      const scale = Math.min(scaleX, scaleY); // アスペクト比を保持
+      
+      // 新しいページを作成
+      const newPage = newPdf.addPage([targetDims.width, targetDims.height]);
+      
+      // 元ページを埋め込み
+      const [embeddedPage] = await newPdf.embedPdf(pdfDoc, [i]);
+      
+      // 中央配置で描画
+      const scaledWidth = origWidth * scale;
+      const scaledHeight = origHeight * scale;
+      const x = (targetDims.width - scaledWidth) / 2;
+      const y = (targetDims.height - scaledHeight) / 2;
+      
+      newPage.drawPage(embeddedPage, {
+        x,
+        y,
+        width: scaledWidth,
+        height: scaledHeight,
+      });
+    }
+    
+    // 出力ディレクトリが存在しない場合は作成
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    // PDFを保存
+    const pdfBytes = await newPdf.save();
+    fs.writeFileSync(outputPath, pdfBytes);
+    
+    console.log(`[PDF] Converted to ${targetSize}: ${outputPath}`);
+  } catch (error) {
+    console.error(`[PDF] Error converting PDF to ${targetSize}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * 元PDFのサイズを検出
+ * @param pdfPath PDFファイルのパス
+ * @returns 検出されたサイズ名、または 'CUSTOM'
+ */
+export async function detectPdfSize(pdfPath: string): Promise<PaperSize | 'CUSTOM'> {
+  try {
+    const pdfBytes = fs.readFileSync(pdfPath);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const firstPage = pdfDoc.getPages()[0];
+    const { width, height } = firstPage.getSize();
+    
+    // 許容誤差（±5pt）
+    const tolerance = 5;
+    
+    for (const [sizeName, dims] of Object.entries(PAPER_SIZES)) {
+      if (
+        Math.abs(width - dims.width) < tolerance &&
+        Math.abs(height - dims.height) < tolerance
+      ) {
+        return sizeName as PaperSize;
+      }
+    }
+    
+    return 'CUSTOM';
+  } catch (error) {
+    console.error('[PDF] Error detecting PDF size:', error);
+    return 'CUSTOM';
+  }
+}

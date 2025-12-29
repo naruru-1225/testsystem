@@ -10,6 +10,7 @@ interface PdfViewerProps {
   pdfUrl: string | null;
   attachments?: TestAttachment[];
   testName?: string;
+  testId?: number; // テストID（サイズ変換用）
   onClose: () => void;
 }
 
@@ -40,6 +41,7 @@ export default function PdfViewer({
   pdfUrl,
   attachments = [],
   testName,
+  testId,
   onClose,
 }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
@@ -55,6 +57,7 @@ export default function PdfViewer({
   >("pdf");
   const [workerReady, setWorkerReady] = useState(false); // Worker設定完了フラグ
   const [useFallback, setUseFallback] = useState(false); // Safari 16フォールバックフラグ
+  const [selectedSize, setSelectedSize] = useState<string | null>(null); // 選択された用紙サイズ
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -195,7 +198,19 @@ export default function PdfViewer({
     () => allFiles[activeTab] || null,
     [allFiles, activeTab]
   );
-  const currentPdf = currentFile?.path || null;
+  
+  // サイズが選択されている場合は変換APIのURLを使用
+  const currentPdf = useMemo(() => {
+    if (!currentFile?.path) return null;
+    
+    // メインPDFでサイズが選択されている場合
+    if (activeTab === 0 && selectedSize && testId && pdfUrl) {
+      const encodedPath = encodeURIComponent(pdfUrl);
+      return `/api/pdf/sized?testId=${testId}&size=${selectedSize}&pdfPath=${encodedPath}`;
+    }
+    
+    return currentFile.path;
+  }, [currentFile, selectedSize, testId, pdfUrl, activeTab]);
 
   // PDF.js options をメモ化して不要な再レンダリングを防ぐ
   // iPad Safari対応: withCredentialsをfalseに設定
@@ -614,6 +629,31 @@ export default function PdfViewer({
             >
               100%
             </button>
+
+            {/* 用紙サイズ選択（メインPDFのみ） */}
+            {activeTab === 0 && testId && currentFileType === "pdf" && (
+              <div className="ml-4 border-l border-gray-300 pl-4">
+                <select
+                  value={selectedSize || ""}
+                  onChange={(e) => {
+                    const newSize = e.target.value || null;
+                    setSelectedSize(newSize);
+                    // サイズ変更時にPDFを再読み込み
+                    if (newSize) {
+                      setLoading(true);
+                      setPdfKey((prev) => prev + 1);
+                    }
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">元のサイズ</option>
+                  <option value="A3">A3</option>
+                  <option value="A4">A4</option>
+                  <option value="B4">B4</option>
+                  <option value="B5">B5</option>
+                </select>
+              </div>
+            )}
 
             {/* 印刷ボタン */}
             <div className="ml-4 border-l border-gray-300 pl-4">

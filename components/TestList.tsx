@@ -551,6 +551,7 @@ export default function TestList() {
           pdfUrl={selectedPdfUrl}
           attachments={testAttachments}
           testName={selectedTest.name}
+          testId={selectedTest.id}
           onClose={handleClosePdfViewer}
         />
       )}

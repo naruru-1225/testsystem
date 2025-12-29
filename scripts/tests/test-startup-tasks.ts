@@ -1,5 +1,5 @@
 // テスト: 起動時タスクの動作確認
-import { runStartupTasks } from '../lib/startupTasks';
+import { runStartupTasks } from '../../lib/startupTasks';
 
 console.log('起動時タスクのテストを開始します...\n');
 
