@@ -1,5 +1,5 @@
-import db from "../db-instance";
-import { getDescendantFolderIds } from "../db-helpers";
+import db from "../db/db-instance";
+import { getDescendantFolderIds } from "../db/db-helpers";
 import type { Test, Tag, Folder, TestWithTags, TestAttachment } from "@/types/database";
 
 export interface TestFilters {

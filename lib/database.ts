@@ -1,6 +1,6 @@
-import db from "./db-instance";
+import db from "./db/db-instance";
 import { runStartupTasks } from "./startupTasks";
-import { addColumnIfNotExists } from "./db-helpers";
+import { addColumnIfNotExists } from "./db/db-helpers";
 import {
   FOLDERS_TABLE_SCHEMA,
   TESTS_TABLE_SCHEMA,
@@ -8,7 +8,7 @@ import {
   TAGS_TABLE_SCHEMA,
   TEST_TAGS_TABLE_SCHEMA,
   TEST_ATTACHMENTS_TABLE_SCHEMA,
-} from "./db-schema";
+} from "./db/db-schema";
 
 /**
  * データベース管理クラス

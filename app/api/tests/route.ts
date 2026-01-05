@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { testRepository } from "@/lib/repositories/testRepository";
 import { folderRepository } from "@/lib/repositories/folderRepository";
 import { withErrorHandling, validationError } from "@/lib/api-utils";
-import db from "@/lib/db-instance"; // For uncategorized folder check if needed, or use repository
+import db from "@/lib/db/db-instance"; // For uncategorized folder check if needed, or use repository
 
 /**
  * テスト一覧取得API

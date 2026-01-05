@@ -1,4 +1,4 @@
-import db from "../db-instance";
+import db from "../db/db-instance";
 
 export interface Subject {
   id: number;
