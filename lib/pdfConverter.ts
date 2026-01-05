@@ -52,12 +52,17 @@ export async function convertPdfSize(
         targetDims = { width: PAPER_SIZES[targetSize].width, height: PAPER_SIZES[targetSize].height };
       }
       
-      console.log(`[PDF] Page ${i + 1}: Original ${origWidth.toFixed(0)}x${origHeight.toFixed(0)} (${isOriginalLandscape ? 'landscape' : 'portrait'}) -> Target ${targetSize} ${targetDims.width}x${targetDims.height}`);
-      
-      // スケール計算（余白なしでフィット）
+      // スケール計算（よりフィットする方を選択）
       const scaleX = targetDims.width / origWidth;
       const scaleY = targetDims.height / origHeight;
-      const scale = Math.min(scaleX, scaleY); // アスペクト比を保持
+      
+      // 両方のスケールがほぼ同じ（差が0.5%以内）の場合は大きい方を使用
+      // これにより余白を最小化
+      const scaleDiff = Math.abs(scaleX - scaleY);
+      const avgScale = (scaleX + scaleY) / 2;
+      const scale = (scaleDiff / avgScale < 0.005) ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
+      
+      console.log(`[PDF] Page ${i + 1}: Original ${origWidth.toFixed(0)}x${origHeight.toFixed(0)} (${isOriginalLandscape ? 'landscape' : 'portrait'}) -> Target ${targetSize} ${targetDims.width}x${targetDims.height}, Scale: ${scale.toFixed(4)}`);
       
       // 新しいページを作成
       const newPage = newPdf.addPage([targetDims.width, targetDims.height]);
