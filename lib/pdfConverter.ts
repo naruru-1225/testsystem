@@ -90,6 +90,19 @@ export async function convertPdfSize(
       fs.mkdirSync(outputDir, { recursive: true });
     }
     
+    // 印刷設定を埋め込む（ViewerPreferences）
+    // PrintScaling: None = 印刷時にスケーリングしない（実際のサイズで印刷）
+    // これにより、プリンタがPDFのページサイズに合った用紙を選択する可能性が高まる
+    const catalog = newPdf.catalog;
+    const viewerPrefsDict = newPdf.context.obj({
+      PrintScaling: 'None',           // 印刷時のスケーリングを無効化
+      Duplex: 'None',                 // 両面印刷設定
+      PickTrayByPDFSize: true,        // PDFのページサイズに基づいて給紙トレイを選択
+    });
+    catalog.set(newPdf.context.obj('ViewerPreferences'), viewerPrefsDict);
+    
+    console.log(`[PDF] Set ViewerPreferences: PrintScaling=None, PickTrayByPDFSize=true`);
+    
     // PDFを保存
     const pdfBytes = await newPdf.save();
     fs.writeFileSync(outputPath, pdfBytes);

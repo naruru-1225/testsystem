@@ -418,16 +418,22 @@ export default function PdfViewer({
         // 画像の場合は、印刷用ウィンドウを作成
         const printWindow = window.open("", "_blank");
         if (printWindow) {
+          // 画像用の用紙サイズCSS
+          const pageSizeCSS = selectedSize 
+            ? `@page { size: ${selectedSize}; margin: 0; }`
+            : "@page { margin: 10mm; }";
+          
           printWindow.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
               <title>印刷 - ${currentFile?.name || "画像"}</title>
               <style>
+                ${pageSizeCSS}
                 body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
                 img { max-width: 100%; height: auto; }
                 @media print {
-                  body { padding: 0; }
+                  body { padding: 0; margin: 0; }
                   img { max-width: 100%; height: auto; page-break-inside: avoid; }
                 }
               </style>
@@ -446,13 +452,11 @@ export default function PdfViewer({
           );
         }
       } else {
-        // PDFの場合は従来通り
+        // PDFの場合: 新しいタブで開く
+        // 注意: PDFにはViewerPreferences（PrintScaling: None, PickTrayByPDFSize: true）が
+        // 埋め込まれているため、プリンタが自動的に正しい用紙サイズを選択する
         const printWindow = window.open(currentPdf, "_blank");
-        if (printWindow) {
-          printWindow.onload = () => {
-            printWindow.print();
-          };
-        } else {
+        if (!printWindow) {
           alert(
             "ポップアップがブロックされました。ブラウザの設定を確認してください。"
           );
