@@ -8,6 +8,7 @@ const CACHE_DIR = path.join(process.cwd(), 'public', 'pdf-cache');
 /**
  * PDFサイズ変換API
  * GET /api/pdf/sized?testId=123&size=A3&pdfPath=/uploads/pdfs/test.pdf
+ * GET /api/pdf/sized?testId=123&size=A3&pdfPath=/uploads/attachments/test.pdf&attachment=true&tabIndex=1
  * 
  * オリジナルPDFを指定サイズに変換してキャッシュ、またはキャッシュから返す
  */
@@ -17,6 +18,8 @@ export async function GET(request: NextRequest) {
     const testId = searchParams.get('testId');
     const size = searchParams.get('size') as PaperSize;
     const pdfPath = searchParams.get('pdfPath');
+    const isAttachment = searchParams.get('attachment') === 'true';
+    const tabIndex = searchParams.get('tabIndex');
     
     // バリデーション
     if (!testId || !size || !pdfPath) {
@@ -43,9 +46,12 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // キャッシュパス
+    // キャッシュパス（添付ファイルの場合はタブインデックスを含める）
     const cacheDir = path.join(CACHE_DIR, testId);
-    const cachePath = path.join(cacheDir, `${size}.pdf`);
+    const cacheFileName = isAttachment && tabIndex 
+      ? `attachment_${tabIndex}_${size}.pdf` 
+      : `${size}.pdf`;
+    const cachePath = path.join(cacheDir, cacheFileName);
     
     // キャッシュが存在する場合
     if (fs.existsSync(cachePath)) {
@@ -53,20 +59,20 @@ export async function GET(request: NextRequest) {
       const now = new Date();
       fs.utimesSync(cachePath, now, now);
       
-      console.log(`[PDF API] Cache hit: ${testId}/${size}.pdf`);
+      console.log(`[PDF API] Cache hit: ${testId}/${cacheFileName}`);
       
       // キャッシュファイルを返す
       const pdfBuffer = fs.readFileSync(cachePath);
       return new NextResponse(pdfBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${size}.pdf"`,
+          'Content-Disposition': `inline; filename="${cacheFileName}"`,
         },
       });
     }
     
     // キャッシュが存在しない場合は生成
-    console.log(`[PDF API] Generating ${size} version for test ${testId}...`);
+    console.log(`[PDF API] Generating ${size} version for test ${testId}${isAttachment ? ` (attachment tab ${tabIndex})` : ''}...`);
     
     try {
       await convertPdfSize(originalPath, cachePath, size);
@@ -76,7 +82,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(pdfBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${size}.pdf"`,
+          'Content-Disposition': `inline; filename="${cacheFileName}"`,
         },
       });
     } catch (error) {
@@ -95,3 +101,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

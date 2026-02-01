@@ -21,7 +21,7 @@ export interface CreateTestData {
   folderIds?: number[]; // マルチフォルダ対応
   totalQuestions?: number;
   totalScore?: number;
-  attachments?: { fileName: string; filePath: string }[];
+  attachments?: { fileName: string; filePath: string; mimeType?: string; fileSize?: number }[];
 }
 
 export const testRepository = {
@@ -165,10 +165,21 @@ export const testRepository = {
       // 4. 添付ファイル保存
       if (data.attachments && data.attachments.length > 0) {
         const insertAttachment = db.prepare(
-          "INSERT INTO test_attachments (test_id, file_name, file_path) VALUES (?, ?, ?)"
+          "INSERT INTO test_attachments (test_id, file_name, file_path, file_type, file_size) VALUES (?, ?, ?, ?, ?)"
         );
         for (const attachment of data.attachments) {
-          insertAttachment.run(testId, attachment.fileName, attachment.filePath);
+          // mimeTypeがない場合は拡張子から推測
+          let fileType = attachment.mimeType || 'application/octet-stream';
+          if (!attachment.mimeType && attachment.fileName) {
+            const ext = attachment.fileName.split('.').pop()?.toLowerCase();
+            if (ext === 'pdf') fileType = 'application/pdf';
+            else if (['jpg', 'jpeg'].includes(ext || '')) fileType = 'image/jpeg';
+            else if (ext === 'png') fileType = 'image/png';
+            else if (['heic', 'heif'].includes(ext || '')) fileType = 'image/heic';
+            else if (ext === 'gif') fileType = 'image/gif';
+            else if (ext === 'webp') fileType = 'image/webp';
+          }
+          insertAttachment.run(testId, attachment.fileName, attachment.filePath, fileType, attachment.fileSize || null);
         }
       }
 
@@ -258,10 +269,21 @@ export const testRepository = {
       // 4. 添付ファイル追加 (既存のものは削除しない、追加のみ)
       if (data.attachments && data.attachments.length > 0) {
         const insertAttachment = db.prepare(
-          "INSERT INTO test_attachments (test_id, file_name, file_path) VALUES (?, ?, ?)"
+          "INSERT INTO test_attachments (test_id, file_name, file_path, file_type, file_size) VALUES (?, ?, ?, ?, ?)"
         );
         for (const attachment of data.attachments) {
-          insertAttachment.run(id, attachment.fileName, attachment.filePath);
+          // mimeTypeがない場合は拡張子から推測
+          let fileType = attachment.mimeType || 'application/octet-stream';
+          if (!attachment.mimeType && attachment.fileName) {
+            const ext = attachment.fileName.split('.').pop()?.toLowerCase();
+            if (ext === 'pdf') fileType = 'application/pdf';
+            else if (['jpg', 'jpeg'].includes(ext || '')) fileType = 'image/jpeg';
+            else if (ext === 'png') fileType = 'image/png';
+            else if (['heic', 'heif'].includes(ext || '')) fileType = 'image/heic';
+            else if (ext === 'gif') fileType = 'image/gif';
+            else if (ext === 'webp') fileType = 'image/webp';
+          }
+          insertAttachment.run(id, attachment.fileName, attachment.filePath, fileType, attachment.fileSize || null);
         }
       }
     });

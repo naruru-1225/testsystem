@@ -57,7 +57,10 @@ export default function PdfViewer({
   >("pdf");
   const [workerReady, setWorkerReady] = useState(false); // Worker設定完了フラグ
   const [useFallback, setUseFallback] = useState(false); // Safari 16フォールバックフラグ
-  const [selectedSize, setSelectedSize] = useState<string | null>(null); // 選択された用紙サイズ
+  const [sizeByTab, setSizeByTab] = useState<Record<number, string | null>>({}); // タブごとの用紙サイズ
+
+  // 現在のタブのサイズ選択を取得
+  const selectedSize = sizeByTab[activeTab] || null;
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -124,6 +127,8 @@ export default function PdfViewer({
       path: string;
       mimeType: string;
       fileName: string;
+      originalPath?: string; // サイズ変換用の元パス
+      isMainPdf?: boolean;
     }> = [];
     if (pdfUrl) {
       const absoluteUrl = getAbsoluteUrl(pdfUrl);
@@ -157,6 +162,8 @@ export default function PdfViewer({
             path: absoluteUrl,
             mimeType: mimeType,
             fileName: `main.${extension}`,
+            originalPath: pdfUrl, // サイズ変換API用
+            isMainPdf: true,
           },
         ];
       }
@@ -189,6 +196,8 @@ export default function PdfViewer({
           path: getAbsoluteUrl(att.file_path),
           mimeType: mimeType || "application/octet-stream",
           fileName: att.file_name,
+          originalPath: att.file_path, // サイズ変換API用
+          isMainPdf: false,
         };
       }),
     ];
@@ -203,14 +212,19 @@ export default function PdfViewer({
   const currentPdf = useMemo(() => {
     if (!currentFile?.path) return null;
     
-    // メインPDFでサイズが選択されている場合
-    if (activeTab === 0 && selectedSize && testId && pdfUrl) {
-      const encodedPath = encodeURIComponent(pdfUrl);
-      return `/api/pdf/sized?testId=${testId}&size=${selectedSize}&pdfPath=${encodedPath}`;
+    // PDFでサイズが選択されている場合（メインPDF・添付PDFの両方対応）
+    if (selectedSize && testId && currentFile.originalPath) {
+      const fileType = getFileType(currentFile.mimeType, currentFile.fileName);
+      if (fileType === "pdf") {
+        const encodedPath = encodeURIComponent(currentFile.originalPath);
+        // 添付ファイルの場合はattachment識別子を追加
+        const attachmentParam = currentFile.isMainPdf ? "" : `&attachment=true&tabIndex=${activeTab}`;
+        return `/api/pdf/sized?testId=${testId}&size=${selectedSize}&pdfPath=${encodedPath}${attachmentParam}`;
+      }
     }
     
     return currentFile.path;
-  }, [currentFile, selectedSize, testId, pdfUrl, activeTab]);
+  }, [currentFile, selectedSize, testId, activeTab]);
 
   // PDF.js options をメモ化して不要な再レンダリングを防ぐ
   // iPad Safari対応: withCredentialsをfalseに設定
@@ -634,14 +648,15 @@ export default function PdfViewer({
               100%
             </button>
 
-            {/* 用紙サイズ選択（メインPDFのみ） */}
-            {activeTab === 0 && testId && currentFileType === "pdf" && (
+            {/* 用紙サイズ選択（PDFファイルで表示） */}
+            {testId && currentFileType === "pdf" && (
               <div className="ml-4 border-l border-gray-300 pl-4">
                 <select
                   value={selectedSize || ""}
                   onChange={(e) => {
                     const newSize = e.target.value || null;
-                    setSelectedSize(newSize);
+                    // タブごとにサイズを保存
+                    setSizeByTab(prev => ({ ...prev, [activeTab]: newSize }));
                     // サイズ変更時にPDFを再読み込み
                     if (newSize) {
                       setLoading(true);

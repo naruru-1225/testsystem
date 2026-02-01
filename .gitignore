@@ -42,3 +42,10 @@ next-env.d.ts
 
 # backups
 /backups
+
+# uploads (user uploaded files)
+/public/uploads
+/public/pdf-cache
+
+# large files
+lib.zip

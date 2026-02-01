@@ -55,17 +55,25 @@ export const statsRepository = {
     }[];
 
     // フォルダ別テスト数（トップ10）
+    // tests.folder_idとtest_foldersの両方からテスト数をカウント（重複排除）
     const testsByFolder = db
       .prepare(
         `
         SELECT 
           f.id,
           f.name,
-          COUNT(tf.test_id) as count
+          (
+            SELECT COUNT(DISTINCT all_tests.id)
+            FROM (
+              -- メインフォルダとして設定されているテスト
+              SELECT t.id FROM tests t WHERE t.folder_id = f.id
+              UNION
+              -- test_foldersテーブルから関連付けされているテスト
+              SELECT tf.test_id as id FROM test_folders tf WHERE tf.folder_id = f.id
+            ) as all_tests
+          ) as count
         FROM folders f
-        LEFT JOIN test_folders tf ON f.id = tf.folder_id
         WHERE f.name != '未分類' AND f.name != 'すべてのテスト'
-        GROUP BY f.id
         ORDER BY count DESC
         LIMIT 10
       `
