@@ -10,7 +10,31 @@ interface AdminModalProps {
   onExportCSV?: () => void;
 }
 
-type TabType = "folders" | "tags" | "grades" | "subjects" | "restore";
+type TabType = "folders" | "tags" | "grades" | "subjects" | "restore" | "email";
+
+interface EmailConfigState {
+  imap_host: string;
+  imap_port: number;
+  imap_user: string;
+  imap_password: string;
+  enabled: number;
+  default_subject: string;
+  default_grade: string;
+  default_folder_id: number | null;
+  default_tag_name: string;
+  name_prefix: string;
+}
+
+interface EmailImportLogEntry {
+  id: number;
+  message_id: string;
+  subject: string;
+  from_address: string;
+  file_name: string;
+  status: string;
+  error_message: string | null;
+  imported_at: string;
+}
 
 export default function AdminModal({
   isOpen,
@@ -57,6 +81,26 @@ export default function AdminModal({
   const [selectedTests, setSelectedTests] = useState<Set<number>>(new Set());
   const [backupLoading, setBackupLoading] = useState(false);
 
+  // メール設定関連
+  const [emailConfig, setEmailConfig] = useState<EmailConfigState>({
+    imap_host: "imap.gmail.com",
+    imap_port: 993,
+    imap_user: "",
+    imap_password: "",
+    enabled: 0,
+    default_subject: "未分類",
+    default_grade: "未設定",
+    default_folder_id: null,
+    default_tag_name: "自動登録",
+    name_prefix: "[自動登録]",
+  });
+  const [emailPollerRunning, setEmailPollerRunning] = useState(false);
+  const [emailImportLogs, setEmailImportLogs] = useState<EmailImportLogEntry[]>([]);
+  const [emailStats, setEmailStats] = useState({ total: 0, success: 0, error: 0 });
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailTestResult, setEmailTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
   // UI状態
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +124,126 @@ export default function AdminModal({
       fetchTags();
       fetchGrades();
       fetchSubjects();
+      fetchEmailConfig();
     }
   }, [isOpen]);
+
+  // メール設定取得
+  const fetchEmailConfig = async () => {
+    try {
+      const response = await fetch("/api/email-settings");
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.config) {
+        setEmailConfig({
+          imap_host: data.config.imap_host || "imap.gmail.com",
+          imap_port: data.config.imap_port || 993,
+          imap_user: data.config.imap_user || "",
+          imap_password: data.config.imap_password || "",
+          enabled: data.config.enabled || 0,
+          default_subject: data.config.default_subject || "未分類",
+          default_grade: data.config.default_grade || "未設定",
+          default_folder_id: data.config.default_folder_id || null,
+          default_tag_name: data.config.default_tag_name || "自動登録",
+          name_prefix: data.config.name_prefix || "[自動登録]",
+        });
+      }
+      setEmailPollerRunning(data.status?.running || false);
+      setEmailImportLogs(data.logs || []);
+      setEmailStats(data.stats || { total: 0, success: 0, error: 0 });
+    } catch (err) {
+      console.error("メール設定取得エラー:", err);
+    }
+  };
+
+  // メール設定保存
+  const handleSaveEmailConfig = async () => {
+    setEmailLoading(true);
+    setError(null);
+    setEmailTestResult(null);
+
+    try {
+      const response = await fetch("/api/email-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailConfig),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "設定の保存に失敗しました");
+      }
+
+      setSuccess("メール設定を保存しました");
+      await fetchEmailConfig();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  // 接続テスト
+  const handleTestEmailConnection = async () => {
+    setEmailLoading(true);
+    setEmailTestResult(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/email-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "test",
+          imap_host: emailConfig.imap_host,
+          imap_port: emailConfig.imap_port,
+          imap_user: emailConfig.imap_user,
+          imap_password: emailConfig.imap_password,
+        }),
+      });
+
+      const result = await response.json();
+      setEmailTestResult(result);
+
+      if (result.success) {
+        setSuccess("✅ 接続テスト成功！");
+      } else {
+        setError(`接続テスト失敗: ${result.error}`);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  // 手動メール取得
+  const handleManualFetch = async () => {
+    setEmailLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/email-fetch", {
+        method: "POST",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message);
+        if (result.imported > 0) {
+          onUpdate();
+        }
+        await fetchEmailConfig(); // ログ更新
+      } else {
+        throw new Error(result.error || "取得に失敗しました");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
 
   const fetchFolders = async () => {
     try {
@@ -851,6 +1013,19 @@ export default function AdminModal({
           >
             バックアップ復元
           </button>
+          <button
+            onClick={() => setActiveTab("email")}
+            className={`px-4 sm:px-6 h-full text-sm font-medium transition-colors whitespace-nowrap min-w-fit flex items-center gap-1 ${
+              activeTab === "email"
+                ? "text-primary border-b-2 border-primary bg-blue-50"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
+          >
+            📧 メール取込
+            {emailPollerRunning && (
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="稼働中"></span>
+            )}
+          </button>
         </div>
 
         {/* メッセージ */}
@@ -1598,6 +1773,246 @@ export default function AdminModal({
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   <p className="mt-2 text-gray-600">読み込み中...</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* メール設定タブ */}
+          {activeTab === "email" && (
+            <div className="space-y-6">
+              {/* ステータス表示 */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📧</span>
+                  <div>
+                    <h3 className="font-medium text-gray-900">メール自動取込</h3>
+                    <p className="text-sm text-gray-500">
+                      {emailPollerRunning ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
+                          稼働中（IMAP IDLE接続）
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">停止中</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">
+                    取込: {emailStats.success}件 / エラー: {emailStats.error}件
+                  </span>
+                </div>
+              </div>
+
+              {/* IMAP接続設定 */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  🔌 IMAP接続設定
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">IMAPホスト</label>
+                    <input
+                      type="text"
+                      value={emailConfig.imap_host}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, imap_host: e.target.value })}
+                      placeholder="imap.gmail.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">ポート</label>
+                    <input
+                      type="number"
+                      value={emailConfig.imap_port}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, imap_port: parseInt(e.target.value) || 993 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">メールアドレス</label>
+                    <input
+                      type="email"
+                      value={emailConfig.imap_user}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, imap_user: e.target.value })}
+                      placeholder="example@gmail.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">アプリパスワード</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={emailConfig.imap_password}
+                        onChange={(e) => setEmailConfig({ ...emailConfig, imap_password: e.target.value })}
+                        placeholder="Googleアプリパスワード"
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPassword ? "🙈" : "👁"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    onClick={handleTestEmailConnection}
+                    disabled={emailLoading || !emailConfig.imap_user}
+                    className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {emailLoading ? "テスト中..." : "🔗 接続テスト"}
+                  </button>
+                  {emailTestResult && (
+                    <span className={`text-sm ${emailTestResult.success ? "text-green-600" : "text-red-600"}`}>
+                      {emailTestResult.success ? "✅ 接続OK" : `❌ ${emailTestResult.error}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 有効/無効 */}
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700">自動取込を有効にする</h4>
+                  <p className="text-xs text-gray-500 mt-1">サーバー起動時にIMAP IDLE接続を開始し、新着メールを自動処理します</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailConfig.enabled === 1}
+                    onChange={(e) => setEmailConfig({ ...emailConfig, enabled: e.target.checked ? 1 : 0 })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+
+              {/* 自動登録の初期値設定 */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  ⚙️ 自動登録の初期値
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">テスト名プレフィックス</label>
+                    <input
+                      type="text"
+                      value={emailConfig.name_prefix}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, name_prefix: e.target.value })}
+                      placeholder="[自動登録]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">タグ名</label>
+                    <input
+                      type="text"
+                      value={emailConfig.default_tag_name}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, default_tag_name: e.target.value })}
+                      placeholder="自動登録"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">科目</label>
+                    <select
+                      value={emailConfig.default_subject}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, default_subject: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="未分類">未分類</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">学年</label>
+                    <select
+                      value={emailConfig.default_grade}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, default_grade: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="未設定">未設定</option>
+                      {grades.map((g) => (
+                        <option key={g.id} value={g.name}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">保存先フォルダ</label>
+                    <select
+                      value={emailConfig.default_folder_id || ""}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, default_folder_id: e.target.value ? parseInt(e.target.value) : null })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="">未分類（デフォルト）</option>
+                      {folders.map((f) => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* ボタン */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSaveEmailConfig}
+                  disabled={emailLoading}
+                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 font-medium text-sm"
+                >
+                  {emailLoading ? "保存中..." : "💾 設定を保存"}
+                </button>
+                <button
+                  onClick={handleManualFetch}
+                  disabled={emailLoading || !emailConfig.imap_user}
+                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors disabled:opacity-50 font-medium text-sm"
+                >
+                  {emailLoading ? "取込中..." : "📥 今すぐ取込"}
+                </button>
+              </div>
+
+              {/* 取込ログ */}
+              {emailImportLogs.length > 0 && (
+                <div className="border border-gray-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+                    📋 取込ログ（最新20件）
+                  </h4>
+                  <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                    {emailImportLogs.map((log) => (
+                      <div key={log.id} className="px-4 py-2.5 text-sm flex items-center gap-3">
+                        <span className={log.status === "success" ? "text-green-500" : "text-red-500"}>
+                          {log.status === "success" ? "✅" : "❌"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-gray-900">{log.file_name}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {log.from_address} | {log.subject}
+                          </div>
+                          {log.error_message && (
+                            <div className="text-xs text-red-500 truncate">{log.error_message}</div>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          {new Date(log.imported_at).toLocaleString("ja-JP", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

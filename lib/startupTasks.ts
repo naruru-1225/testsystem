@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { performBackup } from './backupScheduler';
+import { startEmailPoller } from './emailPoller';
 
 const BACKUP_DIR = path.join(process.cwd(), 'backups');
 const PDF_CACHE_DIR = path.join(process.cwd(), 'public', 'pdf-cache');
@@ -11,6 +12,7 @@ const CACHE_MAX_AGE_DAYS = 30;
  * サーバー起動時に実行されるタスク
  * - バックアップの確認と実行
  * - PDFキャッシュのクリーンアップ
+ * - メール自動取込の開始
  */
 export async function runStartupTasks() {
   console.log('========================================');
@@ -23,6 +25,13 @@ export async function runStartupTasks() {
     
     // 2. PDFキャッシュクリーンアップ
     await cleanupPdfCache();
+    
+    // 3. メール自動取込開始（IMAP IDLE）
+    try {
+      await startEmailPoller();
+    } catch (emailError) {
+      console.error('[Startup] メール自動取込の開始に失敗:', emailError);
+    }
     
     console.log('[Startup] All startup tasks completed.');
   } catch (error) {

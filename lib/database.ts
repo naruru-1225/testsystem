@@ -47,6 +47,40 @@ export function initializeDatabase() {
     )
   `);
 
+  // メール取込関連テーブル
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_config (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      imap_host TEXT DEFAULT 'imap.gmail.com',
+      imap_port INTEGER DEFAULT 993,
+      imap_user TEXT DEFAULT '',
+      imap_password TEXT DEFAULT '',
+      enabled INTEGER DEFAULT 0,
+      default_subject TEXT DEFAULT '未分類',
+      default_grade TEXT DEFAULT '未設定',
+      default_folder_id INTEGER,
+      default_tag_name TEXT DEFAULT '自動登録',
+      name_prefix TEXT DEFAULT '[自動登録]',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_import_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id TEXT UNIQUE,
+      uid INTEGER,
+      subject TEXT,
+      from_address TEXT,
+      file_name TEXT,
+      test_id INTEGER,
+      status TEXT DEFAULT 'success',
+      error_message TEXT,
+      imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE SET NULL
+    )
+  `);
+
   // インデックス作成
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tests_folder_id ON tests(folder_id);
@@ -59,6 +93,8 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_test_attachments_test_id ON test_attachments(test_id);
     CREATE INDEX IF NOT EXISTS idx_grades_display_order ON grades(display_order);
     CREATE INDEX IF NOT EXISTS idx_subjects_display_order ON subjects(display_order);
+    CREATE INDEX IF NOT EXISTS idx_email_import_log_message_id ON email_import_log(message_id);
+    CREATE INDEX IF NOT EXISTS idx_email_import_log_imported_at ON email_import_log(imported_at);
   `);
 
   // マイグレーション: カラム追加

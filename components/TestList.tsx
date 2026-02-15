@@ -448,9 +448,17 @@ export default function TestList() {
                                 />
                               </svg>
                               {test.name}
+                              {test.description?.includes("メールから自動登録") && (
+                                <span className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-normal whitespace-nowrap" title="メールから自動登録されたテスト">📧 自動</span>
+                              )}
                             </button>
                           ) : (
-                            <span className="text-gray-700">{test.name}</span>
+                            <span className="text-gray-700 flex items-center gap-2">
+                              {test.name}
+                              {test.description?.includes("メールから自動登録") && (
+                                <span className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-normal whitespace-nowrap" title="メールから自動登録されたテスト">📧 自動</span>
+                              )}
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm">{test.subject}</td>

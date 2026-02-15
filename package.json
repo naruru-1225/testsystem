@@ -21,6 +21,8 @@
     "@vercel/postgres": "^0.10.0",
     "better-sqlite3": "^11.7.0",
     "heic-convert": "^2.1.0",
+    "imapflow": "^1.2.9",
+    "mailparser": "^3.9.3",
     "next": "^15.1.6",
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
@@ -31,6 +33,7 @@
   "devDependencies": {
     "@capacitor/cli": "^7.4.4",
     "@types/better-sqlite3": "^7.6.11",
+    "@types/mailparser": "^3.4.6",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
