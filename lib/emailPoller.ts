@@ -72,35 +72,46 @@ export async function restartEmailPoller(): Promise<void> {
 }
 
 /**
- * 手動でメールを取得
+ * 手動でメールを取得（同時実行防止付き）
  */
-export async function manualFetch(): Promise<{ imported: number; errors: string[] }> {
-  const config = emailConfigRepository.get();
+let fetchLock = false;
 
-  if (!config || !config.imap_user || !config.imap_password) {
-    throw new Error("メール設定が不完全です");
+export async function manualFetch(): Promise<{ imported: number; errors: string[] }> {
+  if (fetchLock) {
+    return { imported: 0, errors: ["既に取り込み処理中です。しばらくお待ちください。"] };
   }
 
-  // 全体タイムアウト: 60秒
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("メール取得がタイムアウトしました（60秒）")), 60000);
-  });
+  fetchLock = true;
+  try {
+    const config = emailConfigRepository.get();
 
-  const fetchPromise = async () => {
-    const service = new EmailService(config);
-    try {
-      await service.connect();
-      const emails = await service.fetchRecentPDFs();
-      const result = await processEmails(emails, config);
-      await service.disconnect();
-      return result;
-    } catch (error) {
-      try { await service.disconnect(); } catch (e) { /* ignore */ }
-      throw error;
+    if (!config || !config.imap_user || !config.imap_password) {
+      throw new Error("メール設定が不完全です");
     }
-  };
 
-  return Promise.race([fetchPromise(), timeoutPromise]);
+    // 全体タイムアウト: 60秒
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("メール取得がタイムアウトしました（60秒）")), 60000);
+    });
+
+    const fetchPromise = async () => {
+      const service = new EmailService(config);
+      try {
+        await service.connect();
+        const emails = await service.fetchRecentPDFs();
+        const result = await processEmails(emails, config);
+        await service.disconnect();
+        return result;
+      } catch (error) {
+        try { await service.disconnect(); } catch (e) { /* ignore */ }
+        throw error;
+      }
+    };
+
+    return await Promise.race([fetchPromise(), timeoutPromise]);
+  } finally {
+    fetchLock = false;
+  }
 }
 
 /**

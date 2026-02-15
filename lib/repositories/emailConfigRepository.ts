@@ -104,7 +104,7 @@ export const emailConfigRepository = {
     errorMessage?: string;
   }): number {
     const result = db.prepare(`
-      INSERT INTO email_import_log (message_id, uid, subject, from_address, file_name, test_id, status, error_message)
+      INSERT OR IGNORE INTO email_import_log (message_id, uid, subject, from_address, file_name, test_id, status, error_message)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       log.messageId,
@@ -120,11 +120,11 @@ export const emailConfigRepository = {
   },
 
   /**
-   * Message-IDで取込済みか確認
+   * Message-IDで取込済みか確認（成功・エラー問わず）
    */
   isImported(messageId: string): boolean {
     const row = db.prepare(
-      "SELECT id FROM email_import_log WHERE message_id = ? AND status = 'success'"
+      "SELECT id FROM email_import_log WHERE message_id = ?"
     ).get(messageId);
     return !!row;
   },
