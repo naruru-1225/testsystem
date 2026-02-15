@@ -89,6 +89,7 @@ export class EmailService {
 
   /**
    * 未読メールからPDF添付を取得
+   * 直近7日間の未読メールのみ対象、最大10件まで
    */
   async fetchUnreadPDFs(): Promise<ParsedEmail[]> {
     if (!this.client) {
@@ -101,9 +102,15 @@ export class EmailService {
     const lock = await this.client.getMailboxLock("INBOX");
 
     try {
-      // 未読(UNSEEN)メールを検索
+      // 7日前の日付を計算
+      const since = new Date();
+      since.setDate(since.getDate() - 7);
+
+      console.log(`[Email] 未読メール検索中... (${since.toLocaleDateString('ja-JP')} 以降)`);
+
+      // 未読(UNSEEN) かつ 直近7日間のメールを検索
       const messages = this.client.fetch(
-        { seen: false },
+        { seen: false, since },
         {
           uid: true,
           envelope: true,
@@ -111,7 +118,15 @@ export class EmailService {
         }
       );
 
+      let count = 0;
+      const MAX_MESSAGES = 10;
+
       for await (const msg of messages) {
+        if (count >= MAX_MESSAGES) {
+          console.log(`[Email] 最大取得件数(${MAX_MESSAGES})に達しました`);
+          break;
+        }
+
         try {
           if (!msg.source) {
             console.warn(`[Email] ソースが空のメール (UID: ${msg.uid}), スキップ`);
@@ -129,14 +144,19 @@ export class EmailService {
               date: parsed.date || new Date(),
               attachments: pdfAttachments,
             });
+            console.log(`[Email] PDF添付メール発見: "${parsed.subject}" (${pdfAttachments.length}件のPDF)`);
           }
 
           // メールを既読にマーク
           await this.client!.messageFlagsAdd({ uid: msg.uid }, ["\\Seen"], { uid: true });
+          count++;
         } catch (parseError: any) {
           console.error(`[Email] メール解析エラー (UID: ${msg.uid}):`, parseError.message);
+          count++;
         }
       }
+
+      console.log(`[Email] ${count}件のメールを処理、${results.length}件にPDF添付あり`);
     } finally {
       lock.release();
     }
