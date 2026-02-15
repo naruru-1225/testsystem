@@ -43,6 +43,7 @@ export class EmailService {
         pass: this.config.imap_password,
       },
       logger: false, // ログ出力を抑制
+      connectionTimeout: 30000, // 接続タイムアウト: 30秒
     });
 
     await this.client.connect();
@@ -74,6 +75,7 @@ export class EmailService {
           pass: this.config.imap_password,
         },
         logger: false,
+        connectionTimeout: 15000, // 接続テスト用タイムアウト: 15秒
       });
 
       await testClient.connect();

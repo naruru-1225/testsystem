@@ -81,17 +81,26 @@ export async function manualFetch(): Promise<{ imported: number; errors: string[
     throw new Error("メール設定が不完全です");
   }
 
-  const service = new EmailService(config);
-  try {
-    await service.connect();
-    const emails = await service.fetchUnreadPDFs();
-    const result = await processEmails(emails, config);
-    await service.disconnect();
-    return result;
-  } catch (error) {
-    try { await service.disconnect(); } catch (e) { /* ignore */ }
-    throw error;
-  }
+  // 全体タイムアウト: 60秒
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error("メール取得がタイムアウトしました（60秒）")), 60000);
+  });
+
+  const fetchPromise = async () => {
+    const service = new EmailService(config);
+    try {
+      await service.connect();
+      const emails = await service.fetchUnreadPDFs();
+      const result = await processEmails(emails, config);
+      await service.disconnect();
+      return result;
+    } catch (error) {
+      try { await service.disconnect(); } catch (e) { /* ignore */ }
+      throw error;
+    }
+  };
+
+  return Promise.race([fetchPromise(), timeoutPromise]);
 }
 
 /**
