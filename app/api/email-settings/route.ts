@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import "@/lib/database"; // DB初期化（テーブル作成）を確実に実行
 import { emailConfigRepository } from "@/lib/repositories/emailConfigRepository";
 import { testConnection, restartEmailPoller, stopEmailPoller, getPollerStatus } from "@/lib/emailPoller";
 import { withErrorHandling } from "@/lib/api-utils";
