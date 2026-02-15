@@ -88,10 +88,11 @@ export class EmailService {
   }
 
   /**
-   * 未読メールからPDF添付を取得
-   * 直近7日間の未読メールのみ対象、最大10件まで
+   * 直近のメールからPDF添付を取得
+   * 直近7日間の全メールが対象、最大10件まで
+   * 重複チェックは呼び出し側（emailPoller）で行う
    */
-  async fetchUnreadPDFs(): Promise<ParsedEmail[]> {
+  async fetchRecentPDFs(): Promise<ParsedEmail[]> {
     if (!this.client) {
       throw new Error("IMAP未接続です");
     }
@@ -108,14 +109,14 @@ export class EmailService {
       const since = new Date();
       since.setDate(since.getDate() - 7);
 
-      // Step 1: 未読メールのUIDを検索（軽量）
-      console.log(`[Email] 未読メール検索中... (${since.toLocaleDateString('ja-JP')} 以降)`);
-      const searchResult = await this.client.search({ seen: false, since }, { uid: true });
+      // Step 1: 直近7日間の全メールのUIDを検索（既読・未読問わず）
+      console.log(`[Email] メール検索中... (${since.toLocaleDateString('ja-JP')} 以降、既読含む)`);
+      const searchResult = await this.client.search({ since }, { uid: true });
       const uids = Array.isArray(searchResult) ? searchResult : [];
-      console.log(`[Email] ${uids.length}件の未読メールが見つかりました`);
+      console.log(`[Email] ${uids.length}件のメールが見つかりました`);
 
       if (uids.length === 0) {
-        console.log("[Email] 未読メールなし、終了");
+        console.log("[Email] 対象メールなし、終了");
         return results;
       }
 
@@ -155,9 +156,6 @@ export class EmailService {
           } else {
             console.log(`[Email] UID ${uid}: PDF添付なし ("${parsed.subject}")`);
           }
-
-          // メールを既読にマーク
-          await this.client!.messageFlagsAdd(String(uid), ["\\Seen"], { uid: true });
         } catch (parseError: any) {
           console.error(`[Email] UID ${uid} 処理エラー:`, parseError.message);
         }

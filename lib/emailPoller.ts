@@ -90,7 +90,7 @@ export async function manualFetch(): Promise<{ imported: number; errors: string[
     const service = new EmailService(config);
     try {
       await service.connect();
-      const emails = await service.fetchUnreadPDFs();
+      const emails = await service.fetchRecentPDFs();
       const result = await processEmails(emails, config);
       await service.disconnect();
       return result;
@@ -120,7 +120,7 @@ async function connectAndIdle(config: EmailConfig): Promise<void> {
     await emailService.connect();
 
     // まず未読メールを処理
-    const emails = await emailService.fetchUnreadPDFs();
+    const emails = await emailService.fetchRecentPDFs();
     if (emails.length > 0) {
       await processEmails(emails, config);
     }
@@ -136,7 +136,7 @@ async function connectAndIdle(config: EmailConfig): Promise<void> {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         if (emailService) {
-          const newEmails = await emailService.fetchUnreadPDFs();
+          const newEmails = await emailService.fetchRecentPDFs();
           if (newEmails.length > 0) {
             await processEmails(newEmails, config);
           }
