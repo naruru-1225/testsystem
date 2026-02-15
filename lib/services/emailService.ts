@@ -99,66 +99,74 @@ export class EmailService {
     const results: ParsedEmail[] = [];
 
     // INBOXを開く
+    console.log("[Email] INBOXを開いています...");
     const lock = await this.client.getMailboxLock("INBOX");
+    console.log("[Email] INBOXを開きました");
 
     try {
       // 7日前の日付を計算
       const since = new Date();
       since.setDate(since.getDate() - 7);
 
+      // Step 1: 未読メールのUIDを検索（軽量）
       console.log(`[Email] 未読メール検索中... (${since.toLocaleDateString('ja-JP')} 以降)`);
+      const searchResult = await this.client.search({ seen: false, since }, { uid: true });
+      const uids = Array.isArray(searchResult) ? searchResult : [];
+      console.log(`[Email] ${uids.length}件の未読メールが見つかりました`);
 
-      // 未読(UNSEEN) かつ 直近7日間のメールを検索
-      const messages = this.client.fetch(
-        { seen: false, since },
-        {
-          uid: true,
-          envelope: true,
-          source: true,
-        }
-      );
+      if (uids.length === 0) {
+        console.log("[Email] 未読メールなし、終了");
+        return results;
+      }
 
-      let count = 0;
+      // 最大10件に制限（新しいものから）
       const MAX_MESSAGES = 10;
+      const targetUids = uids.slice(-MAX_MESSAGES);
+      console.log(`[Email] ${targetUids.length}件を処理します`);
 
-      for await (const msg of messages) {
-        if (count >= MAX_MESSAGES) {
-          console.log(`[Email] 最大取得件数(${MAX_MESSAGES})に達しました`);
-          break;
-        }
-
+      // Step 2: 各メールを個別に取得
+      for (const uid of targetUids) {
         try {
-          if (!msg.source) {
-            console.warn(`[Email] ソースが空のメール (UID: ${msg.uid}), スキップ`);
+          console.log(`[Email] UID ${uid} を取得中...`);
+          const msg = await this.client.fetchOne(
+            String(uid),
+            { uid: true, envelope: true, source: true },
+            { uid: true }
+          );
+
+          if (!msg || !msg.source) {
+            console.warn(`[Email] UID ${uid}: ソースが空、スキップ`);
             continue;
           }
+
           const parsed: ParsedMail = await simpleParser(msg.source) as ParsedMail;
           const pdfAttachments = this.extractPDFs(parsed);
 
           if (pdfAttachments.length > 0) {
             results.push({
-              messageId: parsed.messageId || `uid-${msg.uid}`,
-              uid: msg.uid,
+              messageId: parsed.messageId || `uid-${uid}`,
+              uid: uid,
               subject: parsed.subject || "件名なし",
               from: parsed.from?.text || "不明",
               date: parsed.date || new Date(),
               attachments: pdfAttachments,
             });
-            console.log(`[Email] PDF添付メール発見: "${parsed.subject}" (${pdfAttachments.length}件のPDF)`);
+            console.log(`[Email] ✅ PDF添付メール発見: "${parsed.subject}" (${pdfAttachments.length}件のPDF)`);
+          } else {
+            console.log(`[Email] UID ${uid}: PDF添付なし ("${parsed.subject}")`);
           }
 
           // メールを既読にマーク
-          await this.client!.messageFlagsAdd({ uid: msg.uid }, ["\\Seen"], { uid: true });
-          count++;
+          await this.client!.messageFlagsAdd(String(uid), ["\\Seen"], { uid: true });
         } catch (parseError: any) {
-          console.error(`[Email] メール解析エラー (UID: ${msg.uid}):`, parseError.message);
-          count++;
+          console.error(`[Email] UID ${uid} 処理エラー:`, parseError.message);
         }
       }
 
-      console.log(`[Email] ${count}件のメールを処理、${results.length}件にPDF添付あり`);
+      console.log(`[Email] 完了: ${targetUids.length}件処理、${results.length}件にPDF添付あり`);
     } finally {
       lock.release();
+      console.log("[Email] INBOXロック解放");
     }
 
     return results;
