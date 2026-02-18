@@ -312,6 +312,10 @@ export const testRepository = {
     db.prepare("DELETE FROM test_attachments WHERE id = ?").run(attachmentId);
   },
 
+  renameAttachment: (attachmentId: number, newFileName: string) => {
+    db.prepare("UPDATE test_attachments SET file_name = ? WHERE id = ?").run(newFileName, attachmentId);
+  },
+
   getCategories: () => {
     // テストに存在する学年のみを取得
     const grades = db

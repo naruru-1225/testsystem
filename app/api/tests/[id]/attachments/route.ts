@@ -69,3 +69,39 @@ export const DELETE = withErrorHandling(async (request: Request, { params }: any
     message: "添付ファイルを削除しました",
   });
 });
+
+/**
+ * テスト添付ファイル名変更API
+ * PATCH /api/tests/[id]/attachments
+ */
+export const PATCH = withErrorHandling(async (request: Request, { params }: any) => {
+  const { id } = await params;
+  const testId = parseInt(id);
+  const body = await request.json();
+  const { attachmentId, fileName } = body;
+
+  if (isNaN(testId)) {
+    return validationError("無効なテストIDです");
+  }
+
+  if (!attachmentId || !fileName || !fileName.trim()) {
+    return validationError("添付ファイルIDとファイル名を指定してください");
+  }
+
+  const attachment = testRepository.getAttachment(parseInt(attachmentId));
+
+  if (!attachment) {
+    return notFoundError("添付ファイルが見つかりません");
+  }
+
+  if (attachment.test_id !== testId) {
+    return validationError("このテストの添付ファイルではありません");
+  }
+
+  testRepository.renameAttachment(parseInt(attachmentId), fileName.trim());
+
+  return NextResponse.json({
+    success: true,
+    message: "ファイル名を変更しました",
+  });
+});

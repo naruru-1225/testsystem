@@ -38,6 +38,8 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   // 添付ファイル関連
   const [attachments, setAttachments] = useState<TestAttachment[]>([]);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [editingAttachmentId, setEditingAttachmentId] = useState<number | null>(null);
+  const [editingAttachmentName, setEditingAttachmentName] = useState("");
 
   // マスターデータ
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -558,6 +560,39 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
     }
   };
 
+  // 添付ファイル名変更
+  const handleRenameAttachment = async (attachmentId: number) => {
+    if (!editingAttachmentName.trim()) {
+      setEditingAttachmentId(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/tests/${testId}/attachments`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attachmentId, fileName: editingAttachmentName.trim() }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "名前の変更に失敗しました");
+      }
+
+      // ローカルの一覧を更新
+      setAttachments(attachments.map(a =>
+        a.id === attachmentId ? { ...a, file_name: editingAttachmentName.trim() } : a
+      ));
+      setEditingAttachmentId(null);
+    } catch (err: any) {
+      console.error("添付ファイル名変更エラー:", err);
+      setError(err.message || "名前の変更に失敗しました");
+    }
+  };
+
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -986,9 +1021,45 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                           </svg>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {attachment.file_name}
-                          </p>
+                          {editingAttachmentId === attachment.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                value={editingAttachmentName}
+                                onChange={(e) => setEditingAttachmentName(e.target.value)}
+                                className="flex-1 px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleRenameAttachment(attachment.id);
+                                  if (e.key === "Escape") setEditingAttachmentId(null);
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRenameAttachment(attachment.id)}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                                title="保存"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingAttachmentId(null)}
+                                className="p-1 text-gray-500 hover:bg-gray-200 rounded transition-colors"
+                                title="キャンセル"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {attachment.file_name}
+                            </p>
+                          )}
                           <p className="text-xs text-gray-500">
                             {attachment.file_size
                               ? `${(attachment.file_size / 1024 / 1024).toFixed(
@@ -1002,6 +1073,33 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 flex-shrink-0">
+                        {/* 名前変更ボタン */}
+                        {editingAttachmentId !== attachment.id && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingAttachmentId(attachment.id);
+                              setEditingAttachmentName(attachment.file_name);
+                            }}
+                            disabled={loading || success}
+                            className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"
+                            title="名前変更"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                              />
+                            </svg>
+                          </button>
+                        )}
                         <a
                           href={attachment.file_path}
                           target="_blank"
