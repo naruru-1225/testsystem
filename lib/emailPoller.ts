@@ -259,7 +259,7 @@ async function processEmails(
         const nameBase = attachment.filename.replace(/\.pdf$/i, "") || email.subject;
         const testName = `${config.name_prefix} ${nameBase}`;
 
-        // テスト登録
+        // テスト登録（pdfPathにメインPDFを設定、attachmentsは不要）
         const newTest = testRepository.create({
           name: testName,
           subject: config.default_subject || "未分類",
@@ -269,12 +269,6 @@ async function processEmails(
           pdfPath: publicPath,
           tagIds: tagId ? [tagId] : [],
           folderIds: [folderId!],
-          attachments: [{
-            fileName: attachment.filename,
-            filePath: publicPath,
-            mimeType: "application/pdf",
-            fileSize: attachment.size,
-          }],
         });
 
         // 取込ログに記録
