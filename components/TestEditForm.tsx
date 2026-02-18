@@ -1134,9 +1134,32 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                 disabled={loading || success}
                 maxLength={500}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                {description.length}/500文字
-              </p>
+              <div className="mt-1 flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  {description.length}/500文字
+                </p>
+                {description.includes("メールから自動登録") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 自動登録の説明文を削除
+                      const cleaned = description
+                        .replace(/📧\s*メールから自動登録[^\n]*/g, "")
+                        .replace(/送信者:\s*[^\n]*/g, "")
+                        .replace(/受信日時:\s*[^\n]*/g, "")
+                        .replace(/件名:\s*[^\n]*/g, "")
+                        .replace(/\n{2,}/g, "\n")
+                        .trim();
+                      setDescription(cleaned);
+                    }}
+                    disabled={loading || success}
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-md transition-colors"
+                  >
+                    <span>📧</span>
+                    <span>自動登録マークを解除</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* 大問数・満点 */}
