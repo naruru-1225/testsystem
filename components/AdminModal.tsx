@@ -3,6 +3,21 @@
 import { useState, useEffect } from "react";
 import type { Folder, Tag, Grade, Subject } from "@/types/database";
 
+// 使用件数付き型 (#69)
+interface GradeWithUsage extends Grade {
+  usage_count?: number;
+}
+interface SubjectWithUsage extends Subject {
+  usage_count?: number;
+}
+
+interface BackupEntry {
+  name: string;
+  createdAt: string;
+  size: number;
+  sizeFormatted: string;
+}
+
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -65,21 +80,22 @@ export default function AdminModal({
   const [editingTagColor, setEditingTagColor] = useState("");
 
   // 学年関連
-  const [grades, setGrades] = useState<Grade[]>([]);
+  const [grades, setGrades] = useState<GradeWithUsage[]>([]);
   const [newGradeName, setNewGradeName] = useState("");
   const [editingGradeId, setEditingGradeId] = useState<number | null>(null);
   const [editingGradeName, setEditingGradeName] = useState("");
 
   // 科目関連
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<SubjectWithUsage[]>([]);
   const [newSubjectName, setNewSubjectName] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
   const [editingSubjectName, setEditingSubjectName] = useState("");
 
-  // バックアップ復元関連
+  // バックアップ復元・履歴関連
   const [backupTests, setBackupTests] = useState<any[]>([]);
   const [selectedTests, setSelectedTests] = useState<Set<number>>(new Set());
   const [backupLoading, setBackupLoading] = useState(false);
+  const [backupList, setBackupList] = useState<BackupEntry[]>([]); // (#73)
 
   // メール設定関連
   const [emailConfig, setEmailConfig] = useState<EmailConfigState>({
@@ -125,6 +141,7 @@ export default function AdminModal({
       fetchGrades();
       fetchSubjects();
       fetchEmailConfig();
+      fetchBackupList();
     }
   }, [isOpen]);
 
@@ -269,7 +286,7 @@ export default function AdminModal({
 
   const fetchGrades = async () => {
     try {
-      const response = await fetch("/api/grades");
+      const response = await fetch("/api/grades?withCounts=true");
       if (!response.ok) throw new Error("学年の取得に失敗しました");
       const data = await response.json();
       setGrades(data);
@@ -280,12 +297,23 @@ export default function AdminModal({
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch("/api/subjects");
+      const response = await fetch("/api/subjects?withCounts=true");
       if (!response.ok) throw new Error("科目の取得に失敗しました");
       const data = await response.json();
       setSubjects(data);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  // バックアップ履歴取得 (#73)
+  const fetchBackupList = async () => {
+    try {
+      const res = await fetch("/api/backup/list");
+      if (!res.ok) return;
+      setBackupList(await res.json());
+    } catch {
+      // ignore
     }
   };
 
@@ -623,6 +651,31 @@ export default function AdminModal({
     }
   };
 
+  // 学年並び替え (#68)
+  const handleMoveGrade = async (index: number, direction: "up" | "down") => {
+    const newGrades = [...grades];
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= newGrades.length) return;
+    [newGrades[index], newGrades[swapIndex]] = [newGrades[swapIndex], newGrades[index]];
+    // Update display_order for swapped items
+    const updates = newGrades.map((g, i) => ({ id: g.id, order: i }));
+    setGrades(newGrades); // Optimistic update
+    try {
+      await Promise.all(
+        [updates[index], updates[swapIndex]].map(({ id, order }) =>
+          fetch(`/api/grades/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newGrades.find((g) => g.id === id)!.name, displayOrder: order }),
+          })
+        )
+      );
+      await fetchGrades();
+    } catch {
+      await fetchGrades(); // Revert on error
+    }
+  };
+
   // 科目作成
   const handleCreateSubject = async () => {
     if (!newSubjectName.trim()) {
@@ -718,6 +771,30 @@ export default function AdminModal({
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 科目並び替え (#68)
+  const handleMoveSubject = async (index: number, direction: "up" | "down") => {
+    const newSubjects = [...subjects];
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= newSubjects.length) return;
+    [newSubjects[index], newSubjects[swapIndex]] = [newSubjects[swapIndex], newSubjects[index]];
+    const updates = newSubjects.map((s, i) => ({ id: s.id, order: i }));
+    setSubjects(newSubjects); // Optimistic update
+    try {
+      await Promise.all(
+        [updates[index], updates[swapIndex]].map(({ id, order }) =>
+          fetch(`/api/subjects/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newSubjects.find((s) => s.id === id)!.name, displayOrder: order }),
+          })
+        )
+      );
+      await fetchSubjects();
+    } catch {
+      await fetchSubjects();
     }
   };
 
@@ -1383,7 +1460,7 @@ export default function AdminModal({
                   学年一覧
                 </h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {grades.map((grade) => (
+                  {grades.map((grade, index) => (
                     <div
                       key={grade.id}
                       className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
@@ -1421,9 +1498,34 @@ export default function AdminModal({
                         </div>
                       ) : (
                         <>
-                          <span className="text-gray-900 font-medium">
-                            {grade.name}
-                          </span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* 並び替えボタン (#68) */}
+                            <div className="flex flex-col gap-0.5">
+                              <button
+                                onClick={() => handleMoveGrade(index, "up")}
+                                disabled={index === 0 || loading}
+                                className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                                title="上へ"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h16z" /></svg>
+                              </button>
+                              <button
+                                onClick={() => handleMoveGrade(index, "down")}
+                                disabled={index === grades.length - 1 || loading}
+                                className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                                title="下へ"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8H4z" /></svg>
+                              </button>
+                            </div>
+                            <span className="text-gray-900 font-medium">{grade.name}</span>
+                            {/* 使用件数バッジ (#69) */}
+                            {typeof grade.usage_count === "number" && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${grade.usage_count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                                {grade.usage_count}件
+                              </span>
+                            )}
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
@@ -1433,40 +1535,19 @@ export default function AdminModal({
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                               title="編集"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
+                            {/* 削除防止: 使用中は無効 (#70) */}
                             <button
-                              onClick={() =>
-                                handleDeleteGrade(grade.id, grade.name)
-                              }
-                              disabled={loading}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                              title="削除"
+                              onClick={() => handleDeleteGrade(grade.id, grade.name)}
+                              disabled={loading || (grade.usage_count !== undefined && grade.usage_count > 0)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title={grade.usage_count && grade.usage_count > 0 ? `${grade.usage_count}件のテストで使用中のため削除できません` : "削除"}
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
                           </div>
@@ -1557,9 +1638,34 @@ export default function AdminModal({
                         </div>
                       ) : (
                         <>
-                          <span className="text-gray-900 font-medium">
-                            {subject.name}
-                          </span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* 並び替えボタン (#68) */}
+                            <div className="flex flex-col gap-0.5">
+                              <button
+                                onClick={() => handleMoveSubject(subjects.indexOf(subject), "up")}
+                                disabled={subjects.indexOf(subject) === 0 || loading}
+                                className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                                title="上へ"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h16z" /></svg>
+                              </button>
+                              <button
+                                onClick={() => handleMoveSubject(subjects.indexOf(subject), "down")}
+                                disabled={subjects.indexOf(subject) === subjects.length - 1 || loading}
+                                className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                                title="下へ"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8H4z" /></svg>
+                              </button>
+                            </div>
+                            <span className="text-gray-900 font-medium">{subject.name}</span>
+                            {/* 使用件数バッジ (#69) */}
+                            {typeof subject.usage_count === "number" && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${subject.usage_count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                                {subject.usage_count}件
+                              </span>
+                            )}
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
@@ -1569,40 +1675,19 @@ export default function AdminModal({
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                               title="編集"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
+                            {/* 削除防止: 使用中は無効 (#70) */}
                             <button
-                              onClick={() =>
-                                handleDeleteSubject(subject.id, subject.name)
-                              }
-                              disabled={loading}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                              title="削除"
+                              onClick={() => handleDeleteSubject(subject.id, subject.name)}
+                              disabled={loading || (subject.usage_count !== undefined && subject.usage_count > 0)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title={subject.usage_count && subject.usage_count > 0 ? `${subject.usage_count}件のテストで使用中のため削除できません` : "削除"}
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
                           </div>
@@ -1655,6 +1740,28 @@ export default function AdminModal({
                   </button>
                 </div>
               </div>
+
+              {/* バックアップ履歴一覧 (#73) */}
+              {backupList.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-lg">
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">バックアップ履歴 ({backupList.length}件)</h3>
+                    <button onClick={fetchBackupList} className="text-xs text-gray-500 hover:text-gray-700 underline">更新</button>
+                  </div>
+                  <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                    {backupList.map((b) => (
+                      <div key={b.name} className="px-4 py-2 flex items-center justify-between hover:bg-gray-50">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{b.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(b.createdAt).toLocaleString("ja-JP")} &nbsp;·&nbsp; {b.sizeFormatted}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* バックアップファイル選択 */}
               <div className="bg-gray-50 p-4 rounded-lg">

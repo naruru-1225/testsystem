@@ -5,9 +5,17 @@ import { withErrorHandling, validationError } from "@/lib/api-utils";
 /**
  * フォルダ一覧取得API
  * GET /api/folders
+ * クエリパラメータ:
+ *   - withCounts: true の場合、各フォルダのテスト件数も返す
  */
-export const GET = withErrorHandling(async () => {
-  const folders = folderRepository.getAll();
+export const GET = withErrorHandling(async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const withCounts = searchParams.get("withCounts") === "true";
+
+  const folders = withCounts
+    ? folderRepository.getAllWithCounts()
+    : folderRepository.getAll();
+
   return NextResponse.json(folders);
 });
 

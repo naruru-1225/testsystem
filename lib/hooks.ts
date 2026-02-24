@@ -25,9 +25,10 @@ interface ApiResponse<T> {
 
 /**
  * フォルダ一覧を取得するフック
+ * @param withCounts テスト件数を含む場合は true
  * @returns フォルダ一覧と読み込み状態
  */
-export function useFolders(): ApiResponse<Folder[]> {
+export function useFolders(withCounts = false): ApiResponse<Folder[]> {
   const [data, setData] = useState<Folder[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -37,7 +38,8 @@ export function useFolders(): ApiResponse<Folder[]> {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("/api/folders");
+      const url = withCounts ? "/api/folders?withCounts=true" : "/api/folders";
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("フォルダの取得に失敗しました");
       }
@@ -49,7 +51,7 @@ export function useFolders(): ApiResponse<Folder[]> {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [withCounts]);
 
   // 初回マウント時に実行
   useEffect(() => {
@@ -427,6 +429,10 @@ export interface StatsSummary {
     created_at: string;
     folder_name: string;
   }[];
+  // ダッシュボード改善 (#62-67)
+  registrationTrend?: { date: string; count: number }[];
+  subjectCoverage?: { grade: string; subject: string; count: number }[];
+  storageUsage?: { bytes: number; formatted: string };
 }
 
 /**

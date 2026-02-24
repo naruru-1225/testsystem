@@ -64,6 +64,26 @@ export const POST = withErrorHandling(async (request: Request) => {
     );
   }
 
+  // マジックナンバー検証 (#102)
+  const headerBytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  const isPdf = headerBytes[0] === 0x25 && headerBytes[1] === 0x50 && headerBytes[2] === 0x44 && headerBytes[3] === 0x46; // %PDF
+  const isJpeg = headerBytes[0] === 0xFF && headerBytes[1] === 0xD8 && headerBytes[2] === 0xFF;
+  const isPng = headerBytes[0] === 0x89 && headerBytes[1] === 0x50 && headerBytes[2] === 0x4E && headerBytes[3] === 0x47;
+  // HEIC はftyp box を持つ (bytes 4-7 が 'ftyp')
+  const isHeic = headerBytes[4] === 0x66 && headerBytes[5] === 0x74 && headerBytes[6] === 0x79 && headerBytes[7] === 0x70;
+  // 拡張子に基づいてマジックナンバーを検証
+  const magicNumberValid = (() => {
+    if (["pdf"].includes(fileExt)) return isPdf;
+    if (["jpg", "jpeg"].includes(fileExt)) return isJpeg;
+    if (["png"].includes(fileExt)) return isPng;
+    if (["heic", "heif"].includes(fileExt)) return isHeic;
+    return true; // 未知の拡張子は通す（前段のバリデーションで弾かれる）
+  })();
+  if (!magicNumberValid) {
+    console.log("❌ マジックナンバー不一致:", { fileName: file.name, extension: fileExt });
+    return validationError("ファイルの内容がファイルタイプと一致しません");
+  }
+
   console.log("✅ ファイルタイプ承認:", {
     fileName: file.name,
     type: file.type,

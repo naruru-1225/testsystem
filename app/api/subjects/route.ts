@@ -5,9 +5,14 @@ import { withErrorHandling, validationError } from "@/lib/api-utils";
 /**
  * 科目一覧取得API
  * GET /api/subjects
+ * GET /api/subjects?withCounts=true  (#69)
  */
-export const GET = withErrorHandling(async () => {
-  const subjects = subjectRepository.getAll();
+export const GET = withErrorHandling(async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const withCounts = searchParams.get("withCounts") === "true";
+  const subjects = withCounts
+    ? subjectRepository.getAllWithUsageCounts()
+    : subjectRepository.getAll();
   return NextResponse.json(subjects);
 });
 
@@ -33,4 +38,5 @@ export const POST = withErrorHandling(async (request: Request) => {
     throw error;
   }
 });
+
 

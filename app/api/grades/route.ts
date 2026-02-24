@@ -5,9 +5,14 @@ import { withErrorHandling, validationError } from "@/lib/api-utils";
 /**
  * 学年一覧取得API
  * GET /api/grades
+ * GET /api/grades?withCounts=true  (#69)
  */
-export const GET = withErrorHandling(async () => {
-  const grades = gradeRepository.getAll();
+export const GET = withErrorHandling(async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const withCounts = searchParams.get("withCounts") === "true";
+  const grades = withCounts
+    ? gradeRepository.getAllWithUsageCounts()
+    : gradeRepository.getAll();
   return NextResponse.json(grades);
 });
 
@@ -33,4 +38,5 @@ export const POST = withErrorHandling(async (request: Request) => {
     throw error;
   }
 });
+
 

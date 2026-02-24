@@ -18,10 +18,12 @@
   "dependencies": {
     "@capacitor/android": "^7.4.4",
     "@capacitor/core": "^7.4.4",
+    "@types/jszip": "^3.4.0",
     "@vercel/postgres": "^0.10.0",
     "better-sqlite3": "^11.7.0",
     "heic-convert": "^2.1.0",
     "imapflow": "^1.2.9",
+    "jszip": "^3.10.1",
     "mailparser": "^3.9.3",
     "next": "^15.1.6",
     "pdf-lib": "^1.17.1",

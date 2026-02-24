@@ -2,9 +2,7 @@ import fs from "fs";
 import path from "path";
 import { EmailService, ParsedEmail } from "./services/emailService";
 import { emailConfigRepository, EmailConfig } from "./repositories/emailConfigRepository";
-import { testRepository } from "./repositories/testRepository";
-import { folderRepository } from "./repositories/folderRepository";
-import db from "./db/db-instance";
+import { emailInboxRepository } from "./repositories/emailInboxRepository";
 
 // IDLE再接続間隔（20分 - サーバーの切断を防ぐ）
 const IDLE_RECONNECT_INTERVAL = 20 * 60 * 1000;
@@ -198,11 +196,11 @@ async function connectAndIdle(config: EmailConfig): Promise<void> {
 }
 
 /**
- * 取得したメールを処理してテストとして登録
+ * 取得したメールを受信トレイ（pending）に保存
  */
 async function processEmails(
   emails: ParsedEmail[],
-  config: EmailConfig
+  _config: EmailConfig
 ): Promise<{ imported: number; errors: string[] }> {
   let imported = 0;
   const errors: string[] = [];
@@ -210,106 +208,51 @@ async function processEmails(
   for (const email of emails) {
     for (const attachment of email.attachments) {
       try {
-        // 重複チェック
+        // 重複チェック（email_inboxとemail_import_log両方）
         const importKey = `${email.messageId}::${attachment.filename}`;
-        if (emailConfigRepository.isImported(importKey)) {
+        if (
+          emailConfigRepository.isImported(importKey) ||
+          emailInboxRepository.isImported(importKey)
+        ) {
           console.log(`[EmailPoller] スキップ（取込済み）: ${attachment.filename}`);
           continue;
         }
 
-        // PDFを保存
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "pdfs");
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
+        // PDFを受信トレイ用ディレクトリに保存
+        const inboxDir = path.join(process.cwd(), "public", "uploads", "pdfs", "inbox");
+        if (!fs.existsSync(inboxDir)) {
+          fs.mkdirSync(inboxDir, { recursive: true });
         }
 
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 15);
         const safeFileName = `${timestamp}-${randomStr}.pdf`;
-        const filePath = path.join(uploadDir, safeFileName);
+        const filePath = path.join(inboxDir, safeFileName);
         fs.writeFileSync(filePath, attachment.content);
 
-        const publicPath = `/uploads/pdfs/${safeFileName}`;
+        const publicPath = `/uploads/pdfs/inbox/${safeFileName}`;
 
-        // フォルダ決定
-        let folderId = config.default_folder_id;
-        if (!folderId) {
-          const uncategorized = folderRepository.getUncategorized();
-          folderId = uncategorized?.id || 2;
-        }
-
-        // タグ取得 or 作成
-        let tagId: number | null = null;
-        if (config.default_tag_name) {
-          const existingTag = db
-            .prepare("SELECT id FROM tags WHERE name = ?")
-            .get(config.default_tag_name) as { id: number } | undefined;
-
-          if (existingTag) {
-            tagId = existingTag.id;
-          } else {
-            const result = db
-              .prepare("INSERT INTO tags (name, color) VALUES (?, ?)")
-              .run(config.default_tag_name, "#F59E0B");
-            tagId = result.lastInsertRowid as number;
-          }
-        }
-
-        // テスト名の生成
-        const nameBase = attachment.filename.replace(/\.pdf$/i, "") || email.subject;
-        const testName = `${config.name_prefix} ${nameBase}`;
-
-        // テスト登録（pdfPathにメインPDFを設定、attachmentsは不要）
-        const newTest = testRepository.create({
-          name: testName,
-          subject: config.default_subject || "未分類",
-          grade: config.default_grade || "未設定",
-          folderId: folderId!,
-          description: `📧 メールから自動登録\n送信者: ${email.from}\n受信日時: ${email.date.toLocaleString("ja-JP")}\n件名: ${email.subject}`,
-          pdfPath: publicPath,
-          tagIds: tagId ? [tagId] : [],
-          folderIds: [folderId!],
-        });
-
-        // 取込ログに記録
-        emailConfigRepository.addImportLog({
-          messageId: importKey,
-          uid: email.uid,
-          subject: email.subject,
-          fromAddress: email.from,
-          fileName: attachment.filename,
-          testId: newTest?.id || null,
-          status: "success",
+        // 受信トレイに追加（pending状態）
+        emailInboxRepository.add({
+          file_name: attachment.filename,
+          file_path: publicPath,
+          original_subject: email.subject,
+          from_address: email.from,
+          message_id: importKey,
         });
 
         imported++;
-        console.log(`[EmailPoller] ✅ 登録完了: ${testName}`);
+        console.log(`[EmailPoller] ✅ 受信トレイに追加: ${attachment.filename}`);
       } catch (error: any) {
         const errorMsg = `${attachment.filename}: ${error.message}`;
         errors.push(errorMsg);
-        console.error(`[EmailPoller] ❌ 登録エラー:`, errorMsg);
-
-        // エラーログ記録
-        try {
-          emailConfigRepository.addImportLog({
-            messageId: `${email.messageId}::${attachment.filename}`,
-            uid: email.uid,
-            subject: email.subject,
-            fromAddress: email.from,
-            fileName: attachment.filename,
-            testId: null,
-            status: "error",
-            errorMessage: error.message,
-          });
-        } catch (logError) {
-          // ログ記録エラーは無視
-        }
+        console.error(`[EmailPoller] ❌ 取込エラー:`, errorMsg);
       }
     }
   }
 
   if (imported > 0) {
-    console.log(`[EmailPoller] ${imported}件のPDFを自動登録しました`);
+    console.log(`[EmailPoller] ${imported}件のPDFを受信トレイに追加しました`);
   }
 
   return { imported, errors };

@@ -4,21 +4,34 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Folder, Tag, Grade, Subject } from "@/types/database";
 
+interface TestCreateFormProps {
+  /** 受信トレイから引き継ぐPDFパス */
+  initialPdfPath?: string;
+  /** 受信トレイから引き継ぐテスト名候補 */
+  initialName?: string;
+  /** 受信トレイアイテムID（テスト作成後にassignedにする） */
+  inboxItemId?: number;
+}
+
 /**
  * テスト登録フォームコンポーネント
  * 新規テストの作成画面
  */
-export default function TestCreateForm() {
+export default function TestCreateForm({
+  initialPdfPath,
+  initialName,
+  inboxItemId,
+}: TestCreateFormProps = {}) {
   const router = useRouter();
 
   // フォーム入力値
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName ?? "");
   const [subject, setSubject] = useState("");
   const [grade, setGrade] = useState("");
   const [selectedFolderIds, setSelectedFolderIds] = useState<number[]>([]); // 複数選択対応、初期値は空
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfPath, setPdfPath] = useState<string | null>(null);
+  const [pdfPath, setPdfPath] = useState<string | null>(initialPdfPath ?? null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
 
   // 添付PDF用の状態
@@ -40,6 +53,8 @@ export default function TestCreateForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // フィールド単位エラー (#23)
+  const [draftRestored, setDraftRestored] = useState(false); // 自動保存ドラフト復元通知 (#17)
 
   // フォルダの展開状態
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
@@ -91,6 +106,47 @@ export default function TestCreateForm() {
   useEffect(() => {
     fetchMasterData();
   }, []);
+
+  // 山起時に自動保存ドラフトまたは前回入力値を復元 (#17, #18)
+  useEffect(() => {
+    const DRAFT_KEY = "test-create-draft";
+    const LAST_KEY = "test-create-last-submitted";
+    if (typeof window === "undefined") return;
+    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (!initialName && draft.name !== undefined) setName(draft.name);
+        if (draft.subject) setSubject(draft.subject);
+        if (draft.grade) setGrade(draft.grade);
+        if (draft.selectedFolderIds?.length) setSelectedFolderIds(draft.selectedFolderIds);
+        if (draft.selectedTagIds?.length) setSelectedTagIds(draft.selectedTagIds);
+        if (draft.description !== undefined) setDescription(draft.description);
+        if (draft.totalQuestions !== undefined) setTotalQuestions(draft.totalQuestions);
+        if (draft.totalScore !== undefined) setTotalScore(draft.totalScore);
+        setDraftRestored(true);
+      } catch { /* ignore */ }
+      return; // ドラフトがあれば前回値は使わない
+    }
+    // 前回入力値引継ぎ (#18)
+    const lastSubmitted = localStorage.getItem(LAST_KEY);
+    if (lastSubmitted) {
+      try {
+        const last = JSON.parse(lastSubmitted);
+        if (last.subject) setSubject(last.subject);
+        if (last.grade) setGrade(last.grade);
+        if (last.selectedFolderIds?.length) setSelectedFolderIds(last.selectedFolderIds);
+        if (last.selectedTagIds?.length) setSelectedTagIds(last.selectedTagIds);
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  // 入力値変更時に自動保存 (#17)
+  useEffect(() => {
+    if (success || typeof window === "undefined") return;
+    const data = { name, subject, grade, selectedFolderIds, selectedTagIds, description, totalQuestions, totalScore };
+    localStorage.setItem("test-create-draft", JSON.stringify(data));
+  }, [name, subject, grade, selectedFolderIds, selectedTagIds, description, totalQuestions, totalScore, success]);
 
   const fetchMasterData = async () => {
     try {
@@ -595,19 +651,16 @@ export default function TestCreateForm() {
     setError(null);
     setSuccess(false);
 
-    // バリデーション
-    if (!name.trim()) {
-      setError("テスト名を入力してください");
+    // フィールド単位バリデーション (#23)
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "テスト名を入力してください";
+    if (!subject) errors.subject = "科目を選択してください";
+    if (!grade) errors.grade = "学年を選択してください";
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
-    if (!subject) {
-      setError("科目を選択してください");
-      return;
-    }
-    if (!grade) {
-      setError("学年を選択してください");
-      return;
-    }
+    setFieldErrors({});
 
     setLoading(true);
 
@@ -639,9 +692,31 @@ export default function TestCreateForm() {
 
       setSuccess(true);
 
+      // 自動保存: ドラフト削除、前回値を保存 (#17, #18)
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("test-create-draft");
+        localStorage.setItem("test-create-last-submitted",
+          JSON.stringify({ subject, grade, selectedFolderIds, selectedTagIds })
+        );
+      }
+
+      // 受信トレイのアイテムをassignedに更新
+      if (inboxItemId) {
+        try {
+          await fetch(`/api/inbox/${inboxItemId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "assigned" }),
+          });
+        } catch {
+          // 失敗しても無視（テスト作成は成功済み）
+        }
+      }
+
       // 成功メッセージ表示後、一覧画面へリダイレクト
       setTimeout(() => {
-        router.push("/");
+        // 受信トレイから来た場合は受信トレイへ戻る
+        router.push(inboxItemId ? "/inbox" : "/");
       }, 1500);
     } catch (err: any) {
       console.error("テスト作成エラー:", err);
@@ -711,6 +786,24 @@ export default function TestCreateForm() {
           </div>
         )}
 
+        {/* 自動保存ドラフト復元通知 (#17) */}
+        {draftRestored && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+            <span className="text-yellow-800 text-sm">⚠️ 前回の入力内容を自動復元しました</span>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("test-create-draft");
+                setDraftRestored(false);
+                setName(initialName ?? ""); setSubject(""); setGrade("");
+                setSelectedFolderIds([]); setSelectedTagIds([]);
+                setDescription(""); setTotalQuestions(""); setTotalScore("");
+              }}
+              className="text-yellow-600 text-xs underline hover:text-yellow-800"
+            >クリア</button>
+          </div>
+        )}
+
         {/* フォーム */}
         <form
           onSubmit={handleSubmit}
@@ -729,12 +822,15 @@ export default function TestCreateForm() {
                 type="text"
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setFieldErrors((p) => ({ ...p, name: undefined as any })); }}
                 placeholder="例: 2023年度 1学期期末テスト"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  fieldErrors.name ? "border-red-400 bg-red-50" : "border-gray-300"
+                }`}
                 disabled={loading || success}
                 maxLength={200}
               />
+              {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
             </div>
 
             {/* 科目と学年 */}
@@ -753,8 +849,10 @@ export default function TestCreateForm() {
                 <select
                   id="subject"
                   value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => { setSubject(e.target.value); setFieldErrors((p) => ({ ...p, subject: undefined as any })); }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    fieldErrors.subject ? "border-red-400 bg-red-50" : "border-gray-300"
+                  }`}
                   disabled={loading || success}
                 >
                   <option value="">選択してください</option>
@@ -764,6 +862,7 @@ export default function TestCreateForm() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.subject && <p className="mt-1 text-sm text-red-600">{fieldErrors.subject}</p>}
               </div>
 
               {/* 学年 */}
@@ -780,8 +879,10 @@ export default function TestCreateForm() {
                 <select
                   id="grade"
                   value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => { setGrade(e.target.value); setFieldErrors((p) => ({ ...p, grade: undefined as any })); }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    fieldErrors.grade ? "border-red-400 bg-red-50" : "border-gray-300"
+                  }`}
                   disabled={loading || success}
                 >
                   <option value="">選択してください</option>
@@ -791,6 +892,7 @@ export default function TestCreateForm() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.grade && <p className="mt-1 text-sm text-red-600">{fieldErrors.grade}</p>}
               </div>
             </div>
 

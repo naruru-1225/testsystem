@@ -8,9 +8,26 @@ export interface Folder {
   created_at: string;
 }
 
+export interface FolderWithCount extends Folder {
+  /** そのフォルダに直接紐付くテスト件数（子孫フォルダは含まない） */
+  test_count: number;
+}
+
 export const folderRepository = {
   getAll: () => {
     return db.prepare("SELECT * FROM folders ORDER BY order_index ASC, id ASC").all() as Folder[];
+  },
+
+  /** テスト件数付きフォルダ一覧取得 */
+  getAllWithCounts: () => {
+    return db.prepare(`
+      SELECT f.*, COALESCE(c.cnt, 0) as test_count
+      FROM folders f
+      LEFT JOIN (
+        SELECT folder_id, COUNT(*) as cnt FROM test_folders GROUP BY folder_id
+      ) c ON c.folder_id = f.id
+      ORDER BY f.order_index ASC, f.id ASC
+    `).all() as FolderWithCount[];
   },
 
   getById: (id: number) => {

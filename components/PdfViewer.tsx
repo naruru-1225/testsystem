@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -58,9 +58,20 @@ export default function PdfViewer({
   const [workerReady, setWorkerReady] = useState(false); // Worker設定完了フラグ
   const [useFallback, setUseFallback] = useState(false); // Safari 16フォールバックフラグ
   const [sizeByTab, setSizeByTab] = useState<Record<number, string | null>>({}); // タブごとの用紙サイズ
+  const [detectedSizeByTab, setDetectedSizeByTab] = useState<Record<number, string>>({}); // タブごとの検出された元サイズ
 
   // 現在のタブのサイズ選択を取得
   const selectedSize = sizeByTab[activeTab] || null;
+
+  // 表示・操作の改善 (#1-9)
+  const [rotation, setRotation] = useState<number>(0); // 回転 0/90/180/270
+  const [fitMode, setFitMode] = useState<"free" | "width" | "page">("free"); // フィット表示
+  const [scrollMode, setScrollMode] = useState<boolean>(false); // 連続スクロール
+  const [pdfDark, setPdfDark] = useState<boolean>(false); // PDFダークモード
+  const [showThumbnails, setShowThumbnails] = useState<boolean>(false); // サムネイルパネル
+  const [jumpInput, setJumpInput] = useState<string>(""); // ページジャンプ入力
+  const contentRef = useRef<HTMLDivElement>(null); // コンテンツエリア参照（フィット計算用）
+  const touchRef = useRef<{ dist: number; baseScale: number } | null>(null); // ピンチズーム用
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -244,6 +255,23 @@ export default function PdfViewer({
     return options;
   }, []);
 
+  // PDFの元サイズを検出する関数
+  const fetchDetectedSize = async (tabIndex: number, filePath: string | undefined) => {
+    if (!filePath || detectedSizeByTab[tabIndex]) return;
+    try {
+      const encodedPath = encodeURIComponent(filePath);
+      const response = await fetch(`/api/pdf/detect-size?pdfPath=${encodedPath}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.displayName) {
+          setDetectedSizeByTab(prev => ({ ...prev, [tabIndex]: data.displayName }));
+        }
+      }
+    } catch (error) {
+      console.error("PDF サイズ検出エラー:", error);
+    }
+  };
+
   // タブが変更されたときにファイルを再読み込み
   // Worker設定完了後のみ実行
   useEffect(() => {
@@ -296,6 +324,9 @@ export default function PdfViewer({
         setPdfKey((prev) => prev + 1);
         setUseFallback(false); // PDFファイル変更時はフォールバックをリセット
 
+        // PDFの元サイズを検出
+        fetchDetectedSize(activeTab, currentFile.originalPath);
+
         // タイムアウトは別のuseEffectで監視
         console.log("⏰⏰⏰ [v3.2-FINAL] PDF処理開始 - loading=true設定");
       }
@@ -326,6 +357,98 @@ export default function PdfViewer({
       };
     }
   }, [loading, currentPdf, currentFileType, workerReady, useFallback]);
+
+  // キーボードショートカット (#3): ←→ページ移動、+/-ズーム、Escで閉じる
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
+      switch (e.key) {
+        case "ArrowLeft":
+        case "ArrowUp":
+          e.preventDefault();
+          setPageNumber((p) => Math.max(p - 1, 1));
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          e.preventDefault();
+          setPageNumber((p) => Math.min(p + 1, numPages));
+          break;
+        case "+":
+        case "=":
+          e.preventDefault();
+          setScale((s) => Math.min(s + 0.2, 3.0));
+          break;
+        case "-":
+          e.preventDefault();
+          setScale((s) => Math.max(s - 0.2, 0.5));
+          break;
+        case "Escape":
+          onClose();
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [numPages, onClose]);
+
+  // フィット表示モード: widthまたはpageに合わせてscaleを自動設定 (#5)
+  useEffect(() => {
+    if (fitMode === "free" || !contentRef.current) return;
+    const el = contentRef.current;
+    const w = el.clientWidth - 64;
+    const h = el.clientHeight - 64;
+    const A4_W = 595;
+    const A4_H = 842;
+    if (fitMode === "width") {
+      setScale(Math.max(0.3, w / A4_W));
+    } else if (fitMode === "page") {
+      setScale(Math.max(0.3, Math.min(w / A4_W, h / A4_H)));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitMode, loading]);
+
+  // ピンチズームのタッチハンドラ (#4)
+  const getTouchDist = (e: React.TouchEvent) => {
+    const [t1, t2] = [e.touches[0], e.touches[1]];
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  };
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      touchRef.current = { dist: getTouchDist(e), baseScale: scale };
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scale]);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchRef.current) {
+      e.preventDefault();
+      const newDist = getTouchDist(e);
+      const newScale = Math.min(3.0, Math.max(0.5,
+        touchRef.current.baseScale * (newDist / touchRef.current.dist)
+      ));
+      setScale(newScale);
+      setFitMode("free");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const handleTouchEnd = useCallback(() => { touchRef.current = null; }, []);
+
+  // ページジャンプ処理 (#1)
+  const handleJumpPage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = parseInt(jumpInput, 10);
+    if (!isNaN(n) && n >= 1 && n <= numPages) {
+      setPageNumber(n);
+      if (scrollMode && contentRef.current) {
+        const pageEl = contentRef.current.querySelector(`[data-page-number="${n}"]`);
+        pageEl?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    setJumpInput("");
+  };
+
+  // 回転ハンドラ (#7)
+  const handleRotate = () => setRotation((r) => (r + 90) % 360);
 
   // デバッグ用:ファイルのURLをコンソールに出力
   console.log(
@@ -541,51 +664,88 @@ export default function PdfViewer({
 
         {/* ツールバー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-wrap">
+            {/* サムネイル表示トグル (#2) */}
+            {currentFileType === "pdf" && numPages > 0 && (
+              <button
+                onClick={() => setShowThumbnails((v) => !v)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showThumbnails ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-200"
+                }`}
+                title="サムネイル一覧"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+            )}
             {/* ページナビゲーション（PDFのみ表示） */}
             {currentFileType === "pdf" && (
               <>
                 <button
                   onClick={goToPrevPage}
-                  disabled={pageNumber <= 1}
+                  disabled={pageNumber <= 1 || scrollMode}
                   className="p-2 text-gray-700 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="前のページ"
+                  title="前のページ (←)"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <span className="text-sm text-gray-700 min-w-[100px] text-center">
-                  {loading ? "読込中..." : `${pageNumber} / ${numPages}`}
-                </span>
+                {/* ページジャンプ入力 (#1) */}
+                <form onSubmit={handleJumpPage} className="flex items-center gap-1">
+                  {loading ? (
+                    <span className="text-sm text-gray-700 min-w-[80px] text-center">読込中...</span>
+                  ) : (
+                    <>
+                      <input
+                        type="number"
+                        min={1}
+                        max={numPages}
+                        value={jumpInput || pageNumber}
+                        onChange={(e) => setJumpInput(e.target.value)}
+                        onFocus={(e) => { setJumpInput(e.target.value); e.target.select(); }}
+                        onBlur={() => setJumpInput("")}
+                        className="w-14 text-center text-sm border border-gray-300 rounded px-1 py-0.5"
+                        title="ページ番号を入力してEnter"
+                      />
+                      <span className="text-sm text-gray-500">/ {numPages}</span>
+                    </>
+                  )}
+                </form>
                 <button
                   onClick={goToNextPage}
-                  disabled={pageNumber >= numPages}
+                  disabled={pageNumber >= numPages || scrollMode}
                   className="p-2 text-gray-700 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="次のページ"
+                  title="次のページ (→)"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                {/* 連続スクロールモード (#8) */}
+                <button
+                  onClick={() => setScrollMode((v) => !v)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    scrollMode ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-200"
+                  }`}
+                  title="連続スクロール表示"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                {/* 回転ボタン (#7) */}
+                <button
+                  onClick={handleRotate}
+                  className="p-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                  title="90度回転"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </button>
               </>
@@ -647,6 +807,43 @@ export default function PdfViewer({
             >
               100%
             </button>
+            {/* フィット表示モード (#5) */}
+            <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+              <button
+                onClick={() => setFitMode("width")}
+                className={`px-2 py-1 text-xs transition-colors ${
+                  fitMode === "width" ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+                title="幅に合わせる"
+              >幅</button>
+              <button
+                onClick={() => setFitMode("page")}
+                className={`px-2 py-1 text-xs border-l border-gray-300 transition-colors ${
+                  fitMode === "page" ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+                title="ページに合わせる"
+              >全</button>
+              <button
+                onClick={() => setFitMode("free")}
+                className={`px-2 py-1 text-xs border-l border-gray-300 transition-colors ${
+                  fitMode === "free" ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+                title="自由"
+              >自由</button>
+            </div>
+            {/* PDFダークモード (#6) */}
+            <button
+              onClick={() => setPdfDark((v) => !v)}
+              className={`p-2 rounded-lg transition-colors ${
+                pdfDark ? "bg-gray-800 text-white" : "text-gray-700 hover:bg-gray-200"
+              }`}
+              title="PDFビューワー ダークモード"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
 
             {/* 用紙サイズ選択（PDFファイルで表示） */}
             {testId && currentFileType === "pdf" && (
@@ -665,7 +862,11 @@ export default function PdfViewer({
                   }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">元のサイズ</option>
+                  <option value="">
+                    {detectedSizeByTab[activeTab]
+                      ? `元のサイズ (${detectedSizeByTab[activeTab]})`
+                      : "元のサイズ"}
+                  </option>
                   <option value="A3">A3</option>
                   <option value="A4">A4</option>
                   <option value="B4">B4</option>
@@ -700,7 +901,43 @@ export default function PdfViewer({
         </div>
 
         {/* コンテンツ表示 */}
-        <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4">
+        <div className="flex-1 flex overflow-hidden">
+          {/* サムネイルパネル (#2) */}
+          {showThumbnails && currentFileType === "pdf" && numPages > 0 && currentPdf && (
+            <div className="w-28 flex-shrink-0 overflow-y-auto bg-gray-200 border-r border-gray-300 flex flex-col gap-2 p-2">
+              <Document file={currentPdf} options={pdfOptions} loading={null} onLoadError={() => {}}
+              >
+                {Array.from({ length: Math.min(numPages, 50) }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => { setPageNumber(p); }}
+                    className={`w-full border-2 rounded overflow-hidden transition-colors ${
+                      p === pageNumber ? "border-blue-500" : "border-transparent hover:border-blue-300"
+                    }`}
+                    title={`${p}ページ`}
+                  >
+                    <Page
+                      pageNumber={p}
+                      width={96}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      rotate={rotation}
+                    />
+                    <div className="text-xs text-center text-gray-600 bg-white py-0.5">{p}</div>
+                  </button>
+                ))}
+              </Document>
+            </div>
+          )}
+          {/* メインコンテンツ */}
+          <div
+            ref={contentRef}
+            className="flex-1 overflow-auto bg-gray-100 flex items-start justify-center p-4"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={pdfDark ? { background: "#1a1a2e" } : {}}
+          >
           {error ? (
             <div className="text-center">
               <svg
@@ -835,66 +1072,22 @@ export default function PdfViewer({
               return null;
             })(),
             (
-              <div className="bg-white shadow-lg">
+              <div className={`shadow-lg ${pdfDark ? "bg-gray-900" : "bg-white"}`}
+                style={pdfDark ? { filter: "invert(0.85) hue-rotate(180deg)" } : {}}
+              >
                 <Document
                   key={pdfKey}
                   file={currentPdf}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   onLoadStart={() => {
-                    console.log(
-                      "🚀🚀🚀 [v3.2-FINAL] PDF読み込み開始:",
-                      currentPdf
-                    );
-                    console.log(
-                      "🚀🚀🚀 [v3.2-FINAL] Worker URL:",
-                      pdfjs.GlobalWorkerOptions.workerSrc
-                    );
-                    console.log(
-                      "🚀🚀🚀 [v3.2-FINAL] Worker Ready:",
-                      workerReady
-                    );
+                    console.log("🚀🚀🚀 [v3.2-FINAL] PDF読み込み開始:", currentPdf);
                   }}
                   onLoadProgress={({ loaded, total }) => {
-                    console.log(
-                      "⏳⏳⏳ [v3.2-FINAL] PDF読み込み進捗:",
-                      JSON.stringify(
-                        {
-                          loaded,
-                          total,
-                          percent:
-                            total > 0
-                              ? ((loaded / total) * 100).toFixed(1) + "%"
-                              : "不明",
-                        },
-                        null,
-                        2
-                      )
-                    );
+                    console.log("⏳⏳⏳ [v3.2-FINAL] PDF読み込み進捗:", loaded, "/", total);
                   }}
                   onSourceError={(error) => {
-                    console.error(
-                      "❌❌❌ [v3.2-FINAL] PDF source error:",
-                      error
-                    );
-                    console.error(
-                      "❌❌❌ [v3.2-FINAL] ソースエラー詳細:",
-                      JSON.stringify(
-                        {
-                          error: error,
-                          message: error?.message,
-                          url: currentPdf,
-                          workerReady,
-                          workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
-                          userAgent:
-                            typeof navigator !== "undefined"
-                              ? navigator.userAgent
-                              : "unknown",
-                        },
-                        null,
-                        2
-                      )
-                    );
+                    console.error("❌❌❌ [v3.2-FINAL] PDF source error:", error);
                     setError(
                       "PDFファイルの取得に失敗しました。ネットワーク接続を確認してください。"
                     );
@@ -902,38 +1095,40 @@ export default function PdfViewer({
                   options={pdfOptions}
                   loading={
                     <div className="flex items-center justify-center p-12">
-                      <svg
-                        className="animate-spin h-12 w-12 text-primary"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
+                      <svg className="animate-spin h-12 w-12 text-primary" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
                     </div>
                   }
                 >
-                  <Page
-                    pageNumber={pageNumber}
-                    scale={scale}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                  />
+                  {/* 連続スクロールモード (#8) */}
+                  {scrollMode ? (
+                    Array.from({ length: numPages }, (_, i) => i + 1).map((p) => (
+                      <div key={p} data-page-number={p} className="mb-4">
+                        <Page
+                          pageNumber={p}
+                          scale={scale}
+                          rotate={rotation}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <Page
+                      pageNumber={pageNumber}
+                      scale={scale}
+                      rotate={rotation}
+                      renderTextLayer={true}
+                      renderAnnotationLayer={true}
+                    />
+                  )}
                 </Document>
               </div>
             ))
           )}
+          </div>
         </div>
       </div>
     </div>

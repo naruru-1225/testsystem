@@ -9,6 +9,7 @@ import {
   useDebounce,
 } from "@/lib/hooks";
 import { buildFolderTree, moveArrayItem, filterFolderTree } from "@/lib/utils";
+import { ThemeTogglePanel } from "./ThemeProvider";
 
 /**
  * サイドバーコンポーネント
@@ -46,12 +47,12 @@ export default function Sidebar({
   onAdminMenuClick,
   refreshTrigger,
 }: SidebarProps) {
-  // カスタムフックを使用してフォルダとカテゴリを取得
+  // カスタムフックを使用してフォルダとカテゴリを取得（件数付き）
   const {
     data: foldersData,
     loading: foldersLoading,
     refetch: refetchFolders,
-  } = useFolders();
+  } = useFolders(true);
   const { data: categoriesData } = useCategories(refreshTrigger);
 
   /**
@@ -80,6 +81,9 @@ export default function Sidebar({
   // フォルダツリーのフィルタリング用の状態
   const [folderSearchQuery, setFolderSearchQuery] = useState<string>("");
   const debouncedFolderQuery = useDebounce(folderSearchQuery, 300);
+
+  // 表示設定パネルの開閉
+  const [themeOpen, setThemeOpen] = useState(false);
 
   // データをstateとして扱う（nullチェック対応）
   const folders = foldersData || [];
@@ -371,7 +375,12 @@ export default function Sidebar({
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
               />
             </svg>
-            <span className="break-words">{folder.name}</span>
+            <span className="break-words flex-1">{folder.name}</span>
+            {typeof folder.test_count === "number" && folder.test_count > 0 && (
+              <span className="ml-1 flex-shrink-0 text-xs text-blue-200 bg-blue-800 bg-opacity-50 rounded-full px-1.5 py-0.5 leading-none">
+                {folder.test_count}
+              </span>
+            )}
           </button>
         </div>
 
@@ -427,6 +436,28 @@ export default function Sidebar({
           </svg>
           <span className="text-sm md:text-base font-semibold">
             ダッシュボード
+          </span>
+        </a>
+        {/* 受信トレイボタン */}
+        <a
+          href="/inbox"
+          className="mt-1.5 w-full flex items-center gap-2 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-lg hover:bg-gray-600 transition-colors text-white bg-gray-500 shadow-sm"
+        >
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="text-sm md:text-base font-semibold">
+            メール受信トレイ
           </span>
         </a>
       </div>
@@ -571,6 +602,27 @@ export default function Sidebar({
             })}
           </div>
         </div>
+      </div>
+
+      {/* 表示設定 */}
+      <div className="border-t border-sidebar-dark flex-shrink-0">
+        <button
+          onClick={() => setThemeOpen((v) => !v)}
+          className="w-full text-left px-2 md:px-3 py-1.5 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm hover:bg-blue-600 transition-colors"
+        >
+          <svg className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <span>表示設定</span>
+          <svg className={`w-3 h-3 ml-auto transition-transform ${themeOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {themeOpen && (
+          <div className="px-2 pb-2">
+            <ThemeTogglePanel />
+          </div>
+        )}
       </div>
 
       {/* 管理者メニュー */}

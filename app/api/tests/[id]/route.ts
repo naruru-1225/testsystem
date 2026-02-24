@@ -5,6 +5,8 @@ import { existsSync } from "fs";
 import { testRepository } from "@/lib/repositories/testRepository";
 import { folderRepository } from "@/lib/repositories/folderRepository";
 import { withErrorHandling, validationError, notFoundError } from "@/lib/api-utils";
+import { auditService } from "@/lib/services/auditService";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 /**
  * テスト個別取得API
@@ -56,6 +58,12 @@ export const PUT = withErrorHandling(
       attachmentFileNames,
     } = body;
 
+    // 入力値サニタイズ (#101)
+    name = sanitizeText(name);
+    subject = sanitizeText(subject);
+    grade = sanitizeText(grade);
+    if (description) description = sanitizeText(description);
+
     // フォルダ処理ロジック (POSTと同様)
     const uncategorizedFolder = folderRepository.getUncategorized();
     const uncategorizedId = uncategorizedFolder?.id || 2;
@@ -99,6 +107,8 @@ export const PUT = withErrorHandling(
     if (!updatedTest) {
       return notFoundError("テストが見つかりません");
     }
+
+    await auditService.log("update", "test", testId, name, request);
 
     return NextResponse.json(updatedTest);
   }
@@ -153,6 +163,7 @@ export const DELETE = withErrorHandling(
     }
 
     // テストの削除
+    await auditService.log("delete", "test", testId, existingTest.name, request);
     testRepository.delete(testId);
 
     return NextResponse.json({

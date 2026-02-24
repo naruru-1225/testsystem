@@ -81,6 +81,36 @@ export function initializeDatabase() {
     )
   `);
 
+  // メール受信トレイ（割り振り待機状態のPDF）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_inbox (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      original_subject TEXT,
+      from_address TEXT,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      message_id TEXT,
+      status TEXT DEFAULT 'pending',
+      error_message TEXT
+    )
+  `);
+
+  // 監査ログテーブル (#103)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      action TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id INTEGER,
+      target_name TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      device_hint TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // インデックス作成
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tests_folder_id ON tests(folder_id);
@@ -95,6 +125,9 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_subjects_display_order ON subjects(display_order);
     CREATE INDEX IF NOT EXISTS idx_email_import_log_message_id ON email_import_log(message_id);
     CREATE INDEX IF NOT EXISTS idx_email_import_log_imported_at ON email_import_log(imported_at);
+    CREATE INDEX IF NOT EXISTS idx_email_inbox_status ON email_inbox(status);
+    CREATE INDEX IF NOT EXISTS idx_email_inbox_received_at ON email_inbox(received_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at);
   `);
 
   // マイグレーション: カラム追加

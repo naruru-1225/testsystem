@@ -137,5 +137,28 @@ export const statsRepository = {
       testsByFolder,
       recentTests,
     };
-  }
+  },
+
+  /** 日別登録推移 (последние N days) (#63) */
+  getRegistrationTrend: (days: number = 30) => {
+    return db.prepare(`
+      SELECT 
+        date(created_at) as date,
+        COUNT(*) as count
+      FROM tests
+      WHERE date(created_at) >= date('now', '-${days} days')
+      GROUP BY date(created_at)
+      ORDER BY date ASC
+    `).all() as { date: string; count: number }[];
+  },
+
+  /** 学年×科目カバレッジ (#64) */
+  getSubjectCoverage: () => {
+    return db.prepare(`
+      SELECT grade, subject, COUNT(*) as count
+      FROM tests
+      GROUP BY grade, subject
+      ORDER BY grade, subject
+    `).all() as { grade: string; subject: string; count: number }[];
+  },
 };

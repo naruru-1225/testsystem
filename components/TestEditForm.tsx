@@ -52,6 +52,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // フィールド単位エラー (#23)
 
   // フォルダの展開状態
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
@@ -599,19 +600,16 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
     setError(null);
     setSuccess(false);
 
-    // バリデーション
-    if (!name.trim()) {
-      setError("テスト名を入力してください");
+    // フィールド単位バリデーション (#23)
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "テスト名を入力してください";
+    if (!subject) errors.subject = "科目を選択してください";
+    if (!grade) errors.grade = "学年を選択してください";
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
-    if (!subject) {
-      setError("科目を選択してください");
-      return;
-    }
-    if (!grade) {
-      setError("学年を選択してください");
-      return;
-    }
+    setFieldErrors({});
 
     setLoading(true);
 
@@ -742,12 +740,15 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                 type="text"
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setFieldErrors((p) => ({ ...p, name: undefined as any })); }}
                 placeholder="例: 2023年度 1学期期末テスト"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  fieldErrors.name ? "border-red-400 bg-red-50" : "border-gray-300"
+                }`}
                 disabled={loading || success}
                 maxLength={200}
               />
+              {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
             </div>
 
             {/* 科目と学年 */}
@@ -766,8 +767,10 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                 <select
                   id="subject"
                   value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => { setSubject(e.target.value); setFieldErrors((p) => ({ ...p, subject: undefined as any })); }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    fieldErrors.subject ? "border-red-400 bg-red-50" : "border-gray-300"
+                  }`}
                   disabled={loading || success}
                 >
                   <option value="">選択してください</option>
@@ -777,6 +780,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.subject && <p className="mt-1 text-sm text-red-600">{fieldErrors.subject}</p>}
               </div>
 
               {/* 学年 */}
@@ -793,8 +797,10 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                 <select
                   id="grade"
                   value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => { setGrade(e.target.value); setFieldErrors((p) => ({ ...p, grade: undefined as any })); }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    fieldErrors.grade ? "border-red-400 bg-red-50" : "border-gray-300"
+                  }`}
                   disabled={loading || success}
                 >
                   <option value="">選択してください</option>
@@ -804,6 +810,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.grade && <p className="mt-1 text-sm text-red-600">{fieldErrors.grade}</p>}
               </div>
             </div>
 

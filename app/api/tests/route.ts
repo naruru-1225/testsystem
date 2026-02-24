@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { testRepository } from "@/lib/repositories/testRepository";
 import { folderRepository } from "@/lib/repositories/folderRepository";
 import { withErrorHandling, validationError } from "@/lib/api-utils";
-import db from "@/lib/db/db-instance"; // For uncategorized folder check if needed, or use repository
+import db from "@/lib/db/db-instance";
+import { auditService } from "@/lib/services/auditService";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 /**
  * テスト一覧取得API
@@ -68,6 +70,12 @@ export const POST = withErrorHandling(async (request: Request) => {
     return validationError("必須項目が入力されていません");
   }
 
+  // 入力値サニタイズ (#101)
+  name = sanitizeText(name);
+  subject = sanitizeText(subject);
+  grade = sanitizeText(grade);
+  if (description) description = sanitizeText(description);
+
   // フォルダ処理ロジック
   const uncategorizedFolder = folderRepository.getUncategorized();
   const uncategorizedId = uncategorizedFolder?.id || 2; // デフォルトID=2
@@ -105,6 +113,11 @@ export const POST = withErrorHandling(async (request: Request) => {
     totalScore,
     attachments
   });
+
+  // 監査ログ記録 (#103)
+  if (newTest) {
+    auditService.log("create", "test", newTest.id as number, name, request);
+  }
 
   return NextResponse.json(newTest, { status: 201 });
 });
