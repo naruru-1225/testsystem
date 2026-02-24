@@ -81,6 +81,61 @@ export default function TestList() {
   const [bulkTargetTagId, setBulkTargetTagId] = useState<string>("");
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  // #89 エラー状態（リトライ対応）
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // #90 確認ダイアログ（confirm()の代替）
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => void;
+    detail?: string;
+  } | null>(null);
+
+  // #104 Undo削除
+  const [undoQueue, setUndoQueue] = useState<{
+    tests: TestWithTags[];
+    timer: ReturnType<typeof setTimeout>;
+    message: string;
+  } | null>(null);
+
+  // #44 詳細検索フィルタ
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advDateFrom, setAdvDateFrom] = useLocalStorage<string>("testlist-adv-dateFrom", "");
+  const [advDateTo, setAdvDateTo] = useLocalStorage<string>("testlist-adv-dateTo", "");
+  const [advMinQ, setAdvMinQ] = useLocalStorage<string>("testlist-adv-minQ", "");
+  const [advMaxQ, setAdvMaxQ] = useLocalStorage<string>("testlist-adv-maxQ", "");
+
+  // #45 検索履歴（localStorageに保存）
+  const [searchHistory, setSearchHistory] = useLocalStorage<string[]>("testlist-search-history", []);
+  const [showSearchHistory, setShowSearchHistory] = useState(false);
+
+  // #46 複数タグフィルタ
+  const [selectedTagIds, setSelectedTagIds] = useLocalStorage<number[]>("testlist-tag-ids", []);
+  const [tagFilterMode, setTagFilterMode] = useLocalStorage<"AND" | "OR">("testlist-tag-mode", "OR");
+
+  // #47 フィルタプリセット
+  const [filterPresets, setFilterPresets] = useLocalStorage<{name: string; tagIds: number[]; mode: "AND"|"OR"; dateFrom: string; dateTo: string}[]>("testlist-filter-presets", []);
+  const [showPresetSave, setShowPresetSave] = useState(false);
+  const [presetName, setPresetName] = useState("");
+
+  // #109 QRコードモーダル
+  const [qrModal, setQrModal] = useState<{ testId: number; testName: string } | null>(null);
+
+  // #119 コメントモーダル
+  const [commentModal, setCommentModal] = useState<{ testId: number; testName: string } | null>(null);
+  const [comments, setComments] = useState<{ id: number; content: string; device_hint: string | null; created_at: string }[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+
+  // #124 変更履歴モーダル
+  const [historyModal, setHistoryModal] = useState<{ testId: number; testName: string } | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<{ id: number; action: string; device_hint: string | null; created_at: string }[]>([]);
+
+  // #118 関連テストモーダル
+  const [relatedModal, setRelatedModal] = useState<{ testId: number; testName: string } | null>(null);
+  const [relatedTests, setRelatedTests] = useState<{ id: number; name: string; subject: string | null; grade: string | null }[]>([]);
+  const [relatedSearchQuery, setRelatedSearchQuery] = useState("");
+
   // フォルダデータを取得してパンくずリスト用に使用
   const { data: foldersData } = useFolders();
   const folders = foldersData || [];
@@ -91,16 +146,47 @@ export default function TestList() {
     return buildBreadcrumbs(folders, selectedFolderId);
   }, [folders, selectedFolderId]);
 
-  // 表示設定に基づきソート済みテスト一覧を生成
+  // 表示設定に基づきソート済み・フィルタ済みテスト一覧を生成（#44 #46 詳細検索・複数タグ）
   const sortedTests = useMemo(() => {
-    return [...tests].sort((a, b) => {
+    let filtered = [...tests];
+
+    // #46 複数タグフィルタ（AND/OR）
+    if (selectedTagIds.length > 0) {
+      filtered = filtered.filter((test) => {
+        const testTagIds = (test.tags || []).map((t) => t.id);
+        if (tagFilterMode === "AND") {
+          return selectedTagIds.every((tid) => testTagIds.includes(tid));
+        } else {
+          return selectedTagIds.some((tid) => testTagIds.includes(tid));
+        }
+      });
+    }
+
+    // #44 詳細検索フィルタ
+    if (advDateFrom) {
+      const from = new Date(advDateFrom).getTime();
+      filtered = filtered.filter((t) => new Date(t.created_at).getTime() >= from);
+    }
+    if (advDateTo) {
+      const to = new Date(advDateTo + "T23:59:59").getTime();
+      filtered = filtered.filter((t) => new Date(t.created_at).getTime() <= to);
+    }
+    if (advMinQ) {
+      const min = Number(advMinQ);
+      filtered = filtered.filter((t) => t.total_questions != null && t.total_questions >= min);
+    }
+    if (advMaxQ) {
+      const max = Number(advMaxQ);
+      filtered = filtered.filter((t) => t.total_questions != null && t.total_questions <= max);
+    }
+
+    return filtered.sort((a, b) => {
       if (sortOrder === "name") return a.name.localeCompare(b.name, "ja");
       if (sortOrder === "oldest")
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      // "newest" (default)
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [tests, sortOrder]);
+  }, [tests, sortOrder, selectedTagIds, tagFilterMode, advDateFrom, advDateTo, advMinQ, advMaxQ]);
 
   // ページネーション: ソート・フィルタ変更時にページリセット
   useEffect(() => {
@@ -125,14 +211,8 @@ export default function TestList() {
   const fetchTests = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const params = new URLSearchParams();
-
-      console.log("Fetching tests with:", {
-        selectedFolderId,
-        selectedCategory,
-        selectedTagId,
-        searchQuery,
-      });
 
       if (selectedFolderId)
         params.append("folderId", selectedFolderId.toString());
@@ -140,17 +220,22 @@ export default function TestList() {
         params.append("grade", selectedCategory.grade);
       if (selectedCategory?.subject)
         params.append("subject", selectedCategory.subject);
+      // 単一タグフィルタ（レガシー互換）- 複数タグはクライアントでフィルタ
       if (selectedTagId) params.append("tagId", selectedTagId.toString());
       if (searchQuery) params.append("search", searchQuery);
-
-      console.log("API URL:", `/api/tests?${params.toString()}`);
 
       const response = await fetch(`/api/tests?${params}`);
       if (!response.ok) throw new Error("テストの取得に失敗しました");
       const data = await response.json();
       setTests(data);
+
+      // #45 検索履歴に追加（空でなく、重複しない場合）
+      if (searchQuery.trim() && !searchHistory.includes(searchQuery.trim())) {
+        setSearchHistory([searchQuery.trim(), ...searchHistory.slice(0, 9)]);
+      }
     } catch (error) {
       console.error("テスト取得エラー:", error);
+      setFetchError(error instanceof Error ? error.message : "テストの読み込みに失敗しました");
     } finally {
       setLoading(false);
     }
@@ -385,6 +470,209 @@ export default function TestList() {
     }
   };
 
+  // #90 確認ダイアログを開く ヘルパー
+  const showConfirm = (message: string, onConfirm: () => void, detail?: string) => {
+    setConfirmDialog({ message, onConfirm, detail });
+  };
+
+  // #104 Undo削除：楽観的に一覧から削除し、タイマー後に本削除
+  const handleDeleteWithUndo = (test: TestWithTags) => {
+    // 既存の Undo があればキャンセル（即実行）
+    if (undoQueue) {
+      clearTimeout(undoQueue.timer);
+      // 既存の削除を即実行（非同期、エラーは無視）
+      undoQueue.tests.forEach((t) => {
+        fetch(`/api/tests/${t.id}`, { method: "DELETE" }).catch(() => {});
+      });
+    }
+    // 楽観的に一覧から除去
+    setTests((prev) => prev.filter((t) => t.id !== test.id));
+    setDeleteConfirm(null);
+    setCategoryRefreshTrigger((prev) => prev + 1);
+
+    const timer = setTimeout(async () => {
+      try {
+        await fetch(`/api/tests/${test.id}`, { method: "DELETE" });
+        setUndoQueue(null);
+      } catch {
+        // 削除失敗時は復元
+        toastError("削除に失敗しました。テストを復元します。");
+        await fetchTests();
+        setUndoQueue(null);
+      }
+    }, 8000);
+
+    setUndoQueue({ tests: [test], timer, message: `「${test.name}」を削除しました` });
+  };
+
+  // #104 Undo をキャンセル（テストを復元）
+  const handleUndoDelete = () => {
+    if (!undoQueue) return;
+    clearTimeout(undoQueue.timer);
+    setUndoQueue(null);
+    fetchTests(); // 実際のDB状態を再取得して復元
+    toastSuccess("削除を取り消しました");
+  };
+
+  // #39 一括印刷
+  const handleBulkPrint = () => {
+    if (selectedIds.size === 0) return;
+    const selectedTests = tests.filter((t) => selectedIds.has(t.id) && t.pdf_path);
+    if (selectedTests.length === 0) {
+      toastError("選択したテストにPDFがありません");
+      return;
+    }
+    // 各PDFをiframeで印刷
+    selectedTests.forEach((test, i) => {
+      setTimeout(() => {
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = test.pdf_path!;
+        document.body.appendChild(iframe);
+        iframe.onload = () => {
+          iframe.contentWindow?.print();
+          setTimeout(() => document.body.removeChild(iframe), 3000);
+        };
+      }, i * 1500);
+    });
+    toastSuccess(`${selectedTests.length}件のPDFを印刷中...`);
+  };
+
+  // #47 フィルタプリセット保存
+  const saveFilterPreset = () => {
+    if (!presetName.trim()) return;
+    const newPreset = {
+      name: presetName.trim(),
+      tagIds: selectedTagIds,
+      mode: tagFilterMode,
+      dateFrom: advDateFrom,
+      dateTo: advDateTo,
+    };
+    setFilterPresets([newPreset, ...filterPresets.filter((p) => p.name !== presetName.trim())]);
+    setPresetName("");
+    setShowPresetSave(false);
+    toastSuccess("フィルタプリセットを保存しました");
+  };
+
+  // #47 フィルタプリセット適用
+  const applyFilterPreset = (p: typeof filterPresets[0]) => {
+    setSelectedTagIds(p.tagIds);
+    setTagFilterMode(p.mode);
+    setAdvDateFrom(p.dateFrom);
+    setAdvDateTo(p.dateTo);
+    setCurrentPage(0);
+    toastSuccess(`プリセット「${p.name}」を適用しました`);
+  };
+
+  // 詳細フィルタが有効かどうか
+  const hasAdvancedFilter = (selectedTagIds.length > 0 || !!advDateFrom || !!advDateTo || !!advMinQ || !!advMaxQ);
+
+  // #109 QRコードモーダルを開く
+  const openQrModal = (test: TestWithTags) => {
+    setQrModal({ testId: test.id, testName: test.name });
+  };
+
+  // #119 コメントモーダルを開いてコメント一覧を取得
+  const openCommentModal = async (test: TestWithTags) => {
+    setCommentModal({ testId: test.id, testName: test.name });
+    setCommentInput("");
+    setCommentLoading(true);
+    try {
+      const res = await fetch(`/api/tests/${test.id}/comments`);
+      const data = await res.json();
+      setComments(data.comments || []);
+    } catch {
+      setComments([]);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!commentModal || !commentInput.trim()) return;
+    setCommentLoading(true);
+    try {
+      const res = await fetch(`/api/tests/${commentModal.testId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: commentInput.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => [...prev, data.comment]);
+        setCommentInput("");
+      } else {
+        toastError(data.error || "コメントの追加に失敗しました");
+      }
+    } catch {
+      toastError("コメントの追加に失敗しました");
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const deleteComment = async (commentId: number) => {
+    if (!commentModal) return;
+    try {
+      await fetch(`/api/tests/${commentModal.testId}/comments?commentId=${commentId}`, { method: "DELETE" });
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch {
+      toastError("コメントの削除に失敗しました");
+    }
+  };
+
+  // #124 変更履歴モーダルを開く
+  const openHistoryModal = async (test: TestWithTags) => {
+    setHistoryModal({ testId: test.id, testName: test.name });
+    try {
+      const res = await fetch(`/api/tests/${test.id}/history`);
+      const data = await res.json();
+      setHistoryEntries(data.history || []);
+    } catch {
+      setHistoryEntries([]);
+    }
+  };
+
+  // #118 関連テストモーダルを開く
+  const openRelatedModal = async (test: TestWithTags) => {
+    setRelatedModal({ testId: test.id, testName: test.name });
+    setRelatedSearchQuery("");
+    try {
+      const res = await fetch(`/api/tests/${test.id}/related`);
+      const data = await res.json();
+      setRelatedTests(data.related || []);
+    } catch {
+      setRelatedTests([]);
+    }
+  };
+
+  const addRelatedTest = async (relatedTestId: number) => {
+    if (!relatedModal) return;
+    try {
+      await fetch(`/api/tests/${relatedModal.testId}/related`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ relatedTestId }),
+      });
+      // リロード
+      const res = await fetch(`/api/tests/${relatedModal.testId}/related`);
+      const data = await res.json();
+      setRelatedTests(data.related || []);
+    } catch {
+      toastError("関連テストの追加に失敗しました");
+    }
+  };
+
+  const removeRelatedTest = async (relatedTestId: number) => {
+    if (!relatedModal) return;
+    try {
+      await fetch(`/api/tests/${relatedModal.testId}/related?relatedTestId=${relatedTestId}`, { method: "DELETE" });
+      setRelatedTests((prev) => prev.filter((t) => t.id !== relatedTestId));
+    } catch {
+      toastError("関連テストの削除に失敗しました");
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* モバイル用オーバーレイ */}
@@ -497,62 +785,60 @@ export default function TestList() {
                 </svg>
               </button>
 
-              {/* 検索バー */}
+              {/* 検索バー (#43 #45) */}
               <div className="relative flex-1">
                 <input
                   type="text"
                   placeholder="キーワード、科目、学年で検索..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => { setSearchQuery(e.target.value); setShowSearchHistory(false); }}
+                  onFocus={() => searchHistory.length > 0 && setShowSearchHistory(true)}
+                  onBlur={() => setTimeout(() => setShowSearchHistory(false), 200)}
+                  className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
-                <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                )}
+                {/* #45 検索履歴ドロップダウン */}
+                {showSearchHistory && searchHistory.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-30 mt-1 max-h-48 overflow-auto">
+                    <p className="text-xs text-gray-400 px-3 pt-2 pb-1">最近の検索</p>
+                    {searchHistory.map((h, i) => (
+                      <button key={i} onClick={() => { setSearchQuery(h); setShowSearchHistory(false); }}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors">
+                        <svg className="inline w-3.5 h-3.5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {h}
+                      </button>
+                    ))}
+                    <button onClick={() => { setSearchHistory([]); setShowSearchHistory(false); }}
+                      className="block w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 border-t border-gray-100">
+                      履歴をクリア
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* タグフィルタ */}
-              <div className="relative">
-                <select
-                  value={selectedTagId ?? ""}
-                  onChange={(e) =>
-                    setSelectedTagId(
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white"
-                >
-                  <option value="">すべてのラベル</option>
-                  {tags.map((tag) => (
-                    <option key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 7l3-3 3 3m0 6l-3 3-3-3"
-                  />
+              {/* 詳細検索ボタン (#44) */}
+              <button
+                onClick={() => setShowAdvancedSearch((v) => !v)}
+                title="詳細検索・フィルタ"
+                className={`flex items-center gap-1 px-3 py-2 border rounded-lg transition-colors text-sm whitespace-nowrap ${
+                  showAdvancedSearch || hasAdvancedFilter
+                    ? "bg-primary text-white border-primary"
+                    : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-              </div>
+                <span className="hidden sm:inline">詳細</span>
+                {hasAdvancedFilter && <span className="w-2 h-2 bg-yellow-300 rounded-full" />}
+              </button>
             </div>
 
             {/* 新規テスト登録ボタン */}
@@ -576,6 +862,110 @@ export default function TestList() {
               <span>新規テスト登録</span>
             </Link>
           </div>
+
+          {/* #44 詳細検索パネル（折りたたみ可能） */}
+          {showAdvancedSearch && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+              <div className="flex flex-wrap gap-3 items-end">
+                {/* 登録日範囲 */}
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">登録日（開始）</label>
+                  <input type="date" value={advDateFrom} onChange={(e) => setAdvDateFrom(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">登録日（終了）</label>
+                  <input type="date" value={advDateTo} onChange={(e) => setAdvDateTo(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                </div>
+                {/* 大問数範囲 */}
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">大問数（最小）</label>
+                  <input type="number" min={0} value={advMinQ} onChange={(e) => setAdvMinQ(e.target.value)}
+                    placeholder="0" className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">大問数（最大）</label>
+                  <input type="number" min={0} value={advMaxQ} onChange={(e) => setAdvMaxQ(e.target.value)}
+                    placeholder="∞" className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                </div>
+
+                {/* #46 複数タグフィルタ */}
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    ラベルフィルタ
+                    <span className="ml-2 inline-flex rounded border border-gray-300 overflow-hidden">
+                      {(["OR", "AND"] as const).map((m) => (
+                        <button key={m} onClick={() => setTagFilterMode(m)}
+                          className={`px-2 py-0.5 text-xs transition-colors ${tagFilterMode === m ? "bg-primary text-white" : "bg-white text-gray-600"}`}>
+                          {m}
+                        </button>
+                      ))}
+                    </span>
+                  </label>
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((tag) => (
+                      <button key={tag.id}
+                        onClick={() => setSelectedTagIds(
+                          selectedTagIds.includes(tag.id)
+                            ? selectedTagIds.filter((i) => i !== tag.id)
+                            : [...selectedTagIds, tag.id]
+                        )}
+                        className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                          selectedTagIds.includes(tag.id)
+                            ? "text-white border-transparent"
+                            : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                        }`}
+                        style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color || "#3B82F6" } : {}}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* フィルタクリア・プリセット */}
+                <div className="flex gap-2">
+                  {hasAdvancedFilter && (
+                    <button onClick={() => { setSelectedTagIds([]); setAdvDateFrom(""); setAdvDateTo(""); setAdvMinQ(""); setAdvMaxQ(""); setCurrentPage(0); }}
+                      className="px-3 py-1.5 text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors">
+                      クリア
+                    </button>
+                  )}
+                  {/* #47 プリセット保存 */}
+                  <button onClick={() => setShowPresetSave((v) => !v)}
+                    className="px-3 py-1.5 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                    保存
+                  </button>
+                </div>
+              </div>
+
+              {/* プリセット保存フォーム */}
+              {showPresetSave && (
+                <div className="mt-2 flex gap-2 items-center">
+                  <input type="text" value={presetName} onChange={(e) => setPresetName(e.target.value)}
+                    placeholder="プリセット名..."
+                    className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-primary" />
+                  <button onClick={saveFilterPreset} disabled={!presetName.trim()}
+                    className="px-3 py-1 bg-primary text-white rounded text-sm disabled:opacity-50 hover:bg-primary-dark">追加</button>
+                  <button onClick={() => setShowPresetSave(false)} className="px-3 py-1 text-gray-500 text-sm hover:text-gray-700">×</button>
+                </div>
+              )}
+
+              {/* #47 保存済みプリセット一覧 */}
+              {filterPresets.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {filterPresets.map((p, i) => (
+                    <div key={i} className="flex items-center gap-0.5 border border-gray-300 rounded-full overflow-hidden text-xs">
+                      <button onClick={() => applyFilterPreset(p)} className="px-2 py-1 hover:bg-gray-50 transition-colors">{p.name}</button>
+                      <button onClick={() => setFilterPresets(filterPresets.filter((_, fi) => fi !== i))}
+                        className="px-1.5 py-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 表示設定バー（ソート・カード/リスト切替・行高さ・件数/ページ・リセット） */}
           <div className="flex items-center gap-2 flex-wrap mt-3 text-sm">
@@ -709,9 +1099,7 @@ export default function TestList() {
               {/* 一括削除 */}
               <button
                 onClick={() => {
-                  if (confirm(`${selectedIds.size}件のテストを削除しますか？この操作は取り消せません。`)) {
-                    handleBulkDelete();
-                  }
+                  showConfirm(`${selectedIds.size}件のテストを削除しますか？`, handleBulkDelete, 'この操作は取り消せません。');
                 }}
                 disabled={bulkProcessing}
                 className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
@@ -846,6 +1234,19 @@ export default function TestList() {
                 </button>
               )}
 
+              {/* #39 一括印刷 */}
+              <button
+                onClick={handleBulkPrint}
+                disabled={bulkProcessing}
+                className="flex items-center gap-1 px-3 py-1 bg-purple-50 border border-purple-300 text-purple-700 rounded hover:bg-purple-100 transition-colors disabled:opacity-50"
+                title="選択したテストのPDFを印刷"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                一括印刷
+              </button>
+
               {/* PDF一括ZIPダウンロード (#106) */}
               <button
                 onClick={handleBulkZipDownload}
@@ -860,6 +1261,35 @@ export default function TestList() {
               </button>
             </div>
             {bulkProcessing && <span className="text-blue-500 text-xs ml-2">処理中...</span>}
+          </div>
+        )}
+
+        {/* #89 エラーバー */}
+        {fetchError && !loading && (
+          <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-700 text-sm flex-1">{fetchError}</p>
+            <button
+              onClick={fetchTests}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+            >
+              再試行
+            </button>
+          </div>
+        )}
+
+        {/* #104 Undo バー */}
+        {undoQueue && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg flex items-center gap-4 shadow-lg z-50">
+            <span className="text-sm">{undoQueue.message}</span>
+            <button
+              onClick={handleUndoDelete}
+              className="px-3 py-1 bg-white text-gray-800 rounded text-sm hover:bg-gray-100 transition-colors"
+            >
+              取り消す
+            </button>
           </div>
         )}
 
@@ -891,7 +1321,7 @@ export default function TestList() {
                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                {searchQuery || selectedTagId || selectedCategory ? (
+                {searchQuery || selectedTagIds.length > 0 || selectedCategory || hasAdvancedFilter ? (
                   <>
                     <p className="text-gray-500 font-medium">条件に一致するテストが見つかりませんでした</p>
                     <p className="text-gray-400 text-sm mt-1">検索条件を変更するか、フィルターをクリアしてください</p>
@@ -981,31 +1411,13 @@ export default function TestList() {
                         >
                           編集
                         </Link>
-                        {deleteConfirm === test.id ? (
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleDelete(test.id)}
-                              disabled={deleting}
-                              className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
-                            >
-                              {deleting ? "削除中..." : "確定"}
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              disabled={deleting}
-                              className="text-xs text-gray-600 hover:text-gray-700 font-medium disabled:opacity-50"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(test.id)}
-                            className="text-xs text-red-600 hover:text-red-700 font-medium"
-                          >
-                            削除
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleDeleteWithUndo(test)}
+                          className="text-xs text-red-600 hover:text-red-700 font-medium"
+                          title="削除（8秒以内に取り消せます）"
+                        >
+                          削除
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1141,7 +1553,7 @@ export default function TestList() {
                           {formatDate(test.created_at)}
                         </td>
                         <td className={`px-4 ${rowPadding[rowHeight]}`}>
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex gap-2 flex-wrap items-center">
                             <Link
                               href={`/tests/${test.id}/edit`}
                               className="text-primary hover:text-primary-dark text-sm font-medium"
@@ -1155,31 +1567,53 @@ export default function TestList() {
                             >
                               複製
                             </button>
-                            {deleteConfirm === test.id ? (
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleDelete(test.id)}
-                                  disabled={deleting}
-                                  className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50"
-                                >
-                                  {deleting ? "削除中..." : "確定"}
-                                </button>
-                                <button
-                                  onClick={() => setDeleteConfirm(null)}
-                                  disabled={deleting}
-                                  className="text-gray-600 hover:text-gray-700 text-sm font-medium disabled:opacity-50"
-                                >
-                                  キャンセル
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setDeleteConfirm(test.id)}
-                                className="text-red-600 hover:text-red-700 text-sm font-medium"
-                              >
-                                削除
-                              </button>
-                            )}
+                            {/* #109 QR */}
+                            <button
+                              onClick={() => openQrModal(test)}
+                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              title="QRコードを表示"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5V16M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
+                              </svg>
+                            </button>
+                            {/* #119 コメント */}
+                            <button
+                              onClick={() => openCommentModal(test)}
+                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              title="コメント"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
+                            </button>
+                            {/* #124 変更履歴 */}
+                            <button
+                              onClick={() => openHistoryModal(test)}
+                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              title="変更履歴"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </button>
+                            {/* #118 関連テスト */}
+                            <button
+                              onClick={() => openRelatedModal(test)}
+                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              title="関連テスト"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteWithUndo(test)}
+                              className="text-red-600 hover:text-red-700 text-sm font-medium"
+                              title="削除（8秒以内に取り消せます）"
+                            >
+                              削除
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1267,6 +1701,228 @@ export default function TestList() {
           testId={selectedTest.id}
           onClose={handleClosePdfViewer}
         />
+      )}
+
+      {/* #90 確認ダイアログ */}
+      {confirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setConfirmDialog(null)}>
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">{confirmDialog.message}</p>
+                {confirmDialog.detail && <p className="text-sm text-gray-500 mt-1">{confirmDialog.detail}</p>}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                削除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* #109 QRコードモーダル */}
+      {qrModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setQrModal(null)}>
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-xs w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800">QRコード</h3>
+              <button onClick={() => setQrModal(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 mb-3 truncate">{qrModal.testName}</p>
+            <div className="flex justify-center mb-4">
+              <img
+                src={`/api/tests/${qrModal.testId}/qr`}
+                alt="QR Code"
+                className="w-48 h-48"
+              />
+            </div>
+            <p className="text-xs text-gray-400 text-center break-all">
+              {typeof window !== "undefined" ? `${window.location.origin}/tests/${qrModal.testId}/edit` : ""}
+            </p>
+            <button
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = `/api/tests/${qrModal.testId}/qr`;
+                link.download = `qr-test-${qrModal.testId}.png`;
+                link.click();
+              }}
+              className="mt-4 w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm"
+            >
+              PNG ダウンロード
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* #119 コメントモーダル */}
+      {commentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setCommentModal(null)}>
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-md w-full mx-4 flex flex-col gap-4 max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-800">コメント</h3>
+              <button onClick={() => setCommentModal(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 -mt-2 truncate">{commentModal.testName}</p>
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+              {commentLoading ? (
+                <div className="text-center py-4 text-gray-400 text-sm">読み込み中...</div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm">まだコメントはありません</div>
+              ) : (
+                comments.map((c) => (
+                  <div key={c.id} className="bg-gray-50 rounded-lg p-3 flex items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{c.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(c.created_at).toLocaleString("ja-JP")}
+                        {c.device_hint && ` · ${c.device_hint}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => deleteComment(c.id)}
+                      className="text-gray-300 hover:text-red-500 text-xs flex-shrink-0"
+                      title="削除"
+                    >✕</button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <textarea
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) submitComment(); }}
+                placeholder="コメントを入力... (Ctrl+Enter で投稿)"
+                className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                rows={2}
+              />
+              <button
+                onClick={submitComment}
+                disabled={commentLoading || !commentInput.trim()}
+                className="px-4 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 text-sm transition-colors"
+              >
+                投稿
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* #124 変更履歴モーダル */}
+      {historyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setHistoryModal(null)}>
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">変更履歴</h3>
+              <button onClick={() => setHistoryModal(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4 truncate">{historyModal.testName}</p>
+            <div className="flex-1 overflow-y-auto">
+              {historyEntries.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 text-sm">変更履歴がありません</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-gray-600 font-medium">操作</th>
+                      <th className="px-3 py-2 text-left text-gray-600 font-medium">端末</th>
+                      <th className="px-3 py-2 text-left text-gray-600 font-medium">日時</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {historyEntries.map((h) => (
+                      <tr key={h.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 font-medium text-gray-700">{h.action}</td>
+                        <td className="px-3 py-2 text-gray-500">{h.device_hint || "-"}</td>
+                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
+                          {new Date(h.created_at).toLocaleString("ja-JP")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* #118 関連テストモーダル */}
+      {relatedModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setRelatedModal(null)}>
+          <div className="bg-white rounded-xl p-6 shadow-xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-800">関連テスト</h3>
+              <button onClick={() => setRelatedModal(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 -mt-2 truncate">{relatedModal.testName}</p>
+            {/* 現在の関連テスト */}
+            <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+              {relatedTests.length === 0 ? (
+                <div className="text-sm text-gray-400 py-2">関連テストなし</div>
+              ) : (
+                relatedTests.map((t) => (
+                  <div key={t.id} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+                    <Link href={`/tests/${t.id}/edit`} className="flex-1 text-sm text-primary hover:underline truncate">
+                      {t.name}
+                    </Link>
+                    {t.subject && <span className="text-xs text-gray-400">{t.subject}</span>}
+                    {t.grade && <span className="text-xs text-gray-400">{t.grade}</span>}
+                    <button onClick={() => removeRelatedTest(t.id)} className="text-gray-300 hover:text-red-500 text-xs" title="解除">✕</button>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* テスト検索して追加 */}
+            <div className="pt-2 border-t">
+              <p className="text-xs text-gray-500 mb-2">テストを検索して追加:</p>
+              <input
+                type="text"
+                value={relatedSearchQuery}
+                onChange={(e) => setRelatedSearchQuery(e.target.value)}
+                placeholder="テスト名で検索..."
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+              />
+              {relatedSearchQuery.trim() && (
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {tests
+                    .filter((t) =>
+                      t.id !== relatedModal.testId &&
+                      !relatedTests.some((r) => r.id === t.id) &&
+                      t.name.toLowerCase().includes(relatedSearchQuery.toLowerCase())
+                    )
+                    .slice(0, 5)
+                    .map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => addRelatedTest(t.id)}
+                        className="w-full text-left text-sm px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-700 border border-transparent hover:border-blue-200 transition-colors truncate"
+                      >
+                        + {t.name}
+                      </button>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 管理者モーダル */}

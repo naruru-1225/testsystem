@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import type { Folder } from "@/types/database";
 import {
   useFolders,
@@ -84,6 +84,24 @@ export default function Sidebar({
 
   // 表示設定パネルの開閉
   const [themeOpen, setThemeOpen] = useState(false);
+
+  // #78 受信トレイ未処理バッジ
+  const [inboxPendingCount, setInboxPendingCount] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/inbox");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setInboxPendingCount(data.pendingCount ?? 0);
+      } catch { /* サイレントに失敗 */ }
+    };
+    fetchCount();
+    // 5分ごとに再取得
+    const interval = setInterval(fetchCount, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   // データをstateとして扱う（nullチェック対応）
   const folders = foldersData || [];
@@ -456,9 +474,15 @@ export default function Sidebar({
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
             />
           </svg>
-          <span className="text-sm md:text-base font-semibold">
+          <span className="text-sm md:text-base font-semibold flex-1">
             メール受信トレイ
           </span>
+          {/* #78 未処理バッジ */}
+          {inboxPendingCount > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+              {inboxPendingCount > 99 ? "99+" : inboxPendingCount}
+            </span>
+          )}
         </a>
       </div>
 

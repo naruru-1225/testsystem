@@ -10,6 +10,7 @@ export interface EmailInboxItem {
   message_id: string | null;
   status: "pending" | "assigned" | "error";
   error_message: string | null;
+  content_hash: string | null;
 }
 
 export const emailInboxRepository = {
@@ -52,22 +53,35 @@ export const emailInboxRepository = {
     original_subject?: string;
     from_address?: string;
     message_id?: string;
+    content_hash?: string;
   }): EmailInboxItem {
     const result = db
       .prepare(
-        `INSERT INTO email_inbox (file_name, file_path, original_subject, from_address, message_id)
-         VALUES (?, ?, ?, ?, ?)`
+        `INSERT INTO email_inbox (file_name, file_path, original_subject, from_address, message_id, content_hash)
+         VALUES (?, ?, ?, ?, ?, ?)`
       )
       .run(
         item.file_name,
         item.file_path,
         item.original_subject ?? null,
         item.from_address ?? null,
-        item.message_id ?? null
+        item.message_id ?? null,
+        item.content_hash ?? null
       );
     return db
       .prepare("SELECT * FROM email_inbox WHERE id = ?")
       .get(result.lastInsertRowid) as EmailInboxItem;
+  },
+
+  /**
+   * #80 コンテンツハッシュで重複チェック
+   */
+  isDuplicateByHash(contentHash: string): boolean {
+    if (!contentHash) return false;
+    const result = db
+      .prepare("SELECT id FROM email_inbox WHERE content_hash = ?")
+      .get(contentHash) as { id: number } | undefined;
+    return !!result;
   },
 
   /**

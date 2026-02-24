@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Folder, Tag, Grade, Subject } from "@/types/database";
 
@@ -55,6 +55,21 @@ export default function TestCreateForm({
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // フィールド単位エラー (#23)
   const [draftRestored, setDraftRestored] = useState(false); // 自動保存ドラフト復元通知 (#17)
+
+  // #19 テンプレート
+  const [formTemplates, setFormTemplates] = useState<{name: string; subject: string; grade: string; folderIds: number[]; tagIds: number[]; description: string}[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(localStorage.getItem("test-form-templates") || "[]"); } catch { return []; }
+  });
+  const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [templateSaveName, setTemplateSaveName] = useState("");
+  const [showTemplateLoad, setShowTemplateLoad] = useState(false);
+
+  // #22 添付ファイル並び替え
+  const fileDragSourceRef = useRef<number | null>(null);
+
+  // #28 アップロード進捗
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   // フォルダの展開状態
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
@@ -608,35 +623,127 @@ export default function TestCreateForm({
     e.stopPropagation();
   };
 
-  // 添付PDFアップロード処理
-  const uploadAttachment = async (file: File) => {
-    setUploadingAttachment(true);
-    setError(null);
+  // #19 テンプレート保存
+  const saveTemplate = () => {
+    if (!templateSaveName.trim()) return;
+    const newTemplate = { name: templateSaveName.trim(), subject, grade, folderIds: selectedFolderIds, tagIds: selectedTagIds, description };
+    const updated = [...formTemplates, newTemplate];
+    setFormTemplates(updated);
+    localStorage.setItem("test-form-templates", JSON.stringify(updated));
+    setTemplateSaveName("");
+    setShowTemplateSave(false);
+  };
 
-    try {
+  const loadTemplate = (tpl: typeof formTemplates[0]) => {
+    setSubject(tpl.subject);
+    setGrade(tpl.grade);
+    setSelectedFolderIds(tpl.folderIds);
+    setSelectedTagIds(tpl.tagIds);
+    setDescription(tpl.description ?? "");
+    setShowTemplateLoad(false);
+  };
+
+  const deleteTemplate = (index: number) => {
+    const updated = formTemplates.filter((_, i) => i !== index);
+    setFormTemplates(updated);
+    localStorage.setItem("test-form-templates", JSON.stringify(updated));
+  };
+
+  // #22 添付ファイル並び替えハンドラ
+  const handleFileDragStart = (index: number) => {
+    fileDragSourceRef.current = index;
+  };
+
+  const handleFileDragOverItem = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const source = fileDragSourceRef.current;
+    if (source === null || source === index) return;
+    setAttachmentFiles((prev) => {
+      const newFiles = [...prev];
+      const [moved] = newFiles.splice(source, 1);
+      newFiles.splice(index, 0, moved);
+      return newFiles;
+    });
+    setUploadedAttachments((prev) => {
+      const newAtts = [...prev];
+      const [moved] = newAtts.splice(source, 1);
+      newAtts.splice(index, 0, moved);
+      return newAtts;
+    });
+    fileDragSourceRef.current = index;
+  };
+
+  // #25/#26 ファイルサイズフォーマット・アイコン取得
+  const formatFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / 1024 / 1024).toFixed(2)} MB`;
+  };
+
+  const getFileIcon = (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const isImage = ["jpg", "jpeg", "png", "heic", "heif"].includes(ext) || file.type.startsWith("image/");
+    if (isImage) {
+      return (
+        <svg className="w-8 h-8 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 5 2-3 3 6z" clipRule="evenodd" />
+        </svg>
+      );
+    }
+    return (
+      <svg className="w-8 h-8 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+      </svg>
+    );
+  };
+
+  // #28 アップロード進捗付き添付ファイルアップロード処理
+  const uploadAttachment = (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      setUploadingAttachment(true);
+      setError(null);
+      const progressKey = `${file.name}-${file.size}`;
+      setUploadProgress((prev) => ({ ...prev, [progressKey]: 0 }));
+
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress((prev) => ({ ...prev, [progressKey]: pct }));
+        }
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "アップロードに失敗しました");
-      }
-
-      const data = await response.json();
-      setUploadedAttachments((prev) => [...prev, { path: data.path, fileName: data.fileName }]);
-    } catch (err: any) {
-      console.error("添付PDFアップロードエラー:", err);
-      setError(err.message || "添付PDFのアップロードに失敗しました");
-      // エラーの場合、ファイルリストから削除
-      setAttachmentFiles((prev) => prev.filter((f) => f !== file));
-    } finally {
-      setUploadingAttachment(false);
-    }
+      xhr.addEventListener("load", () => {
+        setUploadProgress((prev) => { const n = { ...prev }; delete n[progressKey]; return n; });
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setUploadedAttachments((prev) => [...prev, { path: data.path, fileName: data.fileName }]);
+            resolve();
+          } catch {
+            setError("アップロード応答の解析に失敗しました");
+            setAttachmentFiles((prev) => prev.filter((f) => f !== file));
+            reject();
+          }
+        } else {
+          setError("アップロードに失敗しました");
+          setAttachmentFiles((prev) => prev.filter((f) => f !== file));
+          reject();
+        }
+        setUploadingAttachment(false);
+      });
+      xhr.addEventListener("error", () => {
+        setUploadProgress((prev) => { const n = { ...prev }; delete n[progressKey]; return n; });
+        setError("アップロードに失敗しました");
+        setAttachmentFiles((prev) => prev.filter((f) => f !== file));
+        setUploadingAttachment(false);
+        reject();
+      });
+      xhr.open("POST", "/api/upload");
+      xhr.send(formData);
+    });
   };
 
   // 添付PDF削除
@@ -803,6 +910,53 @@ export default function TestCreateForm({
             >クリア</button>
           </div>
         )}
+
+        {/* #19 テンプレートバー */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <span className="text-xs text-gray-500 font-medium">テンプレート:</span>
+          <button
+            type="button"
+            onClick={() => setShowTemplateLoad((v) => !v)}
+            className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+          >
+            📂 読み込み {formTemplates.length > 0 && `(${formTemplates.length})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setTemplateSaveName(""); setShowTemplateSave((v) => !v); }}
+            className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+          >
+            💾 保存
+          </button>
+          {showTemplateSave && (
+            <div className="flex items-center gap-1 w-full">
+              <input
+                type="text"
+                value={templateSaveName}
+                onChange={(e) => setTemplateSaveName(e.target.value)}
+                placeholder="テンプレート名..."
+                className="border rounded px-2 py-1 text-xs flex-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); saveTemplate(); } }}
+              />
+              <button type="button" onClick={saveTemplate} disabled={!templateSaveName.trim()} className="px-2 py-1 bg-primary text-white rounded text-xs disabled:opacity-50">保存</button>
+              <button type="button" onClick={() => setShowTemplateSave(false)} className="px-2 py-1 text-gray-500 text-xs hover:text-gray-700">×</button>
+            </div>
+          )}
+          {showTemplateLoad && formTemplates.length > 0 && (
+            <div className="w-full border rounded-lg bg-white shadow-sm divide-y">
+              {formTemplates.map((tpl, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2">
+                  <button type="button" onClick={() => loadTemplate(tpl)} className="flex-1 text-left text-xs text-primary hover:underline truncate">{tpl.name}</button>
+                  <span className="text-xs text-gray-400 truncate">{tpl.subject} / {tpl.grade}</span>
+                  <button type="button" onClick={() => deleteTemplate(i)} className="text-gray-300 hover:text-red-500 text-xs">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showTemplateLoad && formTemplates.length === 0 && (
+            <span className="text-xs text-gray-400">保存済みテンプレートなし</span>
+          )}
+        </div>
 
         {/* フォーム */}
         <form
@@ -1084,60 +1238,62 @@ export default function TestCreateForm({
                 </span>
               </label>
 
-              {/* アップロード済み添付ファイル一覧 */}
+              {/* アップロード済み添付ファイル一覧 (#22 並び替え / #26 アイコン / #25 サイズ / #28 進捗) */}
               {attachmentFiles.length > 0 && (
                 <div className="space-y-2 mb-3">
-                  {attachmentFiles.map((file, index) => (
+                  {attachmentFiles.map((file, index) => {
+                    const progressKey = `${file.name}-${file.size}`;
+                    const progress = uploadProgress[progressKey];
+                    const isUploading = progress !== undefined;
+                    return (
                     <div
                       key={index}
-                      className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50"
+                      draggable
+                      onDragStart={() => handleFileDragStart(index)}
+                      onDragOver={(e) => handleFileDragOverItem(e, index)}
+                      className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50 cursor-grab active:cursor-grabbing"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <svg
-                            className="w-8 h-8 text-blue-500 flex-shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                              clipRule="evenodd"
-                            />
+                        {/* ドラッグハンドル */}
+                        <div className="text-gray-300 flex-shrink-0 select-none" title="ドラッグして並び替え">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
                           </svg>
+                        </div>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {getFileIcon(file)}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
+                            <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                            {/* #28 進捗バー */}
+                            {isUploading && (
+                              <div className="mt-1">
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div
+                                    className="bg-primary rounded-full h-1.5 transition-all"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-gray-500">{progress}%</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveAttachment(index)}
-                          disabled={loading || success}
-                          className="flex-shrink-0 p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          disabled={loading || success || isUploading}
+                          className="flex-shrink-0 p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-40"
                           title="削除"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

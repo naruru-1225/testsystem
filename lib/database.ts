@@ -111,6 +111,27 @@ export function initializeDatabase() {
     )
   `);
 
+  // コメントテーブル (#119)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS test_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      test_id INTEGER NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      device_hint TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 関連テストテーブル (#118)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS related_tests (
+      test_id INTEGER NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+      related_test_id INTEGER NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (test_id, related_test_id)
+    )
+  `);
+
   // インデックス作成
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tests_folder_id ON tests(folder_id);
@@ -128,6 +149,7 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_email_inbox_status ON email_inbox(status);
     CREATE INDEX IF NOT EXISTS idx_email_inbox_received_at ON email_inbox(received_at);
     CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at);
+    CREATE INDEX IF NOT EXISTS idx_test_comments_test_id ON test_comments(test_id);
   `);
 
   // マイグレーション: カラム追加
@@ -146,6 +168,8 @@ export function initializeDatabase() {
   addColumnIfNotExists("test_folders", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
   addColumnIfNotExists("tags", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
   addColumnIfNotExists("tags", "color", "TEXT DEFAULT '#3B82F6'");
+  // #80 コンテンツハッシュ（重複検知）
+  addColumnIfNotExists("email_inbox", "content_hash", "TEXT");
 
   // フォルダのorder_index初期化 (カラム追加時のみ)
   if (addedOrderIndex) {

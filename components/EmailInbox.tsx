@@ -127,6 +127,23 @@ export default function EmailInbox() {
     router.push(`/tests/new?${params.toString()}`);
   };
 
+  // #79 エラーアイテムを再試行（pending に戻す）
+  const handleRetry = async (item: InboxItem) => {
+    try {
+      const res = await fetch(`/api/inbox/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "pending" }),
+      });
+      if (!res.ok) throw new Error("再試行に失敗しました");
+      toast.success("再試行待ちに戻しました");
+      await fetchItems();
+    } catch (err) {
+      console.error("再試行エラー:", err);
+      toast.error("再試行に失敗しました");
+    }
+  };
+
   // シードデータ投入
   const handleSeed = async () => {
     setSeeding(true);
@@ -362,6 +379,16 @@ export default function EmailInbox() {
                         title="テストを作成する"
                       >
                         登録
+                      </button>
+                    )}
+                    {/* #79 エラー再試行ボタン */}
+                    {item.status === "error" && (
+                      <button
+                        onClick={() => handleRetry(item)}
+                        className="px-3 py-1 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap"
+                        title="再試行（保留に戻す）"
+                      >
+                        再試行
                       </button>
                     )}
                     <button

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { EmailService, ParsedEmail } from "./services/emailService";
@@ -218,6 +219,13 @@ async function processEmails(
           continue;
         }
 
+        // コンテンツハッシュで重複チェック
+        const contentHash = crypto.createHash("sha256").update(attachment.content).digest("hex");
+        if (emailInboxRepository.isDuplicateByHash(contentHash)) {
+          console.log(`[EmailPoller] スキップ（コンテンツ重複）: ${attachment.filename}`);
+          continue;
+        }
+
         // PDFを受信トレイ用ディレクトリに保存
         const inboxDir = path.join(process.cwd(), "public", "uploads", "pdfs", "inbox");
         if (!fs.existsSync(inboxDir)) {
@@ -239,6 +247,7 @@ async function processEmails(
           original_subject: email.subject,
           from_address: email.from,
           message_id: importKey,
+          content_hash: contentHash,
         });
 
         imported++;

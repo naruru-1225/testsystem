@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type {
   Folder,
@@ -40,6 +40,10 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [editingAttachmentId, setEditingAttachmentId] = useState<number | null>(null);
   const [editingAttachmentName, setEditingAttachmentName] = useState("");
+  // #22 並び替え
+  const attachDragSourceRef = useRef<number | null>(null);
+  // #28 アップロード進捗
+  const [attachUploadProgress, setAttachUploadProgress] = useState<number | null>(null);
 
   // マスターデータ
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -496,44 +500,60 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   };
 
   // 添付ファイルのアップロード処理
-  const uploadAttachment = async (file: File) => {
-    setUploadingAttachment(true);
-    setError(null);
+  const uploadAttachment = (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      setUploadingAttachment(true);
+      setError(null);
+      setAttachUploadProgress(0);
 
-    try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("testId", testId.toString());
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) setAttachUploadProgress(Math.round((e.loaded / e.total) * 100));
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "アップロードに失敗しました");
-      }
-
-      const data = await response.json();
-
-      // 添付ファイルリストを更新
-      const newAttachment: TestAttachment = {
-        id: data.attachmentId,
-        test_id: testId,
-        file_name: data.fileName,
-        file_path: data.path,
-        mime_type: data.mimeType ?? null,
-        file_size: typeof data.size === "number" ? data.size : null,
-        uploaded_at: new Date().toISOString(),
-      };
-      setAttachments([...attachments, newAttachment]);
-    } catch (err: any) {
-      console.error("添付ファイルアップロードエラー:", err);
-      setError(err.message || "添付ファイルのアップロードに失敗しました");
-    } finally {
-      setUploadingAttachment(false);
-    }
+      xhr.addEventListener("load", () => {
+        setAttachUploadProgress(null);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            const newAttachment: TestAttachment = {
+              id: data.attachmentId,
+              test_id: testId,
+              file_name: data.fileName,
+              file_path: data.path,
+              mime_type: data.mimeType ?? null,
+              file_size: typeof data.size === "number" ? data.size : null,
+              uploaded_at: new Date().toISOString(),
+            };
+            setAttachments((prev) => [...prev, newAttachment]);
+            resolve();
+          } catch {
+            setError("アップロード応答の解析に失敗しました");
+            reject();
+          }
+        } else {
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            setError(errData.error || "アップロードに失敗しました");
+          } catch {
+            setError("アップロードに失敗しました");
+          }
+          reject();
+        }
+        setUploadingAttachment(false);
+      });
+      xhr.addEventListener("error", () => {
+        setAttachUploadProgress(null);
+        setError("アップロードに失敗しました");
+        setUploadingAttachment(false);
+        reject();
+      });
+      xhr.open("POST", "/api/upload");
+      xhr.send(formData);
+    });
   };
 
   // 添付ファイル削除
@@ -543,9 +563,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
     try {
       const response = await fetch(
         `/api/tests/${testId}/attachments?attachmentId=${attachmentId}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
 
       if (!response.ok) {
@@ -559,6 +577,23 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
       console.error("添付ファイル削除エラー:", err);
       setError(err.message || "添付ファイルの削除に失敗しました");
     }
+  };
+
+  // #22 添付ファイル並び替えハンドラ
+  const handleAttachDragStart = (index: number) => {
+    attachDragSourceRef.current = index;
+  };
+  const handleAttachDragOverItem = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const source = attachDragSourceRef.current;
+    if (source === null || source === index) return;
+    setAttachments((prev) => {
+      const arr = [...prev];
+      const [moved] = arr.splice(source, 1);
+      arr.splice(index, 0, moved);
+      return arr;
+    });
+    attachDragSourceRef.current = index;
   };
 
   // 添付ファイル名変更
@@ -1002,11 +1037,20 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
               {/* 添付ファイルリスト */}
               {attachments.length > 0 && (
                 <div className="mb-3 space-y-2">
-                  {attachments.map((attachment) => (
+                  {attachments.map((attachment, index) => (
                     <div
                       key={attachment.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                      draggable
+                      onDragStart={() => handleAttachDragStart(index)}
+                      onDragOver={(e) => handleAttachDragOverItem(e, index)}
+                      className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing"
                     >
+                      {/* ドラッグハンドル */}
+                      <div className="text-gray-300 mr-2 flex-shrink-0 select-none" title="ドラッグして並び替え">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+                        </svg>
+                      </div>
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
                         {/* ファイルタイプに応じたアイコン表示 */}
                         {attachment.mime_type?.startsWith("image/") ? (
@@ -1184,11 +1228,17 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                     }`}
                   >
                     {uploadingAttachment ? (
-                      <div className="flex items-center justify-center space-x-2">
+                      <div className="flex flex-col items-center gap-2 p-2">
                         <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm text-gray-600">
-                          アップロード中...
-                        </span>
+                        <span className="text-sm text-gray-600">アップロード中...</span>
+                        {attachUploadProgress !== null && (
+                          <div className="w-full max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${attachUploadProgress}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-500">{attachUploadProgress}%</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <>
