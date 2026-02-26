@@ -31,6 +31,8 @@ interface SidebarProps {
   onAdminMenuClick: () => void;
   /** カテゴリ再取得のトリガー（値が変わるたびに再取得） */
   refreshTrigger?: number;
+  /** #42 テストをフォルダに移動するコールバック */
+  onTestMove?: (testId: number, folderId: number) => void;
 }
 
 /** カテゴリの型定義 */
@@ -46,6 +48,7 @@ export default function Sidebar({
   selectedCategory,
   onAdminMenuClick,
   refreshTrigger,
+  onTestMove,
 }: SidebarProps) {
   // カスタムフックを使用してフォルダとカテゴリを取得（件数付き）
   const {
@@ -211,6 +214,19 @@ export default function Sidebar({
   const handleDrop = async (e: React.DragEvent, targetFolderId: number) => {
     e.preventDefault();
 
+    // #42 テストのドロップを確認
+    const testIdStr = e.dataTransfer.getData("application/test-id");
+    if (testIdStr) {
+      const testId = parseInt(testIdStr, 10);
+      if (!isNaN(testId) && onTestMove) {
+        setDragOverFolderId(null);
+        onTestMove(testId, targetFolderId);
+      }
+      setDraggedFolderId(null);
+      setDragOverFolderId(null);
+      return;
+    }
+
     // バリデーション: ドラッグ中のフォルダと同じ位置にドロップした場合は処理中断
     if (!draggedFolderId || draggedFolderId === targetFolderId) {
       setDraggedFolderId(null);
@@ -342,6 +358,7 @@ export default function Sidebar({
           {hasChildren && (
             <button
               onClick={() => toggleFolder(folder.id)}
+              title={isExpanded ? "折りたたむ" : "展開する"}
               className="p-1 hover:bg-blue-600 rounded"
             >
               <svg
@@ -536,6 +553,7 @@ export default function Sidebar({
                     {hasSubjects && (
                       <button
                         onClick={() => toggleGrade(category.grade)}
+                        title={isGradeExpanded ? "折りたたむ" : "展開する"}
                         className="p-2 hover:bg-blue-600 rounded transition-colors"
                       >
                         <svg

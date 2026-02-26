@@ -57,6 +57,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // フィールド単位エラー (#23)
+  const [originalUpdatedAt, setOriginalUpdatedAt] = useState<string | null>(null); // #105 競合検出
 
   // フォルダの展開状態
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
@@ -198,6 +199,8 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
         testData.total_questions ? String(testData.total_questions) : ""
       );
       setTotalScore(testData.total_score ? String(testData.total_score) : "");
+      // #105 競合検出のため更新日時を記録
+      setOriginalUpdatedAt(testData.updated_at || null);
 
       setFolders(foldersData);
       setTags(tagsData);
@@ -664,11 +667,17 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
           description: description.trim() || null,
           totalQuestions: totalQuestions ? parseInt(totalQuestions) : null,
           totalScore: totalScore ? parseInt(totalScore) : null,
+          // #105 競合検出: 編集開始時のupdated_atを送信
+          lastKnownUpdatedAt: originalUpdatedAt,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        // #105 409 Conflict の場合、競合メッセージを表示
+        if (response.status === 409) {
+          throw new Error("⚠️ 別のユーザーまたはデバイスによってこのテストが変更されました。ページを更新して最新のデータを確認してください。");
+        }
         throw new Error(errorData.error || "テストの更新に失敗しました");
       }
 

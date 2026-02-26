@@ -2,9 +2,21 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import Sidebar from "./Sidebar";
-import PdfViewer from "./PdfViewer";
-import AdminModal from "./AdminModal";
+// #99 重いコンポーネントを動的インポートでコード分割
+const PdfViewer = dynamic(() => import("./PdfViewer"), {
+  loading: () => (
+    <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
+      PDFビューワーを読み込み中...
+    </div>
+  ),
+  ssr: false,
+});
+const AdminModal = dynamic(() => import("./AdminModal"), {
+  loading: () => null,
+  ssr: false,
+});
 import type { TestWithTags, TestAttachment, Tag } from "@/types/database";
 import { useFolders, useLocalStorage } from "@/lib/hooks";
 import { buildBreadcrumbs } from "@/lib/utils";
@@ -29,6 +41,42 @@ function highlightText(text: string | null | undefined, query: string): React.Re
     )
   );
 }
+
+/** #123 シンプルなMarkdownレンダラー（メモ欄表示用）
+ * **太字**, *斜体*, ~~打ち消し~~, `コード`, 改行 に対応
+ */
+function renderMarkdown(text: string): { __html: string } {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+  const html = escaped
+    // 太字
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    // 斜体
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/_(.*?)_/g, "<em>$1</em>")
+    // 打ち消し
+    .replace(/~~(.*?)~~/g, "<del>$1</del>")
+    // インラインコード
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-0.5 rounded text-xs font-mono">$1</code>')
+    // 改行
+    .replace(/\n/g, "<br>");
+  return { __html: html };
+}
+
+/** #123 Markdownのシンタックスを除去してプレーンテキストを返す */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/_(.*?)_/g, "$1")
+    .replace(/~~(.*?)~~/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\n/g, " ");
+}
+
 export default function TestList() {
   const [tests, setTests] = useState<TestWithTags[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +117,20 @@ export default function TestList() {
   );
   // ページ番号はセッション内のみ（リロードでリセット）
   const [currentPage, setCurrentPage] = useState(0);
+
+  // #34 カラム表示切替（localStorageに永続化）
+  const [visibleColumns, setVisibleColumns] = useLocalStorage<Record<string, boolean>>(
+    "testlist-visible-columns",
+    { name: true, subject: true, grade: true, memo: true, tags: true, date: true, actions: true }
+  );
+  const [showColumnToggle, setShowColumnToggle] = useState(false);
+  const columnLabels: Record<string, string> = {
+    name: "テスト名", subject: "科目", grade: "学年",
+    memo: "メモ", tags: "ラベル", date: "登録日", actions: "操作"
+  };
+  const toggleColumn = (col: string) => {
+    setVisibleColumns((prev) => ({ ...prev, [col]: !prev[col] }));
+  };
 
   const { error: toastError, success: toastSuccess } = useToast();
 
@@ -329,8 +391,23 @@ export default function TestList() {
     }
   };
 
+  // #91 ブラウザの戻るボタンでPDFビューワーを閉じる
+  useEffect(() => {
+    const onPopState = (_e: PopStateEvent) => {
+      // history.back() で遷移してきた場合はビューワーを閉じる（既に閉じていれば無害）
+      setPdfViewerOpen(false);
+      setSelectedPdfUrl(null);
+      setSelectedTest(null);
+      setTestAttachments([]);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   // PDFプレビュー表示
   const handleViewPdf = async (test: TestWithTags) => {
+    // #91 戻るボタン対応: 履歴スタックにプッシュ
+    window.history.pushState({ pdfOpen: true, testId: test.id }, "");
     setSelectedTest(test);
     setSelectedPdfUrl(test.pdf_path);
 
@@ -355,6 +432,10 @@ export default function TestList() {
     setSelectedPdfUrl(null);
     setSelectedTest(null);
     setTestAttachments([]);
+    // #91 戻るボタン対応: X ボタンで閉じた場合もブラウザ履歴を戻す
+    if (window.history.state?.pdfOpen) {
+      window.history.back();
+    }
   };
 
   // 複数選択ヘルパー
@@ -473,6 +554,22 @@ export default function TestList() {
   // #90 確認ダイアログを開く ヘルパー
   const showConfirm = (message: string, onConfirm: () => void, detail?: string) => {
     setConfirmDialog({ message, onConfirm, detail });
+  };
+
+  // #42 ドラッグ&ドロップでテストをフォルダに移動
+  const handleTestMoveToFolder = async (testId: number, folderId: number) => {
+    try {
+      const res = await fetch(`/api/tests/${testId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder_id: folderId }),
+      });
+      if (!res.ok) throw new Error("移動に失敗しました");
+      toastSuccess("テストをフォルダに移動しました");
+      fetchTests();
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "移動に失敗しました");
+    }
   };
 
   // #104 Undo削除：楽観的に一覧から削除し、タイマー後に本削除
@@ -711,6 +808,7 @@ export default function TestList() {
             setSidebarOpen(false); // モバイルでサイドバーを閉じる
           }}
           refreshTrigger={categoryRefreshTrigger}
+          onTestMove={handleTestMoveToFolder}
         />
       </div>
 
@@ -1073,6 +1171,41 @@ export default function TestList() {
               </button>
             )}
 
+            {/* #34 カラム表示切替 */}
+            {viewMode === "list" && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumnToggle((v) => !v)}
+                  title="表示列を切替"
+                  className={`flex items-center gap-1 px-2 py-1 border rounded-lg transition-colors text-xs ${
+                    showColumnToggle ? "bg-primary text-white border-primary" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  <span className="hidden sm:inline">列</span>
+                </button>
+                {showColumnToggle && (
+                  <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[120px]">
+                    {Object.keys(columnLabels).map((col) => (
+                      <label key={col} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[col] !== false}
+                          onChange={() => toggleColumn(col)}
+                          className="rounded"
+                          disabled={col === "name"}
+                        />
+                        <span className={col === "name" ? "text-gray-400" : "text-gray-700"}>{columnLabels[col]}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 件数表示 */}
             <span className="text-gray-400 ml-auto">
               {sortedTests.length} 件
@@ -1396,9 +1529,12 @@ export default function TestList() {
                       </div>
                     )}
 
-                    {/* メモ */}
+                    {/* メモ (#123 Markdown対応) */}
                     {test.description && (
-                      <p className="text-xs text-gray-500 italic line-clamp-2">{test.description}</p>
+                      <p
+                        className="text-xs text-gray-500 italic line-clamp-2"
+                        dangerouslySetInnerHTML={renderMarkdown(test.description)}
+                      />
                     )}
 
                     {/* フッター：登録日 + 操作 */}
@@ -1440,31 +1576,70 @@ export default function TestList() {
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         テスト名
                       </th>
+                      {visibleColumns["subject"] !== false && (
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         科目
                       </th>
+                      )}
+                      {visibleColumns["grade"] !== false && (
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         学年
                       </th>
+                      )}
+                      {visibleColumns["memo"] !== false && (
                       <th className="px-2 md:px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         メモ
                       </th>
+                      )}
+                      {visibleColumns["tags"] !== false && (
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         ラベル
                       </th>
+                      )}
+                      {visibleColumns["date"] !== false && (
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         登録日
                       </th>
+                      )}
+                      {visibleColumns["actions"] !== false && (
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                         操作
                       </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {paginatedTests.map((test) => (
                       <tr
                         key={test.id}
-                        className={`hover:bg-gray-50 transition-colors ${selectedIds.has(test.id) ? "bg-blue-50" : ""}`}
+                        tabIndex={0}
+                        draggable
+                        onKeyDown={(e) => {
+                          // #93 キーボードナビゲーション
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (test.pdf_path) handleViewPdf(test);
+                          } else if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            const next = e.currentTarget.nextElementSibling as HTMLElement | null;
+                            if (next) next.focus();
+                          } else if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            const prev = e.currentTarget.previousElementSibling as HTMLElement | null;
+                            if (prev) prev.focus();
+                          }
+                        }}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("text/plain", String(test.id));
+                          e.dataTransfer.setData("application/test-id", String(test.id));
+                          e.dataTransfer.effectAllowed = "move";
+                          (e.currentTarget as HTMLElement).style.opacity = "0.5";
+                        }}
+                        onDragEnd={(e) => {
+                          (e.currentTarget as HTMLElement).style.opacity = "";
+                        }}
+                        title="ドラッグしてフォルダに移動 / Enter でPDF表示"
+                        className={`hover:bg-gray-50 transition-colors cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary ${selectedIds.has(test.id) ? "bg-blue-50" : ""}`}
                       >
                         <td className={`px-3 ${rowPadding[rowHeight]} w-10`}>
                           <input
@@ -1505,34 +1680,43 @@ export default function TestList() {
                             </span>
                           )}
                         </td>
+                        {visibleColumns["subject"] !== false && (
                         <td className={`px-4 ${rowPadding[rowHeight]} text-sm`}>{highlightText(test.subject, searchQuery)}</td>
+                        )}
+                        {visibleColumns["grade"] !== false && (
                         <td className={`px-4 ${rowPadding[rowHeight]} text-sm`}>{highlightText(test.grade, searchQuery)}</td>
+                        )}
+                        {visibleColumns["memo"] !== false && (
                         <td className={`px-2 md:px-4 ${rowPadding[rowHeight]} text-sm`}>
                           {test.description ? (
                             <span
                               className="text-gray-600 italic text-xs md:text-sm"
                               title={test.description}
                             >
-                              <span className="hidden xl:inline">
-                                {test.description.length > 50
-                                  ? `${test.description.substring(0, 50)}...`
-                                  : test.description}
-                              </span>
-                              <span className="hidden lg:inline xl:hidden">
-                                {test.description.length > 30
-                                  ? `${test.description.substring(0, 30)}...`
-                                  : test.description}
-                              </span>
-                              <span className="inline lg:hidden">
-                                {test.description.length > 15
-                                  ? `${test.description.substring(0, 15)}...`
-                                  : test.description}
-                              </span>
+                              {(() => {
+                                // #123 Markdown記号を除去した平文を表示
+                                const plain = stripMarkdown(test.description);
+                                return (
+                                  <>
+                                    <span className="hidden xl:inline">
+                                      {plain.length > 50 ? `${plain.substring(0, 50)}...` : plain}
+                                    </span>
+                                    <span className="hidden lg:inline xl:hidden">
+                                      {plain.length > 30 ? `${plain.substring(0, 30)}...` : plain}
+                                    </span>
+                                    <span className="inline lg:hidden">
+                                      {plain.length > 15 ? `${plain.substring(0, 15)}...` : plain}
+                                    </span>
+                                  </>
+                                );
+                              })()}
                             </span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
                         </td>
+                        )}
+                        {visibleColumns["tags"] !== false && (
                         <td className={`px-4 ${rowPadding[rowHeight]}`}>
                           <div className="flex flex-wrap gap-1">
                             {test.tags.map((tag) => (
@@ -1549,9 +1733,13 @@ export default function TestList() {
                             ))}
                           </div>
                         </td>
+                        )}
+                        {visibleColumns["date"] !== false && (
                         <td className={`px-4 ${rowPadding[rowHeight]} text-sm text-gray-600`}>
                           {formatDate(test.created_at)}
                         </td>
+                        )}
+                        {visibleColumns["actions"] !== false && (
                         <td className={`px-4 ${rowPadding[rowHeight]}`}>
                           <div className="flex gap-2 flex-wrap items-center">
                             <Link
@@ -1616,6 +1804,7 @@ export default function TestList() {
                             </button>
                           </div>
                         </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -1694,13 +1883,15 @@ export default function TestList() {
 
       {/* PDFビューワー */}
       {pdfViewerOpen && selectedPdfUrl && selectedTest && (
-        <PdfViewer
-          pdfUrl={selectedPdfUrl}
-          attachments={testAttachments}
-          testName={selectedTest.name}
-          testId={selectedTest.id}
-          onClose={handleClosePdfViewer}
-        />
+        <div id="pdf-viewer-overlay">
+          <PdfViewer
+            pdfUrl={selectedPdfUrl}
+            attachments={testAttachments}
+            testName={selectedTest.name}
+            testId={selectedTest.id}
+            onClose={handleClosePdfViewer}
+          />
+        </div>
       )}
 
       {/* #90 確認ダイアログ */}

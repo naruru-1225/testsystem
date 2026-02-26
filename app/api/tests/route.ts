@@ -23,6 +23,9 @@ export const GET = withErrorHandling(async (request: Request) => {
   const subject = searchParams.get("subject");
   const tagId = searchParams.get("tagId");
   const search = searchParams.get("search");
+  // #100 サーバーサイドページネーション
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
 
   const filters = {
     folderId: folderId ? parseInt(folderId) : undefined,
@@ -33,6 +36,16 @@ export const GET = withErrorHandling(async (request: Request) => {
   };
 
   const tests = testRepository.getAll(filters);
+
+  // ページネーションが指定された場合
+  if (pageParam !== null && limitParam !== null) {
+    const page = Math.max(0, parseInt(pageParam) || 0);
+    const limit = Math.min(500, Math.max(1, parseInt(limitParam) || 25));
+    const total = tests.length;
+    const paged = tests.slice(page * limit, (page + 1) * limit);
+    return NextResponse.json({ tests: paged, total, page, limit });
+  }
+
   return NextResponse.json(tests);
 });
 

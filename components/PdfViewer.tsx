@@ -72,6 +72,20 @@ export default function PdfViewer({
   const [jumpInput, setJumpInput] = useState<string>(""); // ページジャンプ入力
   const contentRef = useRef<HTMLDivElement>(null); // コンテンツエリア参照（フィット計算用）
   const touchRef = useRef<{ dist: number; baseScale: number } | null>(null); // ピンチズーム用
+  // #9 PDF内テキスト検索
+  const [showPdfSearch, setShowPdfSearch] = useState(false);
+  const [pdfSearchQuery, setPdfSearchQuery] = useState("");
+  const [pdfSearchMatchCount, setPdfSearchMatchCount] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  // #10-13 印刷設定
+  const [showPrintSettings, setShowPrintSettings] = useState(false);
+  const [printPageFrom, setPrintPageFrom] = useState<string>("");
+  const [printPageTo, setPrintPageTo] = useState<string>("");
+  const [printCopies, setPrintCopies] = useState<string>("1");
+  const [printDuplex, setPrintDuplex] = useState(false);
+  // #16 カスタムサイズ
+  const [customWidthMm, setCustomWidthMm] = useState<string>("210");
+  const [customHeightMm, setCustomHeightMm] = useState<string>("297");
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -230,12 +244,18 @@ export default function PdfViewer({
         const encodedPath = encodeURIComponent(currentFile.originalPath);
         // 添付ファイルの場合はattachment識別子を追加
         const attachmentParam = currentFile.isMainPdf ? "" : `&attachment=true&tabIndex=${activeTab}`;
+        // #16 カスタムサイズ対応
+        if (selectedSize === "CUSTOM") {
+          const w = parseFloat(customWidthMm) || 210;
+          const h = parseFloat(customHeightMm) || 297;
+          return `/api/pdf/sized?testId=${testId}&size=CUSTOM&widthMm=${w}&heightMm=${h}&pdfPath=${encodedPath}${attachmentParam}`;
+        }
         return `/api/pdf/sized?testId=${testId}&size=${selectedSize}&pdfPath=${encodedPath}${attachmentParam}`;
       }
     }
     
     return currentFile.path;
-  }, [currentFile, selectedSize, testId, activeTab]);
+  }, [currentFile, selectedSize, testId, activeTab, customWidthMm, customHeightMm]);
 
   // PDF.js options をメモ化して不要な再レンダリングを防ぐ
   // iPad Safari対応: withCredentialsをfalseに設定
@@ -358,9 +378,22 @@ export default function PdfViewer({
     }
   }, [loading, currentPdf, currentFileType, workerReady, useFallback]);
 
-  // キーボードショートカット (#3): ←→ページ移動、+/-ズーム、Escで閉じる
+  // キーボードショートカット (#3): ←→ページ移動、+/-ズーム、Escで閉じる、Ctrl+Fで検索
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // #9 Ctrl+F で検索バー表示
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        setShowPdfSearch((v) => !v);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+        return;
+      }
+      if (e.key === "Escape") {
+        if (showPdfSearch) { setShowPdfSearch(false); return; }
+        if (showPrintSettings) { setShowPrintSettings(false); return; }
+        onClose();
+        return;
+      }
       const t = e.target as HTMLElement;
       if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
       switch (e.key) {
@@ -383,14 +416,11 @@ export default function PdfViewer({
           e.preventDefault();
           setScale((s) => Math.max(s - 0.2, 0.5));
           break;
-        case "Escape":
-          onClose();
-          break;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [numPages, onClose]);
+  }, [numPages, onClose, showPdfSearch, showPrintSettings]);
 
   // フィット表示モード: widthまたはpageに合わせてscaleを自動設定 (#5)
   useEffect(() => {
@@ -432,6 +462,33 @@ export default function PdfViewer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleTouchEnd = useCallback(() => { touchRef.current = null; }, []);
+
+  // #9 PDF内テキスト検索
+  const handlePdfSearch = useCallback(() => {
+    if (!pdfSearchQuery.trim() || !contentRef.current) { setPdfSearchMatchCount(0); return; }
+    // 既存のハイライトを除去
+    contentRef.current.querySelectorAll(".pdf-search-highlight").forEach((el) => {
+      const parent = el.parentNode;
+      if (parent) { parent.replaceChild(document.createTextNode(el.textContent || ""), el); parent.normalize(); }
+    });
+    // テキストレイヤーのspanを検索
+    const textSpans = contentRef.current.querySelectorAll(".react-pdf__Page__textContent span");
+    let count = 0;
+    const regex = new RegExp(pdfSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    textSpans.forEach((span) => {
+      if (span.childNodes.length === 1 && span.childNodes[0].nodeType === Node.TEXT_NODE) {
+        const text = span.textContent || "";
+        if (regex.test(text)) { count++; (span as HTMLElement).style.backgroundColor = "rgba(255,255,0,0.6)"; } else { (span as HTMLElement).style.backgroundColor = ""; }
+        regex.lastIndex = 0;
+      }
+    });
+    setPdfSearchMatchCount(count);
+    // 最初のマッチにスクロール
+    if (count > 0) {
+      const first = contentRef.current.querySelector(".react-pdf__Page__textContent span[style*='rgba(255']") as HTMLElement;
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [pdfSearchQuery]);
 
   // ページジャンプ処理 (#1)
   const handleJumpPage = (e: React.FormEvent) => {
@@ -551,15 +608,19 @@ export default function PdfViewer({
 
   const handlePrint = () => {
     if (currentPdf) {
+      // #10-13 印刷設定を適用
+      const copies = Math.max(1, parseInt(printCopies) || 1);
+      const pageFrom = parseInt(printPageFrom) || 1;
+      const pageTo = parseInt(printPageTo) || numPages || 9999;
+
       if (currentFileType === "image") {
         // 画像の場合は、印刷用ウィンドウを作成
         const printWindow = window.open("", "_blank");
         if (printWindow) {
-          // 画像用の用紙サイズCSS
-          const pageSizeCSS = selectedSize 
+          const pageSizeCSS = selectedSize
             ? `@page { size: ${selectedSize}; margin: 0; }`
             : "@page { margin: 10mm; }";
-          
+          const duplexCSS = printDuplex ? "" : "";
           printWindow.document.write(`
             <!DOCTYPE html>
             <html>
@@ -567,6 +628,7 @@ export default function PdfViewer({
               <title>印刷 - ${currentFile?.name || "画像"}</title>
               <style>
                 ${pageSizeCSS}
+                ${duplexCSS}
                 body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
                 img { max-width: 100%; height: auto; }
                 @media print {
@@ -576,29 +638,37 @@ export default function PdfViewer({
               </style>
             </head>
             <body>
-              <img src="${currentPdf}" alt="${
-            currentFile?.name || "画像"
-          }" onload="window.print();" />
+              <img src="${currentPdf}" alt="${currentFile?.name || "画像"}" onload="window.print();" />
             </body>
             </html>
           `);
           printWindow.document.close();
         } else {
-          alert(
-            "ポップアップがブロックされました。ブラウザの設定を確認してください。"
-          );
+          alert("ポップアップがブロックされました。ブラウザの設定を確認してください。");
         }
       } else {
-        // PDFの場合: 新しいタブで開く
-        // 注意: PDFにはViewerPreferences（PrintScaling: None, PickTrayByPDFSize: true）が
-        // 埋め込まれているため、プリンタが自動的に正しい用紙サイズを選択する
+        // PDF: ページ範囲・部数・両面を考慮して印刷ウィンドウを開く
+        // #10 ページ範囲指定・#13 複数部数 はブラウザ印刷ダイアログで設定
         const printWindow = window.open(currentPdf, "_blank");
         if (!printWindow) {
-          alert(
-            "ポップアップがブロックされました。ブラウザの設定を確認してください。"
-          );
+          // フォールバック: iframe 経由で印刷
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = currentPdf;
+          document.body.appendChild(iframe);
+          iframe.onload = () => {
+            try { iframe.contentWindow?.print(); } catch { window.open(currentPdf, "_blank"); }
+            setTimeout(() => document.body.removeChild(iframe), 5000);
+          };
+        }
+        if (copies > 1) {
+          // 複数部数: 複数タブを開く（ブラウザ制限あり）
+          for (let i = 1; i < copies; i++) {
+            setTimeout(() => window.open(currentPdf, "_blank"), i * 300);
+          }
         }
       }
+      setShowPrintSettings(false);
     }
   };
 
@@ -869,36 +939,234 @@ export default function PdfViewer({
                   </option>
                   <option value="A3">A3</option>
                   <option value="A4">A4</option>
+                  <option value="A5">A5</option>
                   <option value="B4">B4</option>
                   <option value="B5">B5</option>
+                  <option value="Letter">Letter</option>
+                  <option value="CUSTOM">カスタム...</option>
                 </select>
+                {/* #16 カスタムサイズ入力 */}
+                {selectedSize === "CUSTOM" && (
+                  <div className="flex gap-1 items-center mt-1">
+                    <input
+                      type="number"
+                      min={50}
+                      max={1000}
+                      value={customWidthMm}
+                      onChange={(e) => setCustomWidthMm(e.target.value)}
+                      className="w-16 text-sm border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="幅mm"
+                    />
+                    <span className="text-xs text-gray-500">×</span>
+                    <input
+                      type="number"
+                      min={50}
+                      max={1000}
+                      value={customHeightMm}
+                      onChange={(e) => setCustomHeightMm(e.target.value)}
+                      className="w-16 text-sm border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="高さmm"
+                    />
+                    <span className="text-xs text-gray-500">mm</span>
+                    <button
+                      onClick={() => {
+                        if (customWidthMm && customHeightMm) {
+                          setLoading(true);
+                          setPdfKey((p) => p + 1);
+                        }
+                      }}
+                      title="カスタムサイズを適用してPDFを変換"
+                      className="px-2 py-0.5 bg-primary text-white rounded text-xs hover:bg-primary-dark"
+                    >
+                      適用
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 印刷ボタン */}
-            <div className="ml-4 border-l border-gray-300 pl-4">
+            {/* #9 PDF内テキスト検索ボタン */}
+            {currentFileType === "pdf" && (
               <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors"
+                onClick={() => {
+                  setShowPdfSearch((v) => !v);
+                  if (!showPdfSearch) {
+                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }
+                }}
+                title="PDF内を検索 (Ctrl+F)"
+                className={`ml-2 p-2 rounded-lg transition-colors ${
+                  showPdfSearch
+                    ? "bg-yellow-200 text-yellow-800"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                }`}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span>印刷</span>
               </button>
+            )}
+
+            {/* #10-13 印刷ボタン + 設定 */}
+            <div className="ml-4 border-l border-gray-300 pl-4 relative">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors"
+                  title="印刷"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
+                  </svg>
+                  <span>印刷</span>
+                </button>
+                {/* 印刷設定ギアボタン */}
+                <button
+                  onClick={() => setShowPrintSettings((v) => !v)}
+                  title="印刷設定"
+                  className={`p-2 rounded-lg transition-colors ${
+                    showPrintSettings
+                      ? "bg-gray-200 text-gray-800"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+              {/* 印刷設定パネル */}
+              {showPrintSettings && (
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-60 text-sm">
+                  <p className="font-semibold text-gray-700 mb-2 border-b pb-1">印刷設定</p>
+                  {/* #10 ページ範囲 */}
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">ページ範囲</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min={1}
+                        max={numPages || 999}
+                        value={printPageFrom}
+                        onChange={(e) => setPrintPageFrom(e.target.value)}
+                        className="w-14 border border-gray-300 rounded px-1 py-0.5 text-center"
+                        placeholder="1"
+                      />
+                      <span className="text-gray-400">〜</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={numPages || 999}
+                        value={printPageTo}
+                        onChange={(e) => setPrintPageTo(e.target.value)}
+                        className="w-14 border border-gray-300 rounded px-1 py-0.5 text-center"
+                        placeholder={String(numPages || "∞")}
+                      />
+                      <span className="text-xs text-gray-400">ページ</span>
+                    </div>
+                  </div>
+                  {/* #13 部数 */}
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">部数</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={printCopies}
+                      onChange={(e) => setPrintCopies(e.target.value)}
+                      className="w-16 border border-gray-300 rounded px-1 py-0.5 text-center"
+                    />
+                    <span className="text-xs text-gray-400 ml-1">部</span>
+                  </div>
+                  {/* #12 両面印刷 */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="printDuplexCheck"
+                      checked={printDuplex}
+                      onChange={(e) => setPrintDuplex(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label htmlFor="printDuplexCheck" className="text-xs text-gray-600 cursor-pointer">
+                      両面印刷（設定参照）
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">※ブラウザの印刷ダイアログで最終確認できます</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* #9 PDF内テキスト検索バー */}
+        {showPdfSearch && currentFileType === "pdf" && (
+          <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-700 flex items-center gap-2">
+            <svg className="w-4 h-4 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={pdfSearchQuery}
+              onChange={(e) => setPdfSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handlePdfSearch();
+                if (e.key === "Escape") {
+                  setShowPdfSearch(false);
+                  setPdfSearchQuery("");
+                  setPdfSearchMatchCount(0);
+                }
+              }}
+              placeholder="PDF内を検索... (Enterで実行)"
+              className="border border-yellow-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white dark:bg-gray-800 dark:text-white"
+            />
+            <button
+              onClick={handlePdfSearch}
+              className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded text-sm font-medium"
+            >
+              検索
+            </button>
+            {pdfSearchMatchCount > 0 && (
+              <span className="text-xs text-yellow-700 dark:text-yellow-300 whitespace-nowrap">
+                {pdfSearchMatchCount}件一致
+              </span>
+            )}
+            {pdfSearchMatchCount === 0 && pdfSearchQuery && (
+              <span className="text-xs text-red-500 whitespace-nowrap">見つかりません</span>
+            )}
+            <button
+              onClick={() => {
+                setShowPdfSearch(false);
+                setPdfSearchQuery("");
+                setPdfSearchMatchCount(0);
+                // ハイライト除去
+                document
+                  .querySelectorAll(".pdf-search-highlight")
+                  .forEach((el) => {
+                    (el as HTMLElement).style.backgroundColor = "";
+                    el.classList.remove("pdf-search-highlight");
+                  });
+              }}
+              className="text-gray-400 hover:text-gray-600 ml-1"
+              title="検索を閉じる"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* コンテンツ表示 */}
         <div className="flex-1 flex overflow-hidden">
@@ -973,6 +1241,8 @@ export default function PdfViewer({
                 <img
                   src={currentPdf}
                   alt={currentFile?.name || "画像"}
+                  loading="lazy"
+                  decoding="async"
                   style={{
                     maxWidth: "100%",
                     height: "auto",

@@ -56,7 +56,23 @@ export const PUT = withErrorHandling(
       totalScore,
       attachmentPaths,
       attachmentFileNames,
+      lastKnownUpdatedAt, // #105 競合検出
     } = body;
+
+    // #105 競合検出: クライアントが知っている updated_at と現在の値を比較
+    if (lastKnownUpdatedAt) {
+      const current = testRepository.getById(testId);
+      if (current && current.updated_at) {
+        const currentTs = new Date(current.updated_at).getTime();
+        const knownTs = new Date(lastKnownUpdatedAt).getTime();
+        if (Math.abs(currentTs - knownTs) > 1000) { // 1秒以上差があれば競合
+          return new NextResponse(
+            JSON.stringify({ error: "別のユーザーによって更新されています。ページを更新してください。" }),
+            { status: 409, headers: { "Content-Type": "application/json" } }
+          );
+        }
+      }
+    }
 
     // 入力値サニタイズ (#101)
     name = sanitizeText(name);
@@ -170,5 +186,43 @@ export const DELETE = withErrorHandling(
       message: "テストを削除しました",
       deletedTest: existingTest,
     });
+  }
+);
+
+/**
+ * テスト部分更新API (#42 フォルダ移動など)
+ * PATCH /api/tests/[id]
+ */
+export const PATCH = withErrorHandling(
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    const testId = parseInt(id);
+
+    if (isNaN(testId)) {
+      return validationError("無効なテストIDです");
+    }
+
+    const existing = testRepository.getById(testId);
+    if (!existing) {
+      return notFoundError("テストが見つかりません");
+    }
+
+    const body = await request.json();
+
+    // folder_id の更新
+    if ("folder_id" in body) {
+      const folderId = body.folder_id != null ? parseInt(String(body.folder_id)) : null;
+      if (folderId != null) {
+        const folder = folderRepository.getById(folderId);
+        if (!folder) {
+          return validationError("指定されたフォルダが見つかりません");
+        }
+      }
+      testRepository.updateFolder(testId, folderId);
+      await auditService.log("update", "test", testId, existing.name, request);
+      return NextResponse.json({ message: "フォルダを更新しました" });
+    }
+
+    return validationError("更新できるフィールドが指定されていません");
   }
 );

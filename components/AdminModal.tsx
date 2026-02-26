@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocalStorage } from "@/lib/hooks";
 import type { Folder, Tag, Grade, Subject } from "@/types/database";
 
 // 使用件数付き型 (#69)
@@ -96,6 +97,18 @@ export default function AdminModal({
   const [selectedTests, setSelectedTests] = useState<Set<number>>(new Set());
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupList, setBackupList] = useState<BackupEntry[]>([]); // (#73)
+  // #72 バックアップ頻度設定（localStorageに永続化）
+  const [backupFrequencyDays, setBackupFrequencyDays] = useLocalStorage<number>("backup-frequency-days", 7);
+  const [backupMaxCount, setBackupMaxCount] = useLocalStorage<number>("backup-max-count", 10);
+
+  // #70 削除時代替先選択ダイアログ
+  const [replaceDialog, setReplaceDialog] = useState<{
+    type: "grade" | "subject";
+    id: number;
+    name: string;
+    usageCount: number;
+    replacementId: string;
+  } | null>(null);
 
   // メール設定関連
   const [emailConfig, setEmailConfig] = useState<EmailConfigState>({
@@ -767,6 +780,46 @@ export default function AdminModal({
 
       setSuccess("科目を削除しました");
       await fetchSubjects();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // #70 使用中マスターデータを代替先に置き換えてから削除
+  const handleDeleteWithReplacement = async () => {
+    if (!replaceDialog) return;
+    const { type, id, name, replacementId } = replaceDialog;
+    if (!replacementId) {
+      setError("代替先を選択してください");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. 代替先への置き換え（一括更新）
+      const endpoint = type === "grade" ? "/api/grades/replace" : "/api/subjects/replace";
+      const replaceRes = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromId: id, toId: parseInt(replacementId) }),
+      });
+      if (!replaceRes.ok) {
+        const err = await replaceRes.json();
+        throw new Error(err.error || "置き換えに失敗しました");
+      }
+      // 2. 削除
+      const deleteEndpoint = type === "grade" ? `/api/grades/${id}` : `/api/subjects/${id}`;
+      const deleteRes = await fetch(deleteEndpoint, { method: "DELETE" });
+      if (!deleteRes.ok) {
+        const err = await deleteRes.json();
+        throw new Error(err.error || "削除に失敗しました");
+      }
+      setSuccess(`「${name}」を削除し、テストを代替先に移行しました`);
+      setReplaceDialog(null);
+      if (type === "grade") await fetchGrades();
+      else await fetchSubjects();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -1539,17 +1592,33 @@ export default function AdminModal({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-                            {/* 削除防止: 使用中は無効 (#70) */}
-                            <button
-                              onClick={() => handleDeleteGrade(grade.id, grade.name)}
-                              disabled={loading || (grade.usage_count !== undefined && grade.usage_count > 0)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title={grade.usage_count && grade.usage_count > 0 ? `${grade.usage_count}件のテストで使用中のため削除できません` : "削除"}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
+                            {/* 削除防止: 使用中は代替先選択ダイアログを表示 (#70) */}
+                            {grade.usage_count && grade.usage_count > 0 ? (
+                              <button
+                                onClick={() => setReplaceDialog({
+                                  type: "grade", id: grade.id, name: grade.name,
+                                  usageCount: grade.usage_count!, replacementId: ""
+                                })}
+                                disabled={loading}
+                                className="p-2 text-orange-500 hover:bg-orange-50 rounded transition-colors"
+                                title={`${grade.usage_count}件で使用中 - 代替先を選択して削除`}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleDeleteGrade(grade.id, grade.name)}
+                                disabled={loading}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="削除"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
@@ -1679,17 +1748,33 @@ export default function AdminModal({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-                            {/* 削除防止: 使用中は無効 (#70) */}
-                            <button
-                              onClick={() => handleDeleteSubject(subject.id, subject.name)}
-                              disabled={loading || (subject.usage_count !== undefined && subject.usage_count > 0)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title={subject.usage_count && subject.usage_count > 0 ? `${subject.usage_count}件のテストで使用中のため削除できません` : "削除"}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
+                            {/* 削除防止: 使用中は代替先選択ダイアログを表示 (#70) */}
+                            {subject.usage_count && subject.usage_count > 0 ? (
+                              <button
+                                onClick={() => setReplaceDialog({
+                                  type: "subject", id: subject.id, name: subject.name,
+                                  usageCount: subject.usage_count!, replacementId: ""
+                                })}
+                                disabled={loading}
+                                className="p-2 text-orange-500 hover:bg-orange-50 rounded transition-colors"
+                                title={`${subject.usage_count}件で使用中 - 代替先を選択して削除`}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleDeleteSubject(subject.id, subject.name)}
+                                disabled={loading}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="削除"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
@@ -1739,6 +1824,55 @@ export default function AdminModal({
                     バックアップ作成
                   </button>
                 </div>
+              </div>
+
+              {/* #72 バックアップ頻度設定 */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  自動バックアップ設定
+                </h3>
+                <div className="flex flex-wrap gap-6">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">バックアップ間隔</label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={backupFrequencyDays}
+                        onChange={(e) => setBackupFrequencyDays(Number(e.target.value))}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                      >
+                        <option value={1}>毎日</option>
+                        <option value={3}>3日ごと</option>
+                        <option value={7}>週1回</option>
+                        <option value={14}>2週間ごと</option>
+                        <option value={30}>月1回</option>
+                        <option value={0}>無効</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">最大保存件数</label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={backupMaxCount}
+                        onChange={(e) => setBackupMaxCount(Number(e.target.value))}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                      >
+                        <option value={3}>3件</option>
+                        <option value={5}>5件</option>
+                        <option value={10}>10件</option>
+                        <option value={20}>20件</option>
+                        <option value={0}>無制限</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  ※ 設定はこの端末に保存されます。サーバー起動時に自動バックアップが実行されます。
+                </p>
               </div>
 
               {/* バックアップ履歴一覧 (#73) */}
@@ -2136,6 +2270,54 @@ export default function AdminModal({
           </button>
         </div>
       </div>
+
+      {/* #70 代替先選択ダイアログ */}
+      {replaceDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {replaceDialog.type === "grade" ? "学年" : "科目"}を削除
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              「<strong>{replaceDialog.name}</strong>」は <strong>{replaceDialog.usageCount}件</strong> のテストで使用されています。
+              削除する前に、これらのテストを移行する代替先を選択してください。
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">代替先</label>
+              <select
+                value={replaceDialog.replacementId}
+                onChange={(e) => setReplaceDialog({ ...replaceDialog, replacementId: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">選択してください</option>
+                {replaceDialog.type === "grade"
+                  ? grades.filter((g) => g.id !== replaceDialog.id).map((g) => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))
+                  : subjects.filter((s) => s.id !== replaceDialog.id).map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+              </select>
+            </div>
+            {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setReplaceDialog(null); setError(null); }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDeleteWithReplacement}
+                disabled={loading || !replaceDialog.replacementId}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
+              >
+                {loading ? "処理中..." : "移行して削除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

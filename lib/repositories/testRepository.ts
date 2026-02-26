@@ -295,6 +295,14 @@ export const testRepository = {
   delete: (id: number) => {
     db.prepare("DELETE FROM tests WHERE id = ?").run(id);
   },
+
+  // #42 フォルダ移動
+  updateFolder: (id: number, folderId: number | null) => {
+    db.prepare("UPDATE tests SET folder_id = ?, updated_at = datetime('now') WHERE id = ?").run(
+      folderId,
+      id
+    );
+  },
   
   getAttachments: (testId: number) => {
     return db

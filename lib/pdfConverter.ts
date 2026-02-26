@@ -6,13 +6,20 @@ import path from 'path';
  * 用紙サイズの定義（ポイント単位：1pt = 1/72 inch）
  */
 export const PAPER_SIZES = {
-  A3: { width: 842, height: 1191 },  // 297 x 420 mm
-  A4: { width: 595, height: 842 },   // 210 x 297 mm
-  B4: { width: 729, height: 1032 },  // 257 x 364 mm
-  B5: { width: 516, height: 729 },   // 182 x 257 mm
+  A3: { width: 842, height: 1191 },   // 297 x 420 mm
+  A4: { width: 595, height: 842 },    // 210 x 297 mm
+  A5: { width: 420, height: 595 },    // 148 x 210 mm (#15)
+  B4: { width: 729, height: 1032 },   // 257 x 364 mm
+  B5: { width: 516, height: 729 },    // 182 x 257 mm
+  Letter: { width: 612, height: 792 }, // 215.9 x 279.4 mm (#15)
 } as const;
 
 export type PaperSize = keyof typeof PAPER_SIZES;
+
+/** mmをptに変換 */
+export function mmToPt(mm: number): number {
+  return Math.round((mm / 25.4) * 72);
+}
 
 /**
  * PDFを指定した用紙サイズに変換（縦横自動判定対応）
@@ -20,11 +27,32 @@ export type PaperSize = keyof typeof PAPER_SIZES;
  * @param outputPath 出力PDFのパス
  * @param targetSize 変換先の用紙サイズ
  */
+export async function convertPdfSizeCustom(
+  inputPath: string,
+  outputPath: string,
+  widthPt: number,
+  heightPt: number
+): Promise<void> {
+  const customSize = { width: widthPt, height: heightPt };
+  await _convertPdfWithDims(inputPath, outputPath, customSize, "CUSTOM");
+}
+
 export async function convertPdfSize(
   inputPath: string,
   outputPath: string,
   targetSize: PaperSize
 ): Promise<void> {
+  await _convertPdfWithDims(inputPath, outputPath, PAPER_SIZES[targetSize], targetSize);
+}
+
+async function _convertPdfWithDims(
+  inputPath: string,
+  outputPath: string,
+  targetDimsBase: { width: number; height: number },
+  label: string
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _targetSize = label; // kept for logging
   try {
     // 元PDFを読み込み
     const existingPdfBytes = fs.readFileSync(inputPath);
@@ -47,9 +75,9 @@ export async function convertPdfSize(
       let targetDims: { width: number; height: number };
       if (isOriginalLandscape) {
         // 横向きの場合は幅と高さを入れ替え
-        targetDims = { width: PAPER_SIZES[targetSize].height, height: PAPER_SIZES[targetSize].width };
+        targetDims = { width: targetDimsBase.height, height: targetDimsBase.width };
       } else {
-        targetDims = { width: PAPER_SIZES[targetSize].width, height: PAPER_SIZES[targetSize].height };
+        targetDims = { width: targetDimsBase.width, height: targetDimsBase.height };
       }
       
       // スケール計算（よりフィットする方を選択）
@@ -62,7 +90,7 @@ export async function convertPdfSize(
       const avgScale = (scaleX + scaleY) / 2;
       const scale = (scaleDiff / avgScale < 0.005) ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
       
-      console.log(`[PDF] Page ${i + 1}: Original ${origWidth.toFixed(0)}x${origHeight.toFixed(0)} (${isOriginalLandscape ? 'landscape' : 'portrait'}) -> Target ${targetSize} ${targetDims.width}x${targetDims.height}, Scale: ${scale.toFixed(4)}`);
+      console.log(`[PDF] Page ${i + 1}: Original ${origWidth.toFixed(0)}x${origHeight.toFixed(0)} (${isOriginalLandscape ? 'landscape' : 'portrait'}) -> Target ${label} ${targetDims.width}x${targetDims.height}, Scale: ${scale.toFixed(4)}`);
       
       // 新しいページを作成
       const newPage = newPdf.addPage([targetDims.width, targetDims.height]);
