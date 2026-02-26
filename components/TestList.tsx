@@ -1177,7 +1177,7 @@ export default function TestList() {
             </div>
 
             {/* 標準表示に戻すボタン（設定変更時のみ表示） */}
-            {(sortOrder !== "newest" || viewMode !== "list" || rowHeight !== "standard" || perPage !== 25) && (
+            {(sortOrder !== "newest" || viewMode !== "list" || rowHeight !== "standard" || perPage !== 25 || Object.values(visibleColumns).some(v => v === false)) && (
               <button
                 onClick={() => {
                   setSortOrder("newest");
@@ -1185,6 +1185,8 @@ export default function TestList() {
                   setRowHeight("standard");
                   setPerPage(25);
                   setCurrentPage(0);
+                  setVisibleColumns({ name: true, subject: true, grade: true, memo: true, tags: true, date: true, actions: true });
+                  setColWidths({ name: 240, subject: 100, grade: 100, memo: 180, tags: 140, date: 110, actions: 120 });
                 }}
                 className="flex items-center gap-1 px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >

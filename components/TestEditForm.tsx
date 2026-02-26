@@ -45,6 +45,52 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   // #28 アップロード進捗
   const [attachUploadProgress, setAttachUploadProgress] = useState<number | null>(null);
 
+  // 受信トレイからファイル選択
+  type InboxItemSimple = { id: number; file_name: string; file_path: string; received_at: string };
+  const [inboxPickerTarget, setInboxPickerTarget] = useState<"main" | "attachment" | null>(null);
+  const [inboxItems, setInboxItems] = useState<InboxItemSimple[]>([]);
+  const [inboxPickerLoading, setInboxPickerLoading] = useState(false);
+  const [pdfInboxName, setPdfInboxName] = useState<string | null>(null);
+
+  const handleOpenInboxPicker = async (target: "main" | "attachment") => {
+    setInboxPickerLoading(true);
+    setInboxPickerTarget(target);
+    try {
+      const res = await fetch("/api/inbox?status=pending");
+      const data = await res.json();
+      setInboxItems(data.items ?? []);
+    } catch {
+      setInboxItems([]);
+    } finally {
+      setInboxPickerLoading(false);
+    }
+  };
+
+  const handleSelectInboxItemEdit = async (item: InboxItemSimple) => {
+    if (inboxPickerTarget === "main") {
+      setPdfPath(item.file_path);
+      setPdfFile(null);
+      setPdfInboxName(item.file_name);
+    } else if (inboxPickerTarget === "attachment") {
+      const total = (pdfPath ? 1 : 0) + attachments.length;
+      if (total >= 5) return;
+      try {
+        const res = await fetch(`/api/tests/${testId}/attachments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filePath: item.file_path, fileName: item.file_name }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAttachments((prev) => [...prev, data.attachment]);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    setInboxPickerTarget(null);
+  };
+
   // マスターデータ
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -422,6 +468,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   const handleRemovePdf = () => {
     setPdfFile(null);
     setPdfPath(null);
+    setPdfInboxName(null);
   };
 
   // 添付ファイルアップロード
@@ -431,16 +478,19 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ファイルタイプチェック（PDFと画像のみ）
-    const allowedTypes = [
-      "application/pdf",
-      "image/heic",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
+    // ファイルタイプチェック（PDF、画像、Word、Excel）
+    const allowedExtensionsUpload = ["pdf", "heic", "heif", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx"];
+    const allowedTypesUpload = [
+      "application/pdf", "image/heic", "image/jpeg", "image/jpg", "image/png",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/octet-stream", "",
     ];
-    if (!allowedTypes.includes(file.type)) {
-      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+    const fileExtUpload = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!allowedExtensionsUpload.includes(fileExtUpload) && !allowedTypesUpload.includes(file.type)) {
+      setError("PDF、HEIC、JPG、PNG、Word（doc/docx）、Excel（xls/xlsx）ファイルのみアップロード可能です");
       return;
     }
 
@@ -468,16 +518,19 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
-    // ファイルタイプチェック（PDFと画像のみ）
-    const allowedTypes = [
-      "application/pdf",
-      "image/heic",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
+    // ファイルタイプチェック（PDF、画像、Word、Excel）
+    const allowedExtensionsDrop = ["pdf", "heic", "heif", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx"];
+    const allowedTypesDrop = [
+      "application/pdf", "image/heic", "image/jpeg", "image/jpg", "image/png",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/octet-stream", "",
     ];
-    if (!allowedTypes.includes(file.type)) {
-      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+    const fileExtDrop = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!allowedExtensionsDrop.includes(fileExtDrop) && !allowedTypesDrop.includes(file.type)) {
+      setError("PDF、HEIC、JPG、PNG、Word（doc/docx）、Excel（xls/xlsx）ファイルのみアップロード可能です");
       return;
     }
 
@@ -915,45 +968,59 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
               </label>
 
               {!pdfFile && !pdfPath ? (
-                <div
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
-                  onDrop={handlePdfDrop}
-                  onDragOver={handlePdfDragOver}
-                >
-                  <input
-                    type="file"
-                    accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,image/*,application/pdf"
-                    onChange={handlePdfChange}
-                    disabled={loading || success || uploadingPdf}
-                    className="hidden"
-                    id="pdf-upload"
-                  />
-                  <label
-                    htmlFor="pdf-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
+                <>
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
+                    onDrop={handlePdfDrop}
+                    onDragOver={handlePdfDragOver}
                   >
-                    <svg
-                      className="w-12 h-12 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <input
+                      type="file"
+                      accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,image/*,application/pdf"
+                      onChange={handlePdfChange}
+                      disabled={loading || success || uploadingPdf}
+                      className="hidden"
+                      id="pdf-upload"
+                    />
+                    <label
+                      htmlFor="pdf-upload"
+                      className="cursor-pointer flex flex-col items-center gap-2"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
+                      <svg
+                        className="w-12 h-12 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm text-gray-600">
+                        クリックしてPDFファイルを選択
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        または、ここにファイルをドラッグ&ドロップ
+                      </p>
+                      <p className="text-xs text-gray-500">最大10MB</p>
+                    </label>
+                  </div>
+                  {/* 受信トレイから選択 */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenInboxPicker("main")}
+                    disabled={loading || success}
+                    className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2 border border-indigo-300 rounded-lg text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <p className="text-sm text-gray-600">
-                      クリックしてPDFファイルを選択
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      または、ここにファイルをドラッグ&ドロップ
-                    </p>
-                    <p className="text-xs text-gray-500">最大10MB</p>
-                  </label>
-                </div>
+                    受信トレイから選択
+                  </button>
+                </>
               ) : uploadingPdf ? (
                 <div className="border-2 border-gray-300 rounded-lg p-6 bg-gray-50">
                   <div className="flex flex-col items-center gap-3">
@@ -996,12 +1063,12 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
                       </svg>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {pdfFile?.name || "PDFファイル"}
+                          {pdfFile?.name || pdfInboxName || "PDFファイル"}
                         </p>
                         <p className="text-xs text-gray-500">
                           {pdfFile
                             ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB`
-                            : "アップロード完了"}
+                            : pdfInboxName ? "受信トレイから選択" : "アップロード完了"}
                         </p>
                       </div>
                     </div>
@@ -1216,67 +1283,81 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
 
               {/* アップロードボタン */}
               {(pdfPath ? 1 : 0) + attachments.length < 5 && (
-                <div
-                  onDrop={handleAttachmentDrop}
-                  onDragOver={handleAttachmentDragOver}
-                >
-                  <input
-                    type="file"
-                    id="attachment-upload"
-                    accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,image/*,application/pdf"
-                    onChange={handleAttachmentUpload}
-                    disabled={loading || success || uploadingAttachment}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="attachment-upload"
-                    className={`block w-full p-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
-                      loading || success || uploadingAttachment
-                        ? "border-gray-200 bg-gray-50 cursor-not-allowed"
-                        : "border-blue-300 hover:border-blue-400 hover:bg-blue-50"
-                    }`}
+                <>
+                  <div
+                    onDrop={handleAttachmentDrop}
+                    onDragOver={handleAttachmentDragOver}
                   >
-                    {uploadingAttachment ? (
-                      <div className="flex flex-col items-center gap-2 p-2">
-                        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm text-gray-600">アップロード中...</span>
-                        {attachUploadProgress !== null && (
-                          <div className="w-full max-w-xs">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${attachUploadProgress}%` }} />
+                    <input
+                      type="file"
+                      id="attachment-upload"
+                      accept=".pdf,.heic,.heif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,image/*,application/pdf"
+                      onChange={handleAttachmentUpload}
+                      disabled={loading || success || uploadingAttachment}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="attachment-upload"
+                      className={`block w-full p-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
+                        loading || success || uploadingAttachment
+                          ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+                          : "border-blue-300 hover:border-blue-400 hover:bg-blue-50"
+                      }`}
+                    >
+                      {uploadingAttachment ? (
+                        <div className="flex flex-col items-center gap-2 p-2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-sm text-gray-600">アップロード中...</span>
+                          {attachUploadProgress !== null && (
+                            <div className="w-full max-w-xs">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${attachUploadProgress}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-500">{attachUploadProgress}%</span>
                             </div>
-                            <span className="text-xs text-gray-500">{attachUploadProgress}%</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-8 h-8 mx-auto mb-2 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                        <p className="text-sm text-gray-600">
-                          クリックしてファイルを追加
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          または、ここにファイルをドラッグ&ドロップ
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          PDF、画像(HEIC/JPG/PNG) • 各10MB以下
-                        </p>
-                      </>
-                    )}
-                  </label>
-                </div>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <svg
+                            className="w-8 h-8 mx-auto mb-2 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          <p className="text-sm text-gray-600">
+                            クリックしてファイルを追加
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            または、ここにファイルをドラッグ&ドロップ
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            PDF、画像(HEIC/JPG/PNG) • 各10MB以下
+                          </p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  {/* 受信トレイから選択 */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenInboxPicker("attachment")}
+                    disabled={loading || success}
+                    className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2 border border-indigo-300 rounded-lg text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    受信トレイから選択
+                  </button>
+                </>
               )}
             </div>
 
@@ -1415,6 +1496,72 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
           </div>
         </form>
       </div>
+
+      {/* 受信トレイからファイル選択モーダル */}
+      {inboxPickerTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900">
+                受信トレイからファイルを選択
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  {inboxPickerTarget === "main" ? "メインPDF" : "添付ファイル"}として設定
+                </span>
+              </h3>
+              <button onClick={() => setInboxPickerTarget(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {inboxPickerLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mr-3"></div>
+                  <span className="text-sm text-gray-500">読み込み中...</span>
+                </div>
+              ) : inboxItems.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm">受信トレイに待機中のファイルがありません</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {inboxItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelectInboxItemEdit(item)}
+                      className="w-full text-left flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                    >
+                      <svg className="w-8 h-8 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{item.file_name}</p>
+                        <p className="text-xs text-gray-500">
+                          受信: {new Date(item.received_at).toLocaleString("ja-JP")}
+                        </p>
+                      </div>
+                      <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-end">
+              <button onClick={() => setInboxPickerTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

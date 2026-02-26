@@ -71,6 +71,32 @@ export const DELETE = withErrorHandling(async (request: Request, { params }: any
 });
 
 /**
+ * 既存ファイルパスを添付ファイルとして登録するAPI（受信トレイから選択時に使用）
+ * POST /api/tests/[id]/attachments
+ * body: { filePath: string; fileName: string }
+ */
+export const POST = withErrorHandling(async (request: Request, { params }: any) => {
+  const { id } = await params;
+  const testId = parseInt(id);
+  const body = await request.json();
+  const { filePath, fileName } = body;
+
+  if (isNaN(testId)) {
+    return validationError("無効なテストIDです");
+  }
+  if (!filePath || !fileName) {
+    return validationError("filePath と fileName が必要です");
+  }
+
+  const attachment = testRepository.addAttachment(testId, fileName, filePath);
+
+  return NextResponse.json({
+    success: true,
+    attachment,
+  });
+});
+
+/**
  * テスト添付ファイル名変更API
  * PATCH /api/tests/[id]/attachments
  */

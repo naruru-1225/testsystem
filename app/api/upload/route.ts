@@ -28,9 +28,9 @@ export const POST = withErrorHandling(async (request: Request) => {
   });
 
   // 許可する拡張子
-  const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+  const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx"];
 
-  // 許可するファイルタイプ（PDFと画像のみ）
+  // 許可するファイルタイプ（PDFと画像 + Word/Excel）
   const allowedTypes = [
     "application/pdf",
     "image/heic",
@@ -39,6 +39,11 @@ export const POST = withErrorHandling(async (request: Request) => {
     "image/jpg",
     "image/png",
     "image/x-heic", // 一部ブラウザのHEIC MIMEタイプ
+    // Word/Excel
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/octet-stream", // 不明なバイナリファイル
     "", // 空のMIMEタイプ
   ];
@@ -60,7 +65,7 @@ export const POST = withErrorHandling(async (request: Request) => {
       isValidMimeType,
     });
     return validationError(
-      "PDF、HEIC、JPG、PNGファイルのみアップロード可能です"
+      "PDF、HEIC、JPG、PNG、Word（doc/docx）、Excel（xls/xlsx）ファイルのみアップロード可能です"
     );
   }
 
@@ -71,12 +76,18 @@ export const POST = withErrorHandling(async (request: Request) => {
   const isPng = headerBytes[0] === 0x89 && headerBytes[1] === 0x50 && headerBytes[2] === 0x4E && headerBytes[3] === 0x47;
   // HEIC はftyp box を持つ (bytes 4-7 が 'ftyp')
   const isHeic = headerBytes[4] === 0x66 && headerBytes[5] === 0x74 && headerBytes[6] === 0x79 && headerBytes[7] === 0x70;
+  // DOCX/XLSX は ZIP ベース (PK magic)
+  const isZipBased = headerBytes[0] === 0x50 && headerBytes[1] === 0x4B;
+  // DOC/XLS は OLE2 形式
+  const isOle2 = headerBytes[0] === 0xD0 && headerBytes[1] === 0xCF && headerBytes[2] === 0x11 && headerBytes[3] === 0xE0;
   // 拡張子に基づいてマジックナンバーを検証
   const magicNumberValid = (() => {
     if (["pdf"].includes(fileExt)) return isPdf;
     if (["jpg", "jpeg"].includes(fileExt)) return isJpeg;
     if (["png"].includes(fileExt)) return isPng;
     if (["heic", "heif"].includes(fileExt)) return isHeic;
+    if (["docx", "xlsx"].includes(fileExt)) return isZipBased;
+    if (["doc", "xls"].includes(fileExt)) return isOle2;
     return true; // 未知の拡張子は通す（前段のバリデーションで弾かれる）
   })();
   if (!magicNumberValid) {
@@ -112,16 +123,18 @@ export const POST = withErrorHandling(async (request: Request) => {
   const savedFile = await fileService.saveFile(file, testId);
 
   let attachmentId: number | undefined;
+  let attachment: import("@/types/database").TestAttachment | undefined;
 
   // データベースに記録 (testIdがある場合)
   if (testId) {
-    attachmentId = testRepository.addAttachment(
+    attachment = testRepository.addAttachment(
       testId,
       savedFile.fileName,
       savedFile.path,
       savedFile.mimeType,
       savedFile.size
     );
+    attachmentId = attachment?.id;
   }
 
   return NextResponse.json({

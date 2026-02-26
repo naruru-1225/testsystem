@@ -427,13 +427,22 @@ export const testRepository = {
     testId: number,
     fileName: string,
     filePath: string,
-    mimeType: string,
-    fileSize: number
+    mimeType?: string | null,
+    fileSize?: number | null
   ) => {
+    let resolvedMimeType = mimeType || 'application/octet-stream';
+    if (!mimeType && fileName) {
+      const ext = fileName.split('.').pop()?.toLowerCase();
+      if (ext === 'pdf') resolvedMimeType = 'application/pdf';
+      else if (['jpg', 'jpeg'].includes(ext || '')) resolvedMimeType = 'image/jpeg';
+      else if (ext === 'png') resolvedMimeType = 'image/png';
+      else if (['heic', 'heif'].includes(ext || '')) resolvedMimeType = 'image/heic';
+    }
     const insert = db.prepare(
       "INSERT INTO test_attachments (test_id, file_name, file_path, mime_type, file_size) VALUES (?, ?, ?, ?, ?)"
     );
-    const result = insert.run(testId, fileName, filePath, mimeType, fileSize);
-    return result.lastInsertRowid as number;
+    const result = insert.run(testId, fileName, filePath, resolvedMimeType, fileSize ?? null);
+    return db.prepare("SELECT id, test_id, file_name, file_path, mime_type, file_size, created_at as uploaded_at FROM test_attachments WHERE id = ?")
+      .get(result.lastInsertRowid) as TestAttachment;
   },
 };

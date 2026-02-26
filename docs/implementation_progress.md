@@ -29,8 +29,10 @@
 - #20 複数PDF一括作成 ✅ (TestCreateForm.tsx - showMultiBatchModal/handleMultiBatchCreate)
 - #22 添付ファイルの並び替え ✅ (TestCreateForm.tsx, TestEditForm.tsx)
 - #23 バリデーションメッセージの改善 ✅ (TestCreateForm.tsx - fieldErrors)
+- #24 Word/Excelファイル添付対応 ✅ (api/upload/route.ts, TestCreateForm.tsx, TestEditForm.tsx - doc/docx/xls/xlsx)
 - #25 ファイルサイズ上限の表示 ✅ (TestCreateForm.tsx - formatFileSize)
-- #26 ファイルタイプアイコン ✅ (TestCreateForm.tsx - getFileIcon)
+- #26 ファイルタイプアイコン ✅ (TestCreateForm.tsx - getFileIcon Word/Excel含む)
+- #27 複数ファイル同時アップロード ✅ (TestCreateForm.tsx - multiple属性, handleAttachmentChange loop)
 - #28 アップロード進捗表示 ✅ (TestCreateForm.tsx, TestEditForm.tsx - XHR progress)
 
 ### テスト一覧
@@ -42,6 +44,7 @@
 - #34 列のカスタマイズ（表示列の選択） ✅ (TestList.tsx - visibleColumns, localStorage)
 - #35 列幅のリサイズ ✅ (TestList.tsx - colWidths/handleColResizeStart, localStorage)
 - #36 行の高さ調整 ✅ (TestList.tsx - compact/standard/wide)
+- 標準表示に戻すボタン ✅ (TestList.tsx - sortOrder/viewMode/rowHeight/perPage/visibleColumns/colWidths全てリセット)
 - #37 複数選択チェックボックス ✅ (TestList.tsx)
 - #38 一括操作（削除/フォルダ移動/学年・科目変更/タグ付け） ✅ (TestList.tsx)
 - #39 一括印刷 ✅ (TestList.tsx)
@@ -94,6 +97,7 @@
 - #80 コンテンツハッシュ重複チェック ✅ (emailPoller.ts, emailInboxRepository.ts)
 - 受信トレイ一括テスト作成 ✅ (EmailInbox.tsx - showBatchModal, handleBatchCreate)
 - デモシードデータ投入 ✅ (app/api/seed/demo/route.ts, AdminModal.tsx "デモデータ作成"ボタン)
+- 受信トレイからファイル選択（テスト登録/編集フォーム） ✅ (TestCreateForm.tsx, TestEditForm.tsx, api/tests/[id]/attachments POST)
 
 ### UI/UX全般
 - #82 ダークモード対応 ✅ (ThemeProvider.tsx)
