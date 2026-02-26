@@ -13,7 +13,9 @@ export const GET = withErrorHandling(async (request: Request) => {
   const grades = withCounts
     ? gradeRepository.getAllWithUsageCounts()
     : gradeRepository.getAll();
-  return NextResponse.json(grades);
+  return NextResponse.json(grades, {
+    headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=60" },
+  });
 });
 
 /**

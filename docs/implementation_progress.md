@@ -19,12 +19,14 @@
 - #12 印刷設定パネル(ギアボタン) ✅ (PdfViewer.tsx - showPrintSettings)
 - #13 複数部数の指定 ✅ (PdfViewer.tsx - printCopies)
 - #15 A5/Letterサイズ選択 ✅ (PdfViewer.tsx - size select dropdown)
+- #14 変換プログレス表示 ✅ (PdfViewer.tsx - loading propに変換中メッセージ追加)
 - #16 カスタムサイズ入力 ✅ (PdfViewer.tsx - customWidthMm/customHeightMm)
 
 ### テスト登録・編集フォーム
 - #17 フォームの自動保存 ✅ (TestCreateForm.tsx - localStorage draft)
 - #18 前回入力値の引継ぎ ✅ (TestCreateForm.tsx - last-submitted key)
 - #19 テンプレート機能 ✅ (TestCreateForm.tsx)
+- #20 複数PDF一括作成 ✅ (TestCreateForm.tsx - showMultiBatchModal/handleMultiBatchCreate)
 - #22 添付ファイルの並び替え ✅ (TestCreateForm.tsx, TestEditForm.tsx)
 - #23 バリデーションメッセージの改善 ✅ (TestCreateForm.tsx - fieldErrors)
 - #25 ファイルサイズ上限の表示 ✅ (TestCreateForm.tsx - formatFileSize)
@@ -38,6 +40,7 @@
 - #32 カード表示モード ✅ (TestList.tsx)
 - #33 テスト件数の表示 ✅ (TestList.tsx - "○件")
 - #34 列のカスタマイズ（表示列の選択） ✅ (TestList.tsx - visibleColumns, localStorage)
+- #35 列幅のリサイズ ✅ (TestList.tsx - colWidths/handleColResizeStart, localStorage)
 - #36 行の高さ調整 ✅ (TestList.tsx - compact/standard/wide)
 - #37 複数選択チェックボックス ✅ (TestList.tsx)
 - #38 一括操作（削除/フォルダ移動/学年・科目変更/タグ付け） ✅ (TestList.tsx)
@@ -61,6 +64,7 @@
 
 ### サイドバー・フォルダ管理
 - #48 フォルダ内テスト件数表示 ✅ (Sidebar.tsx - useFolders(true))
+- #50 フォルダアイコン設定 ✅ (database.ts icon列追加, folderRepository.update, Sidebar.tsx, AdminModal.tsx)
 - #51 フォルダの検索 ✅ (Sidebar.tsx - folderSearchQuery)
 - #53 フォルダの並び替え（同階層内） ✅ (Sidebar.tsx - drag&drop reorder)
 
@@ -88,6 +92,8 @@
 - #78 取り込み通知バッジ ✅ (Sidebar.tsx - inboxPendingCount)
 - #79 エラーの再試行ボタン ✅ (EmailInbox.tsx)
 - #80 コンテンツハッシュ重複チェック ✅ (emailPoller.ts, emailInboxRepository.ts)
+- 受信トレイ一括テスト作成 ✅ (EmailInbox.tsx - showBatchModal, handleBatchCreate)
+- デモシードデータ投入 ✅ (app/api/seed/demo/route.ts, AdminModal.tsx "デモデータ作成"ボタン)
 
 ### UI/UX全般
 - #82 ダークモード対応 ✅ (ThemeProvider.tsx)
@@ -107,6 +113,7 @@
 
 ### パフォーマンス
 - #96 画像の遅延読み込み ✅ (PdfViewer.tsx - loading="lazy" decoding="async")
+- #97 APIレスポンスキャッシュ ✅ (grades/subjects/tags/folders GET - Cache-Control: max-age=30)
 - #99 dynamic importによるコンポーネント遅延読み込み ✅ (TestList.tsx - PdfViewer, AdminModal)
 - #100 サーバーサイドページネーション（APIに page/limit 追加） ✅ (api/tests/route.ts)
 
@@ -114,15 +121,8 @@
 
 ## 🚧 残り未実装・対象外
 
-### PDFビューワー
-- #14 変換プログレス（変換中の明示）
-
-### テスト一覧
-- #35 列幅のリサイズ
-
 ### パフォーマンス
 - #95 仮想スクロール（ページネーションで代替）
-- #97 APIレスポンスキャッシュ（SWR等）
 - #98 PDFストリーミング
 
 ## 除外機能（対象外）

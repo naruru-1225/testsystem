@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import PdfViewer from "./PdfViewer";
+import dynamic from "next/dynamic";
 import { useToast } from "./ToastProvider";
+
+const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
 
 interface InboxItem {
   id: number;
@@ -17,7 +19,17 @@ interface InboxItem {
   error_message: string | null;
 }
 
+interface FolderOption { id: number; name: string; parent_id: number | null }
+
 type FilterStatus = "all" | "pending" | "assigned";
+
+/** 一括作成モーダル用の1行データ */
+interface BatchRow {
+  inboxId: number;
+  fileName: string;
+  pdfPath: string;
+  testName: string;  // 編集可能
+}
 
 /**
  * メール受信トレイコンポーネント
@@ -34,6 +46,17 @@ export default function EmailInbox() {
   const [deleting, setDeleting] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+
+  // 一括テスト作成モーダル
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchRows, setBatchRows] = useState<BatchRow[]>([]);
+  const [batchGrade, setBatchGrade] = useState("");
+  const [batchSubject, setBatchSubject] = useState("");
+  const [batchFolderId, setBatchFolderId] = useState<number | "">("");
+  const [grades, setGrades] = useState<{id:number;name:string}[]>([]);
+  const [subjects, setSubjects] = useState<{id:number;name:string}[]>([]);
+  const [folders, setFolders] = useState<FolderOption[]>([]);
+  const [creating, setCreating] = useState(false);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -162,6 +185,87 @@ export default function EmailInbox() {
     }
   };
 
+  // 一括テスト作成モーダルを開く
+  const handleOpenBatchModal = async () => {
+    const pendingSelected = items.filter(
+      (i) => selectedIds.has(i.id) && i.status === "pending"
+    );
+    if (pendingSelected.length === 0) {
+      toast.error("未処理のPDFを選択してください");
+      return;
+    }
+    // grades / subjects / folders を並列取得
+    const [grRes, subRes, folRes] = await Promise.all([
+      fetch("/api/grades"),
+      fetch("/api/subjects"),
+      fetch("/api/folders"),
+    ]);
+    const [grData, subData, folData] = await Promise.all([
+      grRes.json(),
+      subRes.json(),
+      folRes.json(),
+    ]);
+    setGrades(grData.grades ?? grData ?? []);
+    setSubjects(subData.subjects ?? subData ?? []);
+    setFolders(folData.folders ?? folData ?? []);
+    setBatchRows(
+      pendingSelected.map((i) => ({
+        inboxId: i.id,
+        fileName: i.file_name,
+        pdfPath: i.file_path,
+        testName: i.original_subject || i.file_name.replace(/\.pdf$/i, ""),
+      }))
+    );
+    setBatchGrade("");
+    setBatchSubject("");
+    setBatchFolderId("");
+    setShowBatchModal(true);
+  };
+
+  // 一括テスト作成実行
+  const handleBatchCreate = async () => {
+    if (!batchGrade || !batchSubject) {
+      toast.error("学年と科目を選択してください");
+      return;
+    }
+    setCreating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const row of batchRows) {
+      try {
+        const body: Record<string, unknown> = {
+          name: row.testName,
+          grade: batchGrade,
+          subject: batchSubject,
+          pdfPath: row.pdfPath,
+          inboxItemId: row.inboxId,
+        };
+        if (batchFolderId !== "") body.folderIds = [batchFolderId];
+        const res = await fetch("/api/tests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error("作成失敗");
+        // ステータスを assigned に更新
+        await fetch(`/api/inbox/${row.inboxId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "assigned" }),
+        });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setCreating(false);
+    setShowBatchModal(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) toast.success(`${successCount} 件のテストを作成しました`);
+    if (failCount > 0) toast.error(`${failCount} 件の作成に失敗しました`);
+    await fetchItems();
+  };
+
   // 日時フォーマット
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -256,13 +360,21 @@ export default function EmailInbox() {
 
           {/* 選択操作 */}
           {selectedIds.size > 0 && (
-            <button
-              onClick={handleDeleteSelected}
-              disabled={deleting}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {deleting ? "削除中..." : `選択削除 (${selectedIds.size}件)`}
-            </button>
+            <>
+              <button
+                onClick={handleOpenBatchModal}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+              >
+                選択PDFからテスト作成 ({selectedIds.size}件)
+              </button>
+              <button
+                onClick={handleDeleteSelected}
+                disabled={deleting}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {deleting ? "削除中..." : `選択削除 (${selectedIds.size}件)`}
+              </button>
+            </>
           )}
 
           <span className="ml-auto text-sm text-gray-500">
@@ -407,6 +519,109 @@ export default function EmailInbox() {
           </div>
         )}
       </div>
+
+      {/* 一括テスト作成モーダル */}
+      {showBatchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">一括テスト作成</h2>
+              <button
+                onClick={() => setShowBatchModal(false)}
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-500"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+              {/* 共通設定 */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">学年 <span className="text-red-500">*</span></label>
+                  <select
+                    value={batchGrade}
+                    onChange={(e) => setBatchGrade(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">選択してください</option>
+                    {grades.map((g) => (
+                      <option key={g.id} value={g.name}>{g.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">科目 <span className="text-red-500">*</span></label>
+                  <select
+                    value={batchSubject}
+                    onChange={(e) => setBatchSubject(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">選択してください</option>
+                    {subjects.map((s) => (
+                      <option key={s.id} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">フォルダ</label>
+                  <select
+                    value={batchFolderId}
+                    onChange={(e) => setBatchFolderId(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">なし</option>
+                    {folders.map((f) => (
+                      <option key={f.id} value={f.id}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 各PDF のテスト名 */}
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-2">テスト名（個別に編集できます）</p>
+                <div className="space-y-2">
+                  {batchRows.map((row, idx) => (
+                    <div key={row.inboxId} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
+                      <input
+                        type="text"
+                        value={row.testName}
+                        onChange={(e) => {
+                          const next = [...batchRows];
+                          next[idx] = { ...next[idx], testName: e.target.value };
+                          setBatchRows(next);
+                        }}
+                        className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="テスト名"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setShowBatchModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleBatchCreate}
+                disabled={creating || !batchGrade || !batchSubject}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {creating ? "作成中..." : `${batchRows.length} 件を一括作成`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

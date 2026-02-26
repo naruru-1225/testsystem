@@ -71,6 +71,14 @@ export default function TestCreateForm({
   // #28 アップロード進捗
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
+  // #20 複数PDF一括作成
+  const [showMultiBatchModal, setShowMultiBatchModal] = useState(false);
+  const [multiBatchRows, setMultiBatchRows] = useState<{file: File; name: string}[]>([]);
+  const [multiBatchGrade, setMultiBatchGrade] = useState("");
+  const [multiBatchSubject, setMultiBatchSubject] = useState("");
+  const [multiBatchFolderId, setMultiBatchFolderId] = useState<number | "">("");
+  const [multiBatchCreating, setMultiBatchCreating] = useState(false);
+
   // フォルダの展開状態
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(
     new Set()
@@ -370,51 +378,44 @@ export default function TestCreateForm({
     e.preventDefault();
     e.stopPropagation();
 
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length === 0) return;
+
+    // 許可する拡張子
+    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
+    const validFiles = droppedFiles.filter((f) => {
+      const ext = f.name.split(".").pop()?.toLowerCase() || "";
+      return allowedExtensions.includes(ext);
+    });
+
+    if (validFiles.length === 0) {
+      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
+      return;
+    }
+
+    // 複数ファイルが有効なら一括作成モーダルへ
+    if (validFiles.length > 1) {
+      setMultiBatchRows(
+        validFiles.map((f) => ({
+          file: f,
+          name: f.name.replace(/\.[^.]+$/, ""),
+        }))
+      );
+      setMultiBatchGrade(grade);
+      setMultiBatchSubject(subject);
+      setMultiBatchFolderId(selectedFolderIds[0] ?? "");
+      setShowMultiBatchModal(true);
+      return;
+    }
+
+    // 1ファイルの場合は従来通り
+    const file = validFiles[0];
 
     console.log("📎 ファイルドロップ:", {
       name: file.name,
       type: file.type,
       size: file.size,
       extension: file.name.split(".").pop()?.toLowerCase(),
-    });
-
-    // ファイル拡張子を取得
-    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
-
-    // 許可する拡張子
-    const allowedExtensions = ["pdf", "heic", "heif", "jpg", "jpeg", "png"];
-
-    // 許可するMIMEタイプ
-    const allowedTypes = [
-      "application/pdf",
-      "image/heic",
-      "image/heif",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/x-heic",
-      "application/octet-stream",
-      "",
-    ];
-
-    // 拡張子またはMIMEタイプでチェック
-    const isValidExtension = allowedExtensions.includes(fileExt);
-    const isValidMimeType = allowedTypes.includes(file.type);
-
-    if (!isValidExtension && !isValidMimeType) {
-      console.error("❌ ファイルタイプ拒否:", {
-        type: file.type,
-        extension: fileExt,
-      });
-      setError("PDF、HEIC、JPG、PNGファイルのみアップロード可能です");
-      return;
-    }
-
-    console.log("✅ ファイルタイプ承認:", {
-      isValidExtension,
-      isValidMimeType,
     });
 
     // ファイルサイズチェック(10MB)
@@ -469,6 +470,54 @@ export default function TestCreateForm({
   const handleRemovePdf = () => {
     setPdfFile(null);
     setPdfPath(null);
+  };
+
+  // #20 複数PDF一括テスト作成
+  const handleMultiBatchCreate = async () => {
+    if (!multiBatchGrade || !multiBatchSubject) {
+      setError("学年と科目を選択してください");
+      return;
+    }
+    setMultiBatchCreating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const row of multiBatchRows) {
+      try {
+        // 1. PDFアップロード
+        const formData = new FormData();
+        formData.append("file", row.file);
+        const upRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!upRes.ok) throw new Error("アップロード失敗");
+        const upData = await upRes.json();
+
+        // 2. テスト作成
+        const body: Record<string, unknown> = {
+          name: row.name,
+          subject: multiBatchSubject,
+          grade: multiBatchGrade,
+          pdfPath: upData.path,
+        };
+        if (multiBatchFolderId !== "") body.folderIds = [multiBatchFolderId];
+        const res = await fetch("/api/tests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error("テスト作成失敗");
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setMultiBatchCreating(false);
+    setShowMultiBatchModal(false);
+    if (successCount > 0) {
+      // 作成成功後はテスト一覧へ戻る
+      router.push(`/?message=${encodeURIComponent(`${successCount} 件のテストを作成しました`)}`);
+    }
+    if (failCount > 0) {
+      setError(`${failCount} 件の作成に失敗しました`);
+    }
   };
 
   // 添付ファイル選択時の処理
@@ -1499,6 +1548,84 @@ export default function TestCreateForm({
           </div>
         </form>
       </div>
+
+      {/* #20 複数PDF一括作成モーダル */}
+      {showMultiBatchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">複数PDF 一括テスト作成</h2>
+              <button onClick={() => setShowMultiBatchModal(false)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+              {/* 共通設定 */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">学年 <span className="text-red-500">*</span></label>
+                  <select value={multiBatchGrade} onChange={(e) => setMultiBatchGrade(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">選択</option>
+                    {grades.map((g) => <option key={g.id} value={g.name}>{g.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">科目 <span className="text-red-500">*</span></label>
+                  <select value={multiBatchSubject} onChange={(e) => setMultiBatchSubject(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">選択</option>
+                    {subjects.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">フォルダ</label>
+                  <select value={multiBatchFolderId} onChange={(e) => setMultiBatchFolderId(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">なし</option>
+                    {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              {/* テスト名 */}
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-2">テスト名</p>
+                <div className="space-y-2">
+                  {multiBatchRows.map((row, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
+                      <input type="text" value={row.name}
+                        onChange={(e) => {
+                          const next = [...multiBatchRows];
+                          next[idx] = { ...next[idx], name: e.target.value };
+                          setMultiBatchRows(next);
+                        }}
+                        className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="テスト名" />
+                      <span className="text-xs text-gray-400 truncate max-w-[140px]">{row.file.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t flex justify-end gap-3">
+              <button onClick={() => setShowMultiBatchModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                キャンセル
+              </button>
+              <button onClick={handleMultiBatchCreate}
+                disabled={multiBatchCreating || !multiBatchGrade || !multiBatchSubject}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50">
+                {multiBatchCreating ? "作成中..." : `${multiBatchRows.length} 件を一括作成`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

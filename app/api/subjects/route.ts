@@ -13,7 +13,9 @@ export const GET = withErrorHandling(async (request: Request) => {
   const subjects = withCounts
     ? subjectRepository.getAllWithUsageCounts()
     : subjectRepository.getAll();
-  return NextResponse.json(subjects);
+  return NextResponse.json(subjects, {
+    headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=60" },
+  });
 });
 
 /**

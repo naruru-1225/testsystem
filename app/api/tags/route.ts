@@ -8,7 +8,9 @@ import { withErrorHandling, validationError } from "@/lib/api-utils";
  */
 export const GET = withErrorHandling(async () => {
   const tags = tagRepository.getAll();
-  return NextResponse.json(tags);
+  return NextResponse.json(tags, {
+    headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=60" },
+  });
 });
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Sidebar from "./Sidebar";
@@ -131,6 +131,30 @@ export default function TestList() {
   const toggleColumn = (col: string) => {
     setVisibleColumns((prev) => ({ ...prev, [col]: !prev[col] }));
   };
+
+  // #35 列幅リサイズ（localStorageに永続化）
+  const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>(
+    "testlist-col-widths",
+    { name: 240, subject: 100, grade: 100, memo: 180, tags: 140, date: 110, actions: 120 }
+  );
+  const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
+  const handleColResizeStart = useCallback((col: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = { col, startX: e.clientX, startWidth: colWidths[col] ?? 100 };
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const delta = ev.clientX - resizingRef.current.startX;
+      const newWidth = Math.max(60, resizingRef.current.startWidth + delta);
+      setColWidths((prev) => ({ ...prev, [resizingRef.current!.col]: newWidth }));
+    };
+    const onUp = () => {
+      resizingRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [colWidths, setColWidths]);
 
   const { error: toastError, success: toastSuccess } = useToast();
 
@@ -1561,7 +1585,17 @@ export default function TestList() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{ width: 40 }} />
+                    <col style={{ width: colWidths["name"] ?? 240 }} />
+                    {visibleColumns["subject"] !== false && <col style={{ width: colWidths["subject"] ?? 100 }} />}
+                    {visibleColumns["grade"] !== false && <col style={{ width: colWidths["grade"] ?? 100 }} />}
+                    {visibleColumns["memo"] !== false && <col style={{ width: colWidths["memo"] ?? 180 }} />}
+                    {visibleColumns["tags"] !== false && <col style={{ width: colWidths["tags"] ?? 140 }} />}
+                    {visibleColumns["date"] !== false && <col style={{ width: colWidths["date"] ?? 110 }} />}
+                    {visibleColumns["actions"] !== false && <col style={{ width: colWidths["actions"] ?? 120 }} />}
+                  </colgroup>
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-3 py-3 w-10">
@@ -1573,39 +1607,20 @@ export default function TestList() {
                           title="全て選択/解除"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        テスト名
-                      </th>
-                      {visibleColumns["subject"] !== false && (
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        科目
-                      </th>
-                      )}
-                      {visibleColumns["grade"] !== false && (
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        学年
-                      </th>
-                      )}
-                      {visibleColumns["memo"] !== false && (
-                      <th className="px-2 md:px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        メモ
-                      </th>
-                      )}
-                      {visibleColumns["tags"] !== false && (
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        ラベル
-                      </th>
-                      )}
-                      {visibleColumns["date"] !== false && (
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        登録日
-                      </th>
-                      )}
-                      {visibleColumns["actions"] !== false && (
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        操作
-                      </th>
-                      )}
+                      {(["name", "subject", "grade", "memo", "tags", "date", "actions"] as const).map((col) => {
+                        if (col !== "name" && visibleColumns[col] === false) return null;
+                        return (
+                          <th key={col} className="relative px-4 py-3 text-left text-sm font-semibold text-gray-700 select-none overflow-hidden">
+                            <span className="truncate block pr-2">{columnLabels[col]}</span>
+                            {/* リサイズハンドル */}
+                            <div
+                              onMouseDown={(e) => handleColResizeStart(col, e)}
+                              className="absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-blue-300 opacity-0 hover:opacity-60 transition-opacity"
+                              title="ドラッグで列幅を変更"
+                            />
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody className="divide-y">

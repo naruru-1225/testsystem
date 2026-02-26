@@ -71,6 +71,7 @@ export default function AdminModal({
   const [editingFolderParentId, setEditingFolderParentId] = useState<
     number | null
   >(null);
+  const [editingFolderIcon, setEditingFolderIcon] = useState<string>(""); // #50
 
   // タグ関連
   const [tags, setTags] = useState<Tag[]>([]);
@@ -134,6 +135,7 @@ export default function AdminModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [seedingDemo, setSeedingDemo] = useState(false);
 
   // 定義済みカラーパレット
   const colorPalette = [
@@ -384,6 +386,7 @@ export default function AdminModal({
         body: JSON.stringify({
           name: editingFolderName.trim(),
           parentId: editingFolderParentId,
+          icon: editingFolderIcon.trim() || null,
         }),
       });
 
@@ -1010,6 +1013,26 @@ export default function AdminModal({
     }
   };
 
+  // デモデータ投入
+  const handleSeedDemo = async () => {
+    if (!confirm("フォルダ・タグ・テストのサンプルデータを作成しますか？（既存データには重複しません）")) return;
+    setSeedingDemo(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/seed/demo", { method: "POST" });
+      if (!res.ok) throw new Error("デモデータの投入に失敗しました");
+      const data = await res.json();
+      setSuccess(data.message);
+      await Promise.all([fetchFolders(), fetchTags()]);
+      onUpdate();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSeedingDemo(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -1241,6 +1264,16 @@ export default function AdminModal({
                             disabled={loading}
                             maxLength={50}
                           />
+                          {/* #50 アイコン入力（絵文字等） */}
+                          <input
+                            type="text"
+                            value={editingFolderIcon}
+                            onChange={(e) => setEditingFolderIcon(e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                            disabled={loading}
+                            maxLength={4}
+                            placeholder="アイコン（絵文字: 📁 🗂️ 📚 など）"
+                          />
                           <select
                             value={editingFolderParentId || ""}
                             onChange={(e) =>
@@ -1284,7 +1317,8 @@ export default function AdminModal({
                       ) : (
                         <>
                           <div>
-                            <span className="text-gray-900 font-medium">
+                            <span className="text-gray-900 font-medium flex items-center gap-1.5">
+                              {folder.icon && <span className="text-base">{folder.icon}</span>}
                               {folder.name}
                             </span>
                             {folder.parent_id && (
@@ -1305,6 +1339,7 @@ export default function AdminModal({
                                   setEditingFolderId(folder.id);
                                   setEditingFolderName(folder.name);
                                   setEditingFolderParentId(folder.parent_id);
+                                  setEditingFolderIcon(folder.icon ?? "");
                                   setError(null);
                                   setSuccess(null);
                                 }}
@@ -1792,6 +1827,25 @@ export default function AdminModal({
 
           {activeTab === "restore" && (
             <div className="space-y-6">
+              {/* デモデータ投入 */}
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">デモデータ投入</h3>
+                    <p className="text-sm text-gray-600">
+                      サンプルのフォルダ・タグ・テストを作成します。既存データとは重複しません。
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSeedDemo}
+                    disabled={seedingDemo}
+                    className="ml-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {seedingDemo ? "投入中..." : "デモデータ作成"}
+                  </button>
+                </div>
+              </div>
+
               {/* バックアップ作成 */}
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <div className="flex items-start justify-between">

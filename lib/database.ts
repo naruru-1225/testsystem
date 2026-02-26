@@ -160,6 +160,7 @@ export function initializeDatabase() {
   
   addColumnIfNotExists("folders", "parent_id", "INTEGER REFERENCES folders(id) ON DELETE CASCADE");
   const addedOrderIndex = addColumnIfNotExists("folders", "order_index", "INTEGER DEFAULT 0");
+  addColumnIfNotExists("folders", "icon", "TEXT DEFAULT NULL"); // #50 フォルダアイコン
 
   addColumnIfNotExists("test_attachments", "mime_type", "TEXT");
   addColumnIfNotExists("test_attachments", "file_size", "INTEGER");

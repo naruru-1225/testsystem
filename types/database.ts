@@ -23,6 +23,7 @@ export interface Folder {
   name: string; // フォルダ名
   parent_id: number | null; // 親フォルダID
   order_index: number; // 表示順序
+  icon?: string | null; // アイコン（#50）
   created_at: string; // 作成日
   test_count?: number; // テスト件数（withCounts=trueのときに付与）
 }

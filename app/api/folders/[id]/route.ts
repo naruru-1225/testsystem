@@ -85,6 +85,34 @@ export const PUT = withErrorHandling(async (request: Request, { params }: any) =
 });
 
 /**
+ * フォルダ部分更新API (#50 アイコン設定など)
+ * PATCH /api/folders/[id]
+ */
+export const PATCH = withErrorHandling(async (request: Request, { params }: any) => {
+  const { id } = await params;
+  const folderId = parseInt(id);
+
+  if (isNaN(folderId)) {
+    return validationError("無効なフォルダIDです");
+  }
+
+  const folder = folderRepository.getById(folderId);
+  if (!folder) return notFoundError("フォルダが見つかりません");
+
+  const body = await request.json();
+  const { icon, name, parentId } = body;
+
+  const updatedFolder = folderRepository.update(
+    folderId,
+    name ?? folder.name,
+    parentId !== undefined ? parentId : folder.parent_id,
+    icon !== undefined ? icon : folder.icon
+  );
+
+  return NextResponse.json(updatedFolder);
+});
+
+/**
  * フォルダ削除API
  * DELETE /api/folders/[id]?force=true (forceパラメータで強制削除)
  */

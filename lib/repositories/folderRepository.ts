@@ -5,6 +5,7 @@ export interface Folder {
   id: number;
   name: string;
   parent_id: number | null;
+  icon?: string | null; // #50
   created_at: string;
 }
 
@@ -46,12 +47,12 @@ export const folderRepository = {
     };
   },
 
-  update: (id: number, name: string, parentId: number | null) => {
+  update: (id: number, name: string, parentId: number | null, icon?: string | null) => {
     const stmt = db.prepare(
-      "UPDATE folders SET name = ?, parent_id = ? WHERE id = ?"
+      "UPDATE folders SET name = ?, parent_id = ?, icon = ? WHERE id = ?"
     );
-    stmt.run(name, parentId, id);
-    return { id, name, parent_id: parentId };
+    stmt.run(name, parentId, icon ?? null, id);
+    return { id, name, parent_id: parentId, icon: icon ?? null };
   },
 
   updateOrder: (folderIds: number[]) => {

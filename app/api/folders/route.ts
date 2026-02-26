@@ -16,7 +16,9 @@ export const GET = withErrorHandling(async (request: Request) => {
     ? folderRepository.getAllWithCounts()
     : folderRepository.getAll();
 
-  return NextResponse.json(folders);
+  return NextResponse.json(folders, {
+    headers: { "Cache-Control": "public, max-age=15, stale-while-revalidate=30" },
+  });
 });
 
 /**

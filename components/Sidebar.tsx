@@ -397,19 +397,24 @@ export default function Sidebar({
             }`}
             style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
           >
-            <svg
-              className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
+            {/* #50 カスタムアイコンまたはデフォルトフォルダSVG */}
+            {folder.icon ? (
+              <span className="text-base leading-none flex-shrink-0">{folder.icon}</span>
+            ) : (
+              <svg
+                className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+            )}
             <span className="break-words flex-1">{folder.name}</span>
             {typeof folder.test_count === "number" && folder.test_count > 0 && (
               <span className="ml-1 flex-shrink-0 text-xs text-blue-200 bg-blue-800 bg-opacity-50 rounded-full px-1.5 py-0.5 leading-none">
