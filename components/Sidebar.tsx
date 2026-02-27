@@ -386,7 +386,7 @@ export default function Sidebar({
               console.log("Folder clicked:", folder.id, folder.name);
               onFolderSelect(folder.id);
             }}
-            className={`flex-1 text-left px-1.5 md:px-2 py-1 md:py-1.5 rounded transition-colors flex items-center gap-1.5 md:gap-2 text-xs md:text-sm ${
+            className={`flex-1 text-left px-2 py-2.5 rounded transition-colors flex items-center gap-2 text-sm ${
               !hasChildren ? "ml-5" : ""
             } ${
               (folder.id === 1 &&
@@ -461,7 +461,7 @@ export default function Sidebar({
       <div className="px-2 md:px-2.5 py-1.5 md:py-2 border-b border-sidebar-dark">
         <a
           href="/dashboard"
-          className="w-full flex items-center gap-2 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-lg hover:bg-blue-600 transition-colors text-white bg-blue-500 shadow-sm"
+          className="w-full flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-blue-600 transition-colors text-white bg-blue-500 shadow-sm"
         >
           <svg
             className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0"
@@ -483,7 +483,7 @@ export default function Sidebar({
         {/* 受信トレイボタン */}
         <a
           href="/inbox"
-          className="mt-1.5 w-full flex items-center gap-2 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-lg hover:bg-gray-600 transition-colors text-white bg-gray-500 shadow-sm"
+          className="mt-1.5 w-full flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-600 transition-colors text-white bg-gray-500 shadow-sm"
         >
           <svg
             className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0"
@@ -526,7 +526,7 @@ export default function Sidebar({
               placeholder="フォルダを検索..."
               value={folderSearchQuery}
               onChange={(e) => setFolderSearchQuery(e.target.value)}
-              className="w-full px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-sidebar-dark text-white rounded border border-gray-600 focus:border-blue-400 focus:outline-none placeholder-gray-400"
+              className="w-full px-3 py-2 text-sm bg-sidebar-dark text-white rounded border border-gray-600 focus:border-blue-400 focus:outline-none placeholder-gray-400"
             />
           </div>
 
@@ -586,7 +586,7 @@ export default function Sidebar({
                       onClick={() => {
                         onCategorySelect(category.grade, null);
                       }}
-                      className={`flex-1 text-left px-1.5 md:px-2 py-1 md:py-1.5 rounded transition-colors flex items-center gap-1.5 md:gap-2 text-xs md:text-sm ${
+                      className={`flex-1 text-left px-2 py-2.5 rounded transition-colors flex items-center gap-2 text-sm ${
                         !hasSubjects ? "ml-5" : ""
                       } ${
                         selectedCategory?.grade === category.grade &&
@@ -621,7 +621,7 @@ export default function Sidebar({
                           onClick={() => {
                             onCategorySelect(category.grade, subject);
                           }}
-                          className={`w-full text-left px-1.5 md:px-2 py-1 md:py-1.5 rounded transition-colors flex items-center gap-1.5 md:gap-2 ml-5 text-xs md:text-sm ${
+                          className={`w-full text-left px-2 py-2.5 rounded transition-colors flex items-center gap-2 ml-5 text-sm ${
                             selectedCategory?.grade === category.grade &&
                             selectedCategory?.subject === subject
                               ? "bg-sidebar-dark"
@@ -657,7 +657,7 @@ export default function Sidebar({
       <div className="border-t border-sidebar-dark flex-shrink-0">
         <button
           onClick={() => setThemeOpen((v) => !v)}
-          className="w-full text-left px-2 md:px-3 py-1.5 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm hover:bg-blue-600 transition-colors"
+          className="w-full text-left px-3 py-2.5 flex items-center gap-2 text-sm hover:bg-blue-600 transition-colors"
         >
           <svg className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -678,7 +678,7 @@ export default function Sidebar({
       <div className="p-1.5 md:p-2 border-t border-sidebar-dark flex-shrink-0">
         <button
           onClick={onAdminMenuClick}
-          className="w-full text-left px-1.5 md:px-2 py-1 md:py-1.5 rounded hover:bg-blue-600 transition-colors flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
+          className="w-full text-left px-2 py-2.5 rounded hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm"
         >
           <svg
             className="w-4 h-4 md:w-5 md:h-5"

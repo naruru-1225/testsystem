@@ -204,9 +204,6 @@ export default function TestList() {
   const [showPresetSave, setShowPresetSave] = useState(false);
   const [presetName, setPresetName] = useState("");
 
-  // #109 QRコードモーダル
-  const [qrModal, setQrModal] = useState<{ testId: number; testName: string } | null>(null);
-
   // #119 コメントモーダル
   const [commentModal, setCommentModal] = useState<{ testId: number; testName: string } | null>(null);
   const [comments, setComments] = useState<{ id: number; content: string; device_hint: string | null; created_at: string }[]>([]);
@@ -689,11 +686,6 @@ export default function TestList() {
 
   // 詳細フィルタが有効かどうか
   const hasAdvancedFilter = (selectedTagIds.length > 0 || !!advDateFrom || !!advDateTo || !!advMinQ || !!advMaxQ);
-
-  // #109 QRコードモーダルを開く
-  const openQrModal = (test: TestWithTags) => {
-    setQrModal({ testId: test.id, testName: test.name });
-  };
 
   // #119 コメントモーダルを開いてコメント一覧を取得
   const openCommentModal = async (test: TestWithTags) => {
@@ -1591,13 +1583,13 @@ export default function TestList() {
                       <div className="flex gap-2">
                         <Link
                           href={`/tests/${test.id}/edit`}
-                          className="text-xs text-primary hover:text-primary-dark font-medium"
+                          className="text-sm text-primary hover:text-primary-dark font-medium py-1.5 px-2 rounded hover:bg-primary/10 transition-colors"
                         >
                           編集
                         </Link>
                         <button
                           onClick={() => handleDeleteWithUndo(test)}
-                          className="text-xs text-red-600 hover:text-red-700 font-medium"
+                          className="text-sm text-red-600 hover:text-red-700 font-medium py-1.5 px-2 rounded hover:bg-red-50 transition-colors"
                           title="削除（8秒以内に取り消せます）"
                         >
                           削除
@@ -1794,20 +1786,10 @@ export default function TestList() {
                             >
                               複製
                             </button>
-                            {/* #109 QR */}
-                            <button
-                              onClick={() => openQrModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
-                              title="QRコードを表示"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5V16M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
-                              </svg>
-                            </button>
                             {/* #119 コメント */}
                             <button
                               onClick={() => openCommentModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
                               title="コメント"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1817,7 +1799,7 @@ export default function TestList() {
                             {/* #124 変更履歴 */}
                             <button
                               onClick={() => openHistoryModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
                               title="変更履歴"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1827,7 +1809,7 @@ export default function TestList() {
                             {/* #118 関連テスト */}
                             <button
                               onClick={() => openRelatedModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
+                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
                               title="関連テスト"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1962,41 +1944,6 @@ export default function TestList() {
                 削除
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* #109 QRコードモーダル */}
-      {qrModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]" onClick={() => setQrModal(null)}>
-          <div className="bg-white rounded-xl p-6 shadow-xl max-w-xs w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">QRコード</h3>
-              <button onClick={() => setQrModal(null)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-            <p className="text-sm text-gray-500 mb-3 truncate">{qrModal.testName}</p>
-            <div className="flex justify-center mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/tests/${qrModal.testId}/qr`}
-                alt="QR Code"
-                className="w-48 h-48"
-              />
-            </div>
-            <p className="text-xs text-gray-400 text-center break-all">
-              {typeof window !== "undefined" ? `${window.location.origin}/tests/${qrModal.testId}/edit` : ""}
-            </p>
-            <button
-              onClick={() => {
-                const link = document.createElement("a");
-                link.href = `/api/tests/${qrModal.testId}/qr`;
-                link.download = `qr-test-${qrModal.testId}.png`;
-                link.click();
-              }}
-              className="mt-4 w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm"
-            >
-              PNG ダウンロード
-            </button>
           </div>
         </div>
       )}

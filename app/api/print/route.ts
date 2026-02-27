@@ -88,31 +88,48 @@ async function printWindows(
   printerName: string | undefined,
   copies: number
 ) {
-  // SumatraPDF が使えるか確認（サイレント印刷が可能なため推奨）
+  // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
-
   if (sumatraPath) {
-    // SumatraPDF によるサイレント印刷
     const printerArg = printerName ? `-print-to "${printerName}"` : "-print-to-default";
     const cmd = `"${sumatraPath}" ${printerArg} -silent "${filePath}"`;
-    // 部数は SumatraPDF では複数回呼び出しで対応
     for (let i = 0; i < copies; i++) {
       await execAsync(cmd, { timeout: 60000 });
     }
-  } else {
-    // PowerShell の Start-Process -Verb Print にフォールバック
-    const escapedPath = filePath.replace(/'/g, "''");
-    let cmd: string;
-    if (printerName) {
-      // 特定プリンターへの印刷（レジストリ経由でデフォルト変更は避け、SumatraPDF 推奨）
-      cmd = `powershell -NoProfile -Command "& { $printer = '${printerName.replace(/'/g, "''")}'; $file = '${escapedPath}'; Start-Process -FilePath $file -Verb Print -Wait }"`;
-    } else {
-      cmd = `powershell -NoProfile -Command "Start-Process -FilePath '${escapedPath}' -Verb Print -Wait"`;
-    }
-    for (let i = 0; i < copies; i++) {
-      await execAsync(cmd, { timeout: 60000 });
-    }
+    return;
   }
+
+  // ② Adobe Acrobat / Acrobat Reader によるサイレント印刷
+  const acrobatPath = await findAcrobat();
+  if (acrobatPath) {
+    // /t "file" "printer" でダイアログなしに静かに印刷
+    const printerArg = printerName ? ` "${printerName}"` : "";
+    const cmd = `"${acrobatPath}" /t "${filePath}"${printerArg}`;
+    for (let i = 0; i < copies; i++) {
+      await execAsync(cmd, { timeout: 60000 });
+      // Acrobat は起動後すぐ終了することがあるため少し待機
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    return;
+  }
+
+  // ③ Foxit Reader によるサイレント印刷
+  const foxitPath = await findFoxitReader();
+  if (foxitPath) {
+    const printerArg = printerName ? ` "${printerName}"` : "";
+    const cmd = `"${foxitPath}" /t "${filePath}"${printerArg}`;
+    for (let i = 0; i < copies; i++) {
+      await execAsync(cmd, { timeout: 60000 });
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    return;
+  }
+
+  // ④ どのPDFビューアーも見つからない場合
+  throw new Error(
+    "サイレント印刷に対応するPDFビューアーが見つかりません。" +
+    "SumatraPDF (https://www.sumatrapdfreader.org/) をインストールしてください。"
+  );
 }
 
 async function printUnix(
@@ -137,14 +154,54 @@ async function findSumatraPDF(): Promise<string | null> {
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;
   }
-  // PATH から探す
   try {
     const { stdout } = await execAsync("where SumatraPDF", { timeout: 3000 });
     const found = stdout.trim().split("\n")[0];
-    if (found && fs.existsSync(found)) return found.trim();
-  } catch {
-    // 見つからない
+    if (found && fs.existsSync(found.trim())) return found.trim();
+  } catch { /* 見つからない */ }
+  return null;
+}
+
+/** Adobe Acrobat / Acrobat Reader の実行ファイルパスを探す */
+async function findAcrobat(): Promise<string | null> {
+  const candidates = [
+    // Acrobat Reader DC
+    "C:\\Program Files (x86)\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+    "C:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+    // Acrobat DC (Pro)
+    "C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
+    "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
+    // 旧バージョン
+    "C:\\Program Files (x86)\\Adobe\\Reader 11.0\\Reader\\AcroRd32.exe",
+    "C:\\Program Files (x86)\\Adobe\\Reader 10.0\\Reader\\AcroRd32.exe",
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
   }
+  try {
+    const { stdout } = await execAsync("where AcroRd32", { timeout: 3000 });
+    const found = stdout.trim().split("\n")[0];
+    if (found && fs.existsSync(found.trim())) return found.trim();
+  } catch { /* 見つからない */ }
+  return null;
+}
+
+/** Foxit Reader の実行ファイルパスを探す */
+async function findFoxitReader(): Promise<string | null> {
+  const candidates = [
+    "C:\\Program Files (x86)\\Foxit Software\\Foxit Reader\\FoxitReader.exe",
+    "C:\\Program Files\\Foxit Software\\Foxit Reader\\FoxitReader.exe",
+    "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe",
+    "C:\\Program Files\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe",
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  try {
+    const { stdout } = await execAsync("where FoxitReader", { timeout: 3000 });
+    const found = stdout.trim().split("\n")[0];
+    if (found && fs.existsSync(found.trim())) return found.trim();
+  } catch { /* 見つからない */ }
   return null;
 }
 
