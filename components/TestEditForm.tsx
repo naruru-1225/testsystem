@@ -193,6 +193,7 @@ export default function TestEditForm({ testId }: TestEditFormProps) {
   // 初期データの取得
   useEffect(() => {
     fetchInitialData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   const fetchInitialData = async () => {

@@ -205,6 +205,7 @@ export default function TestCreateForm({
         if (last.selectedTagIds?.length) setSelectedTagIds(last.selectedTagIds);
       } catch { /* ignore */ }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 入力値変更時に自動保存 (#17)

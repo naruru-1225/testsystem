@@ -51,8 +51,7 @@ async function _convertPdfWithDims(
   targetDimsBase: { width: number; height: number },
   label: string
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _targetSize = label; // kept for logging
+  const targetSize = label as PaperSize;
   try {
     // 元PDFを読み込み
     const existingPdfBytes = fs.readFileSync(inputPath);

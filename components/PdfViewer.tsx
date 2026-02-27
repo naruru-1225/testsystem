@@ -353,6 +353,7 @@ export default function PdfViewer({
     } else {
       console.log("⚠️⚠️⚠️ [v3.2-FINAL] currentFileが null です");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentFile, workerReady]);
 
   // タイムアウト監視: loading状態が15秒以上続く場合、フォールバックモードへ
@@ -1238,6 +1239,7 @@ export default function PdfViewer({
             })(),
             (
               <div className="bg-white shadow-lg p-4 max-w-full max-h-full overflow-auto">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={currentPdf}
                   alt={currentFile?.name || "画像"}

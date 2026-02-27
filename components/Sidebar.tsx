@@ -107,7 +107,7 @@ export default function Sidebar({
   }, []);
 
   // データをstateとして扱う（nullチェック対応）
-  const folders = foldersData || [];
+  const folders = useMemo(() => foldersData || [], [foldersData]);
   const categories = categoriesData || [];
 
   /**
@@ -302,6 +302,7 @@ export default function Sidebar({
     }
 
     return tree;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folders, debouncedFolderQuery]);
 
   /**
@@ -440,6 +441,7 @@ export default function Sidebar({
       {/* ヘッダー */}
       <div className="p-2 md:p-2.5 border-b border-sidebar-dark flex-shrink-0">
         <div className="flex items-center gap-1.5 md:gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
             alt="ロゴ"

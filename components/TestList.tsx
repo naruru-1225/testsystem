@@ -224,12 +224,13 @@ export default function TestList() {
 
   // フォルダデータを取得してパンくずリスト用に使用
   const { data: foldersData } = useFolders();
-  const folders = foldersData || [];
+  const folders = useMemo(() => foldersData || [], [foldersData]);
 
   // パンくずリストを構築（useMemoでメモ化）
   const breadcrumbs = useMemo(() => {
     if (!selectedFolderId) return [];
     return buildBreadcrumbs(folders, selectedFolderId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folders, selectedFolderId]);
 
   // 表示設定に基づきソート済み・フィルタ済みテスト一覧を生成（#44 #46 詳細検索・複数タグ）
@@ -354,6 +355,7 @@ export default function TestList() {
       // 検索以外は即座に実行
       fetchTests();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFolderId, selectedCategory, selectedTagId, searchQuery]);
 
   /**
@@ -1954,6 +1956,7 @@ export default function TestList() {
             </div>
             <p className="text-sm text-gray-500 mb-3 truncate">{qrModal.testName}</p>
             <div className="flex justify-center mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/tests/${qrModal.testId}/qr`}
                 alt="QR Code"

@@ -33,7 +33,7 @@ export async function GET(
       },
     });
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "image/png",
         "Content-Disposition": `inline; filename="qr-test-${testId}.png"`,

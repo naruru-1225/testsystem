@@ -60,8 +60,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   // アンマウント時にタイマーをクリア
   useEffect(() => {
+    const timers = timersRef.current;
     return () => {
-      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, []);
 
