@@ -26,8 +26,24 @@ export async function POST(req: NextRequest) {
 
     // public フォルダ基点の絶対パスを解決
     const publicDir = path.join(process.cwd(), "public");
+
+    // pdfPath が /api/pdf/sized?... の形式（サイズ変換API URL）の場合、
+    // クエリパラメーターの pdfPath を抽出して実際のファイルパスを使用する
+    let resolvedPdfPath = pdfPath;
+    if (pdfPath.startsWith("/api/pdf/sized") || pdfPath.startsWith("/api/pdf/")) {
+      try {
+        const url = new URL(pdfPath, "http://localhost");
+        const extracted = url.searchParams.get("pdfPath");
+        if (extracted) {
+          resolvedPdfPath = extracted;
+        }
+      } catch {
+        // URLパースに失敗した場合はそのまま使用
+      }
+    }
+
     // pdfPath が /uploads/... の形式の場合、public フォルダ配下に解決
-    const relPath = pdfPath.startsWith("/") ? pdfPath.slice(1) : pdfPath;
+    const relPath = resolvedPdfPath.startsWith("/") ? resolvedPdfPath.slice(1) : resolvedPdfPath;
     const absolutePath = path.resolve(publicDir, relPath);
 
     // パストラバーサル対策：public フォルダ外のファイルへのアクセスを拒否
@@ -37,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     if (!fs.existsSync(absolutePath)) {
       return NextResponse.json(
-        { error: `ファイルが見つかりません: ${pdfPath}` },
+        { error: `ファイルが見つかりません: ${resolvedPdfPath}（元のパス: ${pdfPath}）` },
         { status: 404 }
       );
     }

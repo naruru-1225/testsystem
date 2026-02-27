@@ -1073,7 +1073,7 @@ export default function PdfViewer({
                 {/* 印刷設定ギアボタン */}
                 <button
                   onClick={() => setShowPrintSettings((v) => !v)}
-                  title="印刷設定"
+                  title="印刷設定 / サーバー印刷"
                   className={`p-2 rounded-lg transition-colors ${
                     showPrintSettings
                       ? "bg-gray-200 text-gray-800"
@@ -1086,25 +1086,7 @@ export default function PdfViewer({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </button>
-                {/* サーバー印刷ボタン */}
-                <button
-                  onClick={handleServerPrint}
-                  disabled={serverPrinting || !currentPdf}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
-                  title="サーバー（PC）経由で印刷（AirPrint非対応な複合機向け）"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
-                  <span>{serverPrinting ? "送信中..." : "🖨️ サーバー印刷"}</span>
-                </button>
               </div>
-              {/* サーバー印刷エラー */}
-              {serverPrintError && (
-                <div className="absolute right-0 top-full mt-1 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 z-50 whitespace-nowrap shadow">
-                  ❌ {serverPrintError}
-                </div>
-              )}
               {/* 印刷設定パネル */}
               {showPrintSettings && (
                 <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-60 text-sm">
@@ -1162,6 +1144,24 @@ export default function PdfViewer({
                     </label>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">※ブラウザの印刷ダイアログで最終確認できます</p>
+                  {/* サーバー印刷ボタン（AirPrint非対応複合機向け） */}
+                  <div className="border-t border-gray-200 mt-3 pt-3">
+                    <p className="text-xs text-gray-500 mb-1.5">🖨️ サーバー（PC）経由で印刷</p>
+                    <button
+                      onClick={handleServerPrint}
+                      disabled={serverPrinting || !currentPdf}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
+                      title="サーバー（PC）経由で印刷（AirPrint非対応な複合機向け）"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      <span>{serverPrinting ? "送信中..." : "サーバー印刷"}</span>
+                    </button>
+                    {serverPrintError && (
+                      <p className="text-xs text-red-600 mt-1">❌ {serverPrintError}</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
