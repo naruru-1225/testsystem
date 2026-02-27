@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { withErrorHandling, validationError } from "@/lib/api-utils";
-import { getDatabase } from "@/lib/database";
+import db from "@/lib/database";
 
 /**
  * 学年の代替先置き換えAPI (#70)
@@ -15,8 +15,6 @@ export const POST = withErrorHandling(
     if (!fromId || !toId) {
       return validationError("fromId と toId が必要です");
     }
-
-    const db = getDatabase();
 
     // fromId の学年名を取得
     const fromGrade = db.prepare("SELECT name FROM grades WHERE id = ?").get(fromId) as { name: string } | undefined;
