@@ -57,6 +57,7 @@ export default function EmailInbox() {
   const [subjects, setSubjects] = useState<{id:number;name:string}[]>([]);
   const [folders, setFolders] = useState<FolderOption[]>([]);
   const [creating, setCreating] = useState(false);
+  const [batchMode, setBatchMode] = useState<"separate" | "single">("separate");
 
   const fetchItems = useCallback(async () => {
     try {
@@ -219,6 +220,7 @@ export default function EmailInbox() {
     setBatchGrade("");
     setBatchSubject("");
     setBatchFolderId("");
+    setBatchMode("separate");
     setShowBatchModal(true);
   };
 
@@ -229,16 +231,20 @@ export default function EmailInbox() {
       return;
     }
     setCreating(true);
-    let successCount = 0;
-    let failCount = 0;
-    for (const row of batchRows) {
+
+    if (batchMode === "single") {
+      // ---- 1テストとしてまとめて登録 ----
       try {
+        const first = batchRows[0];
+        const rest = batchRows.slice(1);
         const body: Record<string, unknown> = {
-          name: row.testName,
+          name: first.testName,
           grade: batchGrade,
           subject: batchSubject,
-          pdfPath: row.pdfPath,
-          inboxItemId: row.inboxId,
+          pdfPath: first.pdfPath,
+          inboxItemId: first.inboxId,
+          attachmentPaths: rest.map((r) => r.pdfPath),
+          attachmentFileNames: rest.map((r) => r.fileName),
         };
         if (batchFolderId !== "") body.folderIds = [batchFolderId];
         const res = await fetch("/api/tests", {
@@ -247,22 +253,61 @@ export default function EmailInbox() {
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error("作成失敗");
-        // ステータスを assigned に更新
-        await fetch(`/api/inbox/${row.inboxId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "assigned" }),
-        });
-        successCount++;
+        // 全アイテムを assigned に更新
+        await Promise.all(
+          batchRows.map((row) =>
+            fetch(`/api/inbox/${row.inboxId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "assigned" }),
+            })
+          )
+        );
+        setCreating(false);
+        setShowBatchModal(false);
+        setSelectedIds(new Set());
+        toast.success(`1件のテスト（添付 ${rest.length} 件）を作成しました`);
       } catch {
-        failCount++;
+        setCreating(false);
+        toast.error("テストの作成に失敗しました");
       }
+    } else {
+      // ---- 別々のテストとして登録 ----
+      let successCount = 0;
+      let failCount = 0;
+      for (const row of batchRows) {
+        try {
+          const body: Record<string, unknown> = {
+            name: row.testName,
+            grade: batchGrade,
+            subject: batchSubject,
+            pdfPath: row.pdfPath,
+            inboxItemId: row.inboxId,
+          };
+          if (batchFolderId !== "") body.folderIds = [batchFolderId];
+          const res = await fetch("/api/tests", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok) throw new Error("作成失敗");
+          await fetch(`/api/inbox/${row.inboxId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "assigned" }),
+          });
+          successCount++;
+        } catch {
+          failCount++;
+        }
+      }
+      setCreating(false);
+      setShowBatchModal(false);
+      setSelectedIds(new Set());
+      if (successCount > 0) toast.success(`${successCount} 件のテストを作成しました`);
+      if (failCount > 0) toast.error(`${failCount} 件の作成に失敗しました`);
     }
-    setCreating(false);
-    setShowBatchModal(false);
-    setSelectedIds(new Set());
-    if (successCount > 0) toast.success(`${successCount} 件のテストを作成しました`);
-    if (failCount > 0) toast.error(`${failCount} 件の作成に失敗しました`);
+
     await fetchItems();
   };
 
@@ -526,6 +571,26 @@ export default function EmailInbox() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
             <div className="px-6 py-4 border-b flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">一括テスト作成</h2>
+              {batchRows.length > 1 && (
+                <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
+                  <button
+                    onClick={() => setBatchMode("separate")}
+                    className={`px-3 py-1.5 transition-colors ${
+                      batchMode === "separate" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    別々のテスト
+                  </button>
+                  <button
+                    onClick={() => setBatchMode("single")}
+                    className={`px-3 py-1.5 transition-colors ${
+                      batchMode === "single" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    1つのテスト
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => setShowBatchModal(false)}
                 className="p-1.5 rounded hover:bg-gray-100 text-gray-500"
@@ -581,27 +646,63 @@ export default function EmailInbox() {
               </div>
 
               {/* 各PDF のテスト名 */}
-              <div>
-                <p className="text-xs font-medium text-gray-700 mb-2">テスト名（個別に編集できます）</p>
-                <div className="space-y-2">
-                  {batchRows.map((row, idx) => (
-                    <div key={row.inboxId} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
-                      <input
-                        type="text"
-                        value={row.testName}
-                        onChange={(e) => {
-                          const next = [...batchRows];
-                          next[idx] = { ...next[idx], testName: e.target.value };
-                          setBatchRows(next);
-                        }}
-                        className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="テスト名"
-                      />
-                    </div>
-                  ))}
+              {batchMode === "separate" ? (
+                <div>
+                  <p className="text-xs font-medium text-gray-700 mb-2">テスト名（個別に編集できます）</p>
+                  <div className="space-y-2">
+                    {batchRows.map((row, idx) => (
+                      <div key={row.inboxId} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
+                        <input
+                          type="text"
+                          value={row.testName}
+                          onChange={(e) => {
+                            const next = [...batchRows];
+                            next[idx] = { ...next[idx], testName: e.target.value };
+                            setBatchRows(next);
+                          }}
+                          className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="テスト名"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      テスト名 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={batchRows[0]?.testName ?? ""}
+                      onChange={(e) => {
+                        const next = [...batchRows];
+                        next[0] = { ...next[0], testName: e.target.value };
+                        setBatchRows(next);
+                      }}
+                      className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="テスト名"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700 mb-1">
+                      メインPDF: <span className="font-normal text-gray-500">{batchRows[0]?.fileName}</span>
+                    </p>
+                    {batchRows.length > 1 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-700 mb-1">添付PDF（{batchRows.length - 1}件）:</p>
+                        <ul className="text-xs text-gray-500 space-y-0.5 ml-2">
+                          {batchRows.slice(1).map((row, idx) => (
+                            <li key={row.inboxId}>• {idx + 1}. {row.fileName}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="px-6 py-4 border-t flex justify-end gap-3">
@@ -616,7 +717,11 @@ export default function EmailInbox() {
                 disabled={creating || !batchGrade || !batchSubject}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
               >
-                {creating ? "作成中..." : `${batchRows.length} 件を一括作成`}
+                {creating
+                  ? "作成中..."
+                  : batchMode === "single"
+                  ? `1件のテストとして作成（添付 ${batchRows.length - 1}件）`
+                  : `${batchRows.length} 件を一括作成`}
               </button>
             </div>
           </div>

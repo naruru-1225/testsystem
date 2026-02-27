@@ -26,7 +26,7 @@ interface AdminModalProps {
   onExportCSV?: () => void;
 }
 
-type TabType = "folders" | "tags" | "grades" | "subjects" | "restore" | "email";
+type TabType = "folders" | "tags" | "grades" | "subjects" | "restore" | "email" | "printer";
 
 interface EmailConfigState {
   imap_host: string;
@@ -130,6 +130,29 @@ export default function AdminModal({
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailTestResult, setEmailTestResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  // 印刷設定関連
+  const [printerList, setPrinterList] = useState<string[]>([]);
+  const [printerName, setPrinterName] = useState("");
+  const [printerCopies, setPrinterCopies] = useState(1);
+  const [printerDuplex, setPrinterDuplex] = useState(false);
+  const [printerLoading, setPrinterLoading] = useState(false);
+  const [printerSaveSuccess, setPrinterSaveSuccess] = useState(false);
+
+  const fetchPrinters = async () => {
+    setPrinterLoading(true);
+    try {
+      const res = await fetch("/api/print/printers");
+      if (res.ok) {
+        const data = await res.json();
+        setPrinterList(data.printers ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setPrinterLoading(false);
+    }
+  };
 
   // UI状態
   const [loading, setLoading] = useState(false);
@@ -1178,6 +1201,16 @@ export default function AdminModal({
             {emailPollerRunning && (
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="稼働中"></span>
             )}
+          </button>
+          <button
+            onClick={() => { setActiveTab("printer"); fetchPrinters(); }}
+            className={`px-4 sm:px-6 h-full text-sm font-medium transition-colors whitespace-nowrap min-w-fit flex items-center gap-1 ${
+              activeTab === "printer"
+                ? "text-primary border-b-2 border-primary bg-blue-50"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
+          >
+            🖨️ 印刷設定
           </button>
         </div>
 
@@ -2310,6 +2343,101 @@ export default function AdminModal({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 印刷設定タブ */}
+          {activeTab === "printer" && (
+            <div className="space-y-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">🖨️ サーバー印刷設定</h3>
+                  <button
+                    onClick={fetchPrinters}
+                    disabled={printerLoading}
+                    className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  >
+                    {printerLoading ? "取得中..." : "プリンター一覧を再取得"}
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  サーバー（PC）に接続されたプリンターを使って、iPadから直接印刷できます。
+                  AirPrintでは印刷できない複合機にも対応します。
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">デフォルトプリンター</label>
+                    {printerLoading ? (
+                      <div className="h-10 bg-gray-200 animate-pulse rounded-lg" />
+                    ) : (
+                      <select
+                        value={printerName}
+                        onChange={(e) => setPrinterName(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        <option value="">システムデフォルトプリンター</option>
+                        {printerList.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    )}
+                    {!printerLoading && printerList.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        プリンターが見つかりませんでした。サーバーデバイスにプリンターがインストールされているか確認してください。
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">部数</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={printerCopies}
+                        onChange={(e) => setPrinterCopies(Math.max(1, Number(e.target.value)))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 mt-6">
+                      <input
+                        id="printer-duplex"
+                        type="checkbox"
+                        checked={printerDuplex}
+                        onChange={(e) => setPrinterDuplex(e.target.checked)}
+                        className="w-4 h-4 text-primary rounded"
+                      />
+                      <label htmlFor="printer-duplex" className="text-sm text-gray-700">両面印刷</label>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setPrinterSaveSuccess(false);
+                        localStorage.setItem("printer-settings", JSON.stringify({
+                          printerName, copies: printerCopies, duplex: printerDuplex
+                        }));
+                        setPrinterSaveSuccess(true);
+                        setTimeout(() => setPrinterSaveSuccess(false), 2000);
+                      }}
+                      className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark transition-colors"
+                    >
+                      設定を保存
+                    </button>
+                    {printerSaveSuccess && (
+                      <span className="ml-3 text-sm text-green-600">✓ 保存しました</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
+                <p className="font-medium mb-1">💡 使い方</p>
+                <ol className="list-decimal ml-4 space-y-1">
+                  <li>上記でデフォルトプリンターを選択して「設定を保存」</li>
+                  <li>PDF表示画面で「🖨️ サーバー印刷」ボタンをタップ</li>
+                  <li>サーバー（PC）から直接複合機に印刷ジョブが送信されます</li>
+                </ol>
+              </div>
             </div>
           )}
         </div>

@@ -135,7 +135,7 @@ export default function TestList() {
   // #35 列幅リサイズ（localStorageに永続化）
   const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>(
     "testlist-col-widths",
-    { name: 240, subject: 100, grade: 100, memo: 180, tags: 140, date: 110, actions: 120 }
+    { name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 100 }
   );
   const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
   const handleColResizeStart = useCallback((col: string, e: React.MouseEvent) => {
@@ -290,9 +290,9 @@ export default function TestList() {
 
   // 行高さCSSクラス
   const rowPadding: Record<string, string> = {
-    compact: "py-1",
-    standard: "py-3",
-    wide: "py-5",
+    compact: "py-0.5",
+    standard: "py-2",
+    wide: "py-3",
   };
 
   const fetchTests = async () => {
@@ -797,7 +797,7 @@ export default function TestList() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-[100dvh] overflow-hidden">
       {/* モバイル用オーバーレイ */}
       {sidebarOpen && (
         <div
@@ -1188,7 +1188,7 @@ export default function TestList() {
                   setPerPage(25);
                   setCurrentPage(0);
                   setVisibleColumns({ name: true, subject: true, grade: true, memo: true, tags: true, date: true, actions: true });
-                  setColWidths({ name: 240, subject: 100, grade: 100, memo: 180, tags: 140, date: 110, actions: 120 });
+                  setColWidths({ name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 100 });
                 }}
                 className="flex items-center gap-1 px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -1511,6 +1511,26 @@ export default function TestList() {
                     key={test.id}
                     className="border rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col gap-2"
                   >
+                    {/* PDFプレビュー */}
+                    {test.pdf_path && (
+                      <div
+                        className="w-full h-28 bg-gray-100 rounded overflow-hidden cursor-pointer flex-shrink-0"
+                        onClick={() => handleViewPdf(test)}
+                        title="PDFを開く"
+                      >
+                        <object
+                          data={test.pdf_path}
+                          type="application/pdf"
+                          className="w-full h-full pointer-events-none"
+                        >
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-10 h-10 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </object>
+                      </div>
+                    )}
                     {/* テスト名 */}
                     <div className="font-medium text-sm">
                       {test.pdf_path ? (

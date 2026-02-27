@@ -437,7 +437,7 @@ export default function Sidebar({
 
   // JSXレンダリング
   return (
-    <div className="w-full md:w-56 bg-sidebar text-white h-screen flex flex-col overflow-hidden">
+    <div className="w-full md:w-56 bg-sidebar text-white h-[100dvh] flex flex-col overflow-hidden">
       {/* ヘッダー */}
       <div className="p-2 md:p-2.5 border-b border-sidebar-dark flex-shrink-0">
         <div className="flex items-center gap-1.5 md:gap-2">

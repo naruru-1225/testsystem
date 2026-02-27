@@ -25,7 +25,11 @@ export const folderRepository = {
       SELECT f.*, COALESCE(c.cnt, 0) as test_count
       FROM folders f
       LEFT JOIN (
-        SELECT folder_id, COUNT(*) as cnt FROM test_folders GROUP BY folder_id
+        SELECT folder_id, COUNT(DISTINCT id) as cnt FROM (
+          SELECT folder_id, id FROM tests WHERE folder_id IS NOT NULL
+          UNION ALL
+          SELECT folder_id, test_id as id FROM test_folders
+        ) GROUP BY folder_id
       ) c ON c.folder_id = f.id
       ORDER BY f.order_index ASC, f.id ASC
     `).all() as FolderWithCount[];
