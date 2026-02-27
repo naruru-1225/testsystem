@@ -910,7 +910,7 @@ export default function TestList() {
                   onChange={(e) => { setSearchQuery(e.target.value); setShowSearchHistory(false); }}
                   onFocus={() => searchHistory.length > 0 && setShowSearchHistory(true)}
                   onBlur={() => setTimeout(() => setShowSearchHistory(false), 200)}
-                  className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -943,7 +943,7 @@ export default function TestList() {
               <button
                 onClick={() => setShowAdvancedSearch((v) => !v)}
                 title="詳細検索・フィルタ"
-                className={`flex items-center gap-1 px-3 py-2 border rounded-lg transition-colors text-sm whitespace-nowrap ${
+                className={`flex items-center gap-1 px-3 py-2.5 border rounded-lg transition-colors text-sm whitespace-nowrap ${
                   showAdvancedSearch || hasAdvancedFilter
                     ? "bg-primary text-white border-primary"
                     : "border-gray-300 text-gray-600 hover:bg-gray-50"
@@ -960,7 +960,7 @@ export default function TestList() {
             {/* 新規テスト登録ボタン */}
             <Link
               href="/tests/new"
-              className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2 justify-center whitespace-nowrap"
+              className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 justify-center whitespace-nowrap"
             >
               <svg
                 className="w-5 h-5"
@@ -987,23 +987,23 @@ export default function TestList() {
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">登録日（開始）</label>
                   <input type="date" value={advDateFrom} onChange={(e) => setAdvDateFrom(e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                    className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">登録日（終了）</label>
                   <input type="date" value={advDateTo} onChange={(e) => setAdvDateTo(e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                    className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
                 {/* 大問数範囲 */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">大問数（最小）</label>
                   <input type="number" min={0} value={advMinQ} onChange={(e) => setAdvMinQ(e.target.value)}
-                    placeholder="0" className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                    placeholder="0" className="border border-gray-300 rounded px-3 py-2 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">大問数（最大）</label>
                   <input type="number" min={0} value={advMaxQ} onChange={(e) => setAdvMaxQ(e.target.value)}
-                    placeholder="∞" className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
+                    placeholder="∞" className="border border-gray-300 rounded px-3 py-2 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
 
                 {/* #46 複数タグフィルタ */}
@@ -1013,7 +1013,7 @@ export default function TestList() {
                     <span className="ml-2 inline-flex rounded border border-gray-300 overflow-hidden">
                       {(["OR", "AND"] as const).map((m) => (
                         <button key={m} onClick={() => setTagFilterMode(m)}
-                          className={`px-2 py-0.5 text-xs transition-colors ${tagFilterMode === m ? "bg-primary text-white" : "bg-white text-gray-600"}`}>
+                          className={`px-2 py-1.5 text-xs transition-colors ${tagFilterMode === m ? "bg-primary text-white" : "bg-white text-gray-600"}`}>
                           {m}
                         </button>
                       ))}
@@ -1027,7 +1027,7 @@ export default function TestList() {
                             ? selectedTagIds.filter((i) => i !== tag.id)
                             : [...selectedTagIds, tag.id]
                         )}
-                        className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                           selectedTagIds.includes(tag.id)
                             ? "text-white border-transparent"
                             : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
@@ -1044,13 +1044,13 @@ export default function TestList() {
                 <div className="flex gap-2">
                   {hasAdvancedFilter && (
                     <button onClick={() => { setSelectedTagIds([]); setAdvDateFrom(""); setAdvDateTo(""); setAdvMinQ(""); setAdvMaxQ(""); setCurrentPage(0); }}
-                      className="px-3 py-1.5 text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors">
+                      className="px-4 py-2 text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors">
                       クリア
                     </button>
                   )}
                   {/* #47 プリセット保存 */}
                   <button onClick={() => setShowPresetSave((v) => !v)}
-                    className="px-3 py-1.5 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
                     保存
                   </button>
                 </div>
@@ -1061,10 +1061,10 @@ export default function TestList() {
                 <div className="mt-2 flex gap-2 items-center">
                   <input type="text" value={presetName} onChange={(e) => setPresetName(e.target.value)}
                     placeholder="プリセット名..."
-                    className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-primary" />
+                    className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-primary" />
                   <button onClick={saveFilterPreset} disabled={!presetName.trim()}
-                    className="px-3 py-1 bg-primary text-white rounded text-sm disabled:opacity-50 hover:bg-primary-dark">追加</button>
-                  <button onClick={() => setShowPresetSave(false)} className="px-3 py-1 text-gray-500 text-sm hover:text-gray-700">×</button>
+                    className="px-4 py-2 bg-primary text-white rounded text-sm disabled:opacity-50 hover:bg-primary-dark">追加</button>
+                  <button onClick={() => setShowPresetSave(false)} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">×</button>
                 </div>
               )}
 
@@ -1073,9 +1073,9 @@ export default function TestList() {
                 <div className="mt-2 flex flex-wrap gap-1">
                   {filterPresets.map((p, i) => (
                     <div key={i} className="flex items-center gap-0.5 border border-gray-300 rounded-full overflow-hidden text-xs">
-                      <button onClick={() => applyFilterPreset(p)} className="px-2 py-1 hover:bg-gray-50 transition-colors">{p.name}</button>
+                      <button onClick={() => applyFilterPreset(p)} className="px-3 py-2 hover:bg-gray-50 transition-colors">{p.name}</button>
                       <button onClick={() => setFilterPresets(filterPresets.filter((_, fi) => fi !== i))}
-                        className="px-1.5 py-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">×</button>
+                        className="px-2 py-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">×</button>
                     </div>
                   ))}
                 </div>
@@ -1093,7 +1093,7 @@ export default function TestList() {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "name")}
-                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                className="border border-gray-300 rounded px-2 py-2 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
               >
                 <option value="newest">新しい順</option>
                 <option value="oldest">古い順</option>
@@ -1106,7 +1106,7 @@ export default function TestList() {
               <button
                 onClick={() => setViewMode("list")}
                 title="リスト表示"
-                className={`px-3 py-1 flex items-center gap-1 transition-colors ${
+                className={`px-3 py-2.5 flex items-center gap-1 transition-colors ${
                   viewMode === "list"
                     ? "bg-primary text-white"
                     : "bg-white text-gray-600 hover:bg-gray-100"
@@ -1120,7 +1120,7 @@ export default function TestList() {
               <button
                 onClick={() => setViewMode("card")}
                 title="カード表示"
-                className={`px-3 py-1 flex items-center gap-1 transition-colors border-l border-gray-300 ${
+                className={`px-3 py-2.5 flex items-center gap-1 transition-colors border-l border-gray-300 ${
                   viewMode === "card"
                     ? "bg-primary text-white"
                     : "bg-white text-gray-600 hover:bg-gray-100"
@@ -1141,7 +1141,7 @@ export default function TestList() {
                     key={h}
                     onClick={() => setRowHeight(h)}
                     title={{ compact: "コンパクト", standard: "標準", wide: "広め" }[h]}
-                    className={`px-2 py-1 transition-colors ${i > 0 ? "border-l border-gray-300" : ""} ${
+                    className={`px-2 py-2.5 transition-colors ${i > 0 ? "border-l border-gray-300" : ""} ${
                       rowHeight === h ? "bg-primary text-white" : "bg-white text-gray-600 hover:bg-gray-100"
                     }`}
                   >
@@ -1160,7 +1160,7 @@ export default function TestList() {
               <select
                 value={perPage}
                 onChange={(e) => { setPerPage(Number(e.target.value)); setCurrentPage(0); }}
-                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                className="border border-gray-300 rounded px-2 py-2 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
               >
                 <option value={10}>10件</option>
                 <option value={25}>25件</option>
@@ -1182,7 +1182,7 @@ export default function TestList() {
                   setVisibleColumns({ name: true, subject: true, grade: true, memo: true, tags: true, date: true, actions: true });
                   setColWidths({ name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 100 });
                 }}
-                className="flex items-center gap-1 px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1197,7 +1197,7 @@ export default function TestList() {
                 <button
                   onClick={() => setShowColumnToggle((v) => !v)}
                   title="表示列を切替"
-                  className={`flex items-center gap-1 px-2 py-1 border rounded-lg transition-colors text-xs ${
+                  className={`flex items-center gap-1 px-3 py-2 border rounded-lg transition-colors text-sm ${
                     showColumnToggle ? "bg-primary text-white border-primary" : "border-gray-300 text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -1255,7 +1255,7 @@ export default function TestList() {
                   showConfirm(`${selectedIds.size}件のテストを削除しますか？`, handleBulkDelete, 'この操作は取り消せません。');
                 }}
                 disabled={bulkProcessing}
-                className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1269,7 +1269,7 @@ export default function TestList() {
                   <select
                     value={bulkTargetFolderId}
                     onChange={(e) => setBulkTargetFolderId(e.target.value)}
-                    className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                    className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white"
                   >
                     <option value="">フォルダを選択...</option>
                     {folders.map((f) => (
@@ -1279,16 +1279,16 @@ export default function TestList() {
                   <button
                     onClick={() => { if (bulkTargetFolderId) handleBulkUpdate({ folderId: Number(bulkTargetFolderId) }); }}
                     disabled={!bulkTargetFolderId || bulkProcessing}
-                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-700"
+                    className="px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50 hover:bg-blue-700"
                   >
                     移動
                   </button>
-                  <button onClick={() => setBulkAction("none")} className="px-2 py-1 text-gray-500 text-xs hover:text-gray-700">×</button>
+                  <button onClick={() => setBulkAction("none")} className="px-3 py-2 text-gray-500 text-sm hover:text-gray-700">×</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setBulkAction("move")}
-                  className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -1305,21 +1305,21 @@ export default function TestList() {
                     value={bulkTargetGrade}
                     onChange={(e) => setBulkTargetGrade(e.target.value)}
                     placeholder="学年を入力..."
-                    className="border rounded px-2 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="border rounded px-3 py-2 text-sm w-28 focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <button
                     onClick={() => { if (bulkTargetGrade) handleBulkUpdate({ grade: bulkTargetGrade }); }}
                     disabled={!bulkTargetGrade || bulkProcessing}
-                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-700"
+                    className="px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50 hover:bg-blue-700"
                   >
                     変更
                   </button>
-                  <button onClick={() => setBulkAction("none")} className="px-2 py-1 text-gray-500 text-xs hover:text-gray-700">×</button>
+                  <button onClick={() => setBulkAction("none")} className="px-3 py-2 text-gray-500 text-sm hover:text-gray-700">×</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setBulkAction("grade")}
-                  className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                 >
                   学年変更
                 </button>
@@ -1333,21 +1333,21 @@ export default function TestList() {
                     value={bulkTargetSubject}
                     onChange={(e) => setBulkTargetSubject(e.target.value)}
                     placeholder="科目を入力..."
-                    className="border rounded px-2 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="border rounded px-3 py-2 text-sm w-28 focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <button
                     onClick={() => { if (bulkTargetSubject) handleBulkUpdate({ subject: bulkTargetSubject }); }}
                     disabled={!bulkTargetSubject || bulkProcessing}
-                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-700"
+                    className="px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50 hover:bg-blue-700"
                   >
                     変更
                   </button>
-                  <button onClick={() => setBulkAction("none")} className="px-2 py-1 text-gray-500 text-xs hover:text-gray-700">×</button>
+                  <button onClick={() => setBulkAction("none")} className="px-3 py-2 text-gray-500 text-sm hover:text-gray-700">×</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setBulkAction("subject")}
-                  className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                 >
                   科目変更
                 </button>
@@ -1359,7 +1359,7 @@ export default function TestList() {
                   <select
                     value={bulkTargetTagId}
                     onChange={(e) => setBulkTargetTagId(e.target.value)}
-                    className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                    className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white"
                   >
                     <option value="">ラベルを選択...</option>
                     {tags.map((t) => (
@@ -1369,16 +1369,16 @@ export default function TestList() {
                   <button
                     onClick={() => { if (bulkTargetTagId) handleBulkUpdate({ addTagIds: [Number(bulkTargetTagId)] }); }}
                     disabled={!bulkTargetTagId || bulkProcessing}
-                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-700"
+                    className="px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50 hover:bg-blue-700"
                   >
                     付与
                   </button>
-                  <button onClick={() => setBulkAction("none")} className="px-2 py-1 text-gray-500 text-xs hover:text-gray-700">×</button>
+                  <button onClick={() => setBulkAction("none")} className="px-3 py-2 text-gray-500 text-sm hover:text-gray-700">×</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setBulkAction("tag")}
-                  className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -1391,7 +1391,7 @@ export default function TestList() {
               <button
                 onClick={handleBulkPrint}
                 disabled={bulkProcessing}
-                className="flex items-center gap-1 px-3 py-1 bg-purple-50 border border-purple-300 text-purple-700 rounded hover:bg-purple-100 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-4 py-2 bg-purple-50 border border-purple-300 text-purple-700 rounded hover:bg-purple-100 transition-colors disabled:opacity-50"
                 title="選択したテストのPDFを印刷"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1840,7 +1840,7 @@ export default function TestList() {
               <button
                 onClick={() => setCurrentPage(0)}
                 disabled={currentPage === 0}
-                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+                className="px-3 py-2 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
                 title="最初のページ"
               >
                 «
@@ -1848,7 +1848,7 @@ export default function TestList() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                 disabled={currentPage === 0}
-                className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+                className="px-3 py-2 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
               >
                 ‹ 前へ
               </button>
@@ -1868,7 +1868,7 @@ export default function TestList() {
                     <button
                       key={item}
                       onClick={() => setCurrentPage(item as number)}
-                      className={`px-3 py-1 rounded border transition-colors ${
+                      className={`px-3 py-2 rounded border transition-colors ${
                         currentPage === item
                           ? "bg-primary text-white border-primary"
                           : "border-gray-300 hover:bg-gray-100"
@@ -1882,14 +1882,14 @@ export default function TestList() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={currentPage === totalPages - 1}
-                className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+                className="px-3 py-2 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
               >
                 次へ ›
               </button>
               <button
                 onClick={() => setCurrentPage(totalPages - 1)}
                 disabled={currentPage === totalPages - 1}
-                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+                className="px-3 py-2 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
                 title="最後のページ"
               >
                 »
