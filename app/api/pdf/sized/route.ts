@@ -110,19 +110,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-import fs from 'fs';
-import path from 'path';
 
-const CACHE_DIR = path.join(process.cwd(), 'public', 'pdf-cache');
-
-/**
- * PDFサイズ変換API
- * GET /api/pdf/sized?testId=123&size=A3&pdfPath=/uploads/pdfs/test.pdf
- * GET /api/pdf/sized?testId=123&size=A3&pdfPath=/uploads/attachments/test.pdf&attachment=true&tabIndex=1
- * 
- * オリジナルPDFを指定サイズに変換してキャッシュ、またはキャッシュから返す
- */
-export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const testId = searchParams.get('testId');
