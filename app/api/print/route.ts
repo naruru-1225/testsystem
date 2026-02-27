@@ -27,22 +27,31 @@ export async function POST(req: NextRequest) {
     // public フォルダ基点の絶対パスを解決
     const publicDir = path.join(process.cwd(), "public");
 
-    // pdfPath が /api/pdf/sized?... の形式（サイズ変換API URL）の場合、
-    // クエリパラメーターの pdfPath を抽出して実際のファイルパスを使用する
+    // pdfPath を実際のファイルパス（/uploads/... 形式）に正規化する
     let resolvedPdfPath = pdfPath;
-    if (pdfPath.startsWith("/api/pdf/sized") || pdfPath.startsWith("/api/pdf/")) {
+
+    // ① フルURL: http(s)://host/api/pdf/pdfs/xxx.pdf → /api/pdf/pdfs/xxx.pdf
+    if (resolvedPdfPath.startsWith("http://") || resolvedPdfPath.startsWith("https://")) {
       try {
-        const url = new URL(pdfPath, "http://localhost");
-        const extracted = url.searchParams.get("pdfPath");
-        if (extracted) {
-          resolvedPdfPath = extracted;
-        }
-      } catch {
-        // URLパースに失敗した場合はそのまま使用
-      }
+        const url = new URL(resolvedPdfPath);
+        resolvedPdfPath = url.pathname + (url.search || "");
+      } catch { /* ignore */ }
     }
 
-    // pdfPath が /uploads/... の形式の場合、public フォルダ配下に解決
+    // ② /api/pdf/sized?pdfPath=... → クエリパラメーターから抽出
+    if (resolvedPdfPath.startsWith("/api/pdf/sized") || resolvedPdfPath.includes("/api/pdf/sized")) {
+      try {
+        const url = new URL(resolvedPdfPath, "http://localhost");
+        const extracted = url.searchParams.get("pdfPath");
+        if (extracted) resolvedPdfPath = extracted;
+      } catch { /* ignore */ }
+    }
+    // ③ /api/pdf/pdfs/xxx.pdf → /uploads/pdfs/xxx.pdf（API経由パスを実ファイルパスに変換）
+    else if (resolvedPdfPath.startsWith("/api/pdf/")) {
+      resolvedPdfPath = resolvedPdfPath.replace("/api/pdf/", "/uploads/");
+    }
+
+    // /uploads/... を public/ 配下の絶対パスに変換
     const relPath = resolvedPdfPath.startsWith("/") ? resolvedPdfPath.slice(1) : resolvedPdfPath;
     const absolutePath = path.resolve(publicDir, relPath);
 
