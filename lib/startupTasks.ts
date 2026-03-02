@@ -3,6 +3,31 @@ import path from 'path';
 import { performBackup } from './backupScheduler';
 import { startEmailPoller } from './emailPoller';
 
+// IMAP の TLS ソケットタイムアウト (ETIMEOUT) は ImapFlow クライアントの
+// エラーイベントをバイパスして TLSSocket 直接から emit されるため
+// uncaughtException としてプロセスがクラッシュする。
+// ここで安全に捕捉し、メール自動取込の再接続タイマーに任せる。
+function imapSocketErrorGuard(error: any) {
+  const isSocketTimeout =
+    error?.code === 'ETIMEOUT' ||
+    error?.message === 'Socket timeout' ||
+    (typeof error?.message === 'string' && error.message.includes('Socket timeout'));
+
+  if (isSocketTimeout) {
+    console.error('[Process] IMAP Socket timeout (non-fatal, 自動再接続を待ちます):', error.message);
+    return; // プロセスを終了しない
+  }
+
+  // 本当の致命的エラーは通常通り処理（Next.js のデフォルト動作に委ねる）
+  console.error('[Process] Uncaught exception (fatal):', error);
+  process.exit(1);
+}
+
+// 同じハンドラの二重登録を防ぐ
+if (!process.listeners('uncaughtException').includes(imapSocketErrorGuard)) {
+  process.on('uncaughtException', imapSocketErrorGuard);
+}
+
 const BACKUP_DIR = path.join(process.cwd(), 'backups');
 const PDF_CACHE_DIR = path.join(process.cwd(), 'public', 'pdf-cache');
 const BACKUP_INTERVAL_HOURS = 24;

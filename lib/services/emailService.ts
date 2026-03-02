@@ -49,11 +49,26 @@ export class EmailService {
     await this.client.connect();
     console.log(`[Email] IMAP接続成功: ${this.config.imap_user}`);
 
-    // ソケットエラー（Socket timeout / ETIMEOUT）を捕捉して
-    // uncaughtException にならないよう防止する
+    // ImapFlow クライアントレベルのエラーハンドラ
     this.client.on("error", (err: Error) => {
       console.error("[Email] IMAP接続エラー (自動再接続を待ちます):", err.message);
     });
+
+    // スタックトレースが示す通り、Socket timeout は ImapFlow を経由せず
+    // TLSSocket から直接 uncaughtException として投げられるケースがある。
+    // 接続後に内部ソケットのタイムアウトを 0 に設定（無効化）し、
+    // かつ socket 自体にも error リスナーを追加して防止する。
+    const rawSocket = (this.client as any).socket as NodeJS.EventEmitter | undefined;
+    if (rawSocket) {
+      if (typeof (rawSocket as any).setTimeout === "function") {
+        (rawSocket as any).setTimeout(0); // ソケットタイムアウトを無効化
+      }
+      if (!rawSocket.listenerCount("error")) {
+        rawSocket.on("error", (err: Error) => {
+          console.error("[Email] Raw socket error (非致命的):", err.message);
+        });
+      }
+    }
   }
 
   /**
