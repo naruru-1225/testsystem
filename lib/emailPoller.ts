@@ -1,22 +1,22 @@
-import crypto from "crypto";
+﻿import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { EmailService, ParsedEmail } from "./services/emailService";
 import { emailConfigRepository, EmailConfig } from "./repositories/emailConfigRepository";
 import { emailInboxRepository } from "./repositories/emailInboxRepository";
 
-// IDLE再接続間隔（20分 - サーバーの切断を防ぐ）
-const IDLE_RECONNECT_INTERVAL = 20 * 60 * 1000;
-// 再接続リトライ間隔（エラー時）
+// ポーリング間隔（5分）
+// IDLE方式は ImapFlow のロック管理に問題があるためシンプルなポーリングに変更
+const POLL_INTERVAL = 5 * 60 * 1000;
+// エラー時の再試行間隔（60秒）
 const RETRY_INTERVAL = 60 * 1000;
 
-let emailService: EmailService | null = null;
-let idleTimer: ReturnType<typeof setTimeout> | null = null;
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
 let isRunning = false;
-let processingQueue = false;
+let fetchLock = false;
 
 /**
- * メールポーリング（IMAP IDLE方式）を開始
+ * メールポーリング（5分間隔）を開始
  */
 export async function startEmailPoller(): Promise<void> {
   const config = emailConfigRepository.get();
@@ -32,9 +32,54 @@ export async function startEmailPoller(): Promise<void> {
   }
 
   isRunning = true;
-  console.log("[EmailPoller] メール自動取込を開始...");
+  console.log("[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...");
 
-  await connectAndIdle(config);
+  // 起動直後に1回実行してから以後5分おきに繰り返す
+  schedulePoll(0);
+}
+
+/**
+ * 次回ポーリングをスケジュール
+ */
+function schedulePoll(delayMs: number): void {
+  if (!isRunning) return;
+  pollTimer = setTimeout(() => {
+    runPoll().catch((err: any) => {
+      console.error("[EmailPoller] ポーリングエラー:", err?.message ?? err);
+      // エラー時は短いインターバルで再試行
+      schedulePoll(RETRY_INTERVAL);
+    });
+  }, delayMs);
+}
+
+/**
+ * 1回のポーリング: 接続→取得→切断 (ステートレス)
+ */
+async function runPoll(): Promise<void> {
+  const config = emailConfigRepository.get();
+
+  if (!config || !config.enabled) {
+    isRunning = false;
+    console.log("[EmailPoller] 設定が無効化されたため停止");
+    return;
+  }
+
+  if (!isRunning) return;
+
+  const service = new EmailService(config);
+  try {
+    await service.connect();
+    const emails = await service.fetchRecentPDFs();
+    if (emails.length > 0) {
+      await processEmails(emails, config);
+    }
+  } finally {
+    // 成功・失敗問わず必ず切断（リークしない）
+    try { await service.disconnect(); } catch (_) { /* ignore */ }
+  }
+
+  // 次回スケジュール
+  schedulePoll(POLL_INTERVAL);
 }
 
 /**
@@ -43,18 +88,9 @@ export async function startEmailPoller(): Promise<void> {
 export async function stopEmailPoller(): Promise<void> {
   isRunning = false;
 
-  if (idleTimer) {
-    clearTimeout(idleTimer);
-    idleTimer = null;
-  }
-
-  if (emailService) {
-    try {
-      await emailService.disconnect();
-    } catch (e) {
-      // 切断エラーは無視
-    }
-    emailService = null;
+  if (pollTimer) {
+    clearTimeout(pollTimer);
+    pollTimer = null;
   }
 
   console.log("[EmailPoller] メール自動取込を停止");
@@ -65,16 +101,13 @@ export async function stopEmailPoller(): Promise<void> {
  */
 export async function restartEmailPoller(): Promise<void> {
   await stopEmailPoller();
-  // 少し待ってから再接続
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 500));
   await startEmailPoller();
 }
 
 /**
  * 手動でメールを取得（同時実行防止付き）
  */
-let fetchLock = false;
-
 export async function manualFetch(): Promise<{ imported: number; errors: string[] }> {
   if (fetchLock) {
     return { imported: 0, errors: ["既に取り込み処理中です。しばらくお待ちください。"] };
@@ -98,12 +131,9 @@ export async function manualFetch(): Promise<{ imported: number; errors: string[
       try {
         await service.connect();
         const emails = await service.fetchRecentPDFs();
-        const result = await processEmails(emails, config);
-        await service.disconnect();
-        return result;
-      } catch (error) {
-        try { await service.disconnect(); } catch (e) { /* ignore */ }
-        throw error;
+        return await processEmails(emails, config);
+      } finally {
+        try { await service.disconnect(); } catch (_) { /* ignore */ }
       }
     };
 
@@ -119,93 +149,6 @@ export async function manualFetch(): Promise<{ imported: number; errors: string[
 export async function testConnection(config: EmailConfig): Promise<{ success: boolean; error?: string }> {
   const service = new EmailService(config);
   return service.testConnection();
-}
-
-/**
- * IMAP接続 + IDLE待機
- */
-async function connectAndIdle(config: EmailConfig): Promise<void> {
-  try {
-    emailService = new EmailService(config);
-    await emailService.connect();
-
-    // まず未読メールを処理
-    const emails = await emailService.fetchRecentPDFs();
-    if (emails.length > 0) {
-      await processEmails(emails, config);
-    }
-
-    // IDLE待機開始
-    await emailService.startIdle(async () => {
-      // 新着メール検知時の処理
-      if (processingQueue) return;
-      processingQueue = true;
-
-      try {
-        // 少し待ってからフェッチ（複数メール到着対応）
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        if (emailService) {
-          const newEmails = await emailService.fetchRecentPDFs();
-          if (newEmails.length > 0) {
-            await processEmails(newEmails, config);
-          }
-        }
-      } catch (error: any) {
-        console.error("[EmailPoller] 新着メール処理エラー:", error.message);
-      } finally {
-        processingQueue = false;
-      }
-    });
-
-    // 20分ごとに再接続（IDLE接続維持のため）
-    idleTimer = setTimeout(() => {
-      if (!isRunning) return;
-
-      console.log("[EmailPoller] 定期再接続...");
-      const reconnect = async () => {
-        try {
-          if (emailService) {
-            await emailService.disconnect();
-          }
-        } catch (e) {
-          // 切断エラーは無視
-        }
-
-        // 設定を再取得して接続
-        const latestConfig = emailConfigRepository.get();
-        if (latestConfig && latestConfig.enabled) {
-          await connectAndIdle(latestConfig);
-        } else {
-          isRunning = false;
-          console.log("[EmailPoller] 設定が無効化されたため停止");
-        }
-      };
-      // unhandled rejection を防ぐため .catch() で明示的に捕捉
-      reconnect().catch((e: any) => {
-        console.error("[EmailPoller] 定期再接続エラー:", e.message);
-      });
-    }, IDLE_RECONNECT_INTERVAL);
-  } catch (error: any) {
-    console.error("[EmailPoller] 接続エラー:", error.message);
-
-    // リトライ
-    if (isRunning) {
-      console.log(`[EmailPoller] ${RETRY_INTERVAL / 1000}秒後に再接続を試みます...`);
-      idleTimer = setTimeout(() => {
-        const retry = async () => {
-          const latestConfig = emailConfigRepository.get();
-          if (latestConfig && latestConfig.enabled && isRunning) {
-            await connectAndIdle(latestConfig);
-          }
-        };
-        // unhandled rejection を防ぐため .catch() で明示的に捕捉
-        retry().catch((e: any) => {
-          console.error("[EmailPoller] リトライエラー:", e.message);
-        });
-      }, RETRY_INTERVAL);
-    }
-  }
 }
 
 /**
