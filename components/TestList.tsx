@@ -634,28 +634,50 @@ export default function TestList() {
     toastSuccess("削除を取り消しました");
   };
 
-  // #39 一括印刷
-  const handleBulkPrint = () => {
+  // #39 一括印刷（サーバーAPI経由）
+  const handleBulkPrint = async () => {
     if (selectedIds.size === 0) return;
     const selectedTests = tests.filter((t) => selectedIds.has(t.id) && t.pdf_path);
     if (selectedTests.length === 0) {
       toastError("選択したテストにPDFがありません");
       return;
     }
-    // 各PDFをiframeで印刷
-    selectedTests.forEach((test, i) => {
-      setTimeout(() => {
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = test.pdf_path!;
-        document.body.appendChild(iframe);
-        iframe.onload = () => {
-          iframe.contentWindow?.print();
-          setTimeout(() => document.body.removeChild(iframe), 3000);
-        };
-      }, i * 1500);
-    });
-    toastSuccess(`${selectedTests.length}件のPDFを印刷中...`);
+    let successCount = 0;
+    for (const test of selectedTests) {
+      try {
+        const res = await fetch("/api/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfPath: test.pdf_path }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "印刷失敗");
+        successCount++;
+      } catch (err) {
+        toastError(`「${test.name}」の印刷に失敗: ${err instanceof Error ? err.message : "不明なエラー"}`);
+      }
+    }
+    if (successCount > 0) toastSuccess(`${successCount}件の印刷ジョブをサーバーに送信しました`);
+  };
+
+  // サーバー印刷（個別）
+  const handleServerPrint = async (test: TestWithTags) => {
+    if (!test.pdf_path) {
+      toastError("PDFが添付されていません");
+      return;
+    }
+    try {
+      const res = await fetch("/api/print", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdfPath: test.pdf_path }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "印刷に失敗しました");
+      toastSuccess(`「${test.name}」の印刷ジョブを送信しました`);
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "印刷に失敗しました");
+    }
   };
 
   // #47 フィルタプリセット保存
@@ -1580,7 +1602,18 @@ export default function TestList() {
                     {/* フッター：登録日 + 操作 */}
                     <div className="flex items-center justify-between mt-auto pt-2 border-t">
                       <span className="text-xs text-gray-400">{formatDate(test.created_at)}</span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        {test.pdf_path && (
+                          <button
+                            onClick={() => handleServerPrint(test)}
+                            className="text-gray-400 hover:text-purple-600 p-1.5 rounded hover:bg-purple-50 transition-colors"
+                            title="サーバーで印刷（ダイアログなし）"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                          </button>
+                        )}
                         <Link
                           href={`/tests/${test.id}/edit`}
                           className="text-sm text-primary hover:text-primary-dark font-medium py-1.5 px-2 rounded hover:bg-primary/10 transition-colors"
@@ -1816,6 +1849,18 @@ export default function TestList() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                               </svg>
                             </button>
+                            {/* サーバー印刷 */}
+                            {test.pdf_path && (
+                              <button
+                                onClick={() => handleServerPrint(test)}
+                                className="text-gray-400 hover:text-purple-600 p-2 rounded hover:bg-purple-50"
+                                title="サーバーで印刷（ダイアログなし）"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDeleteWithUndo(test)}
                               className="text-red-600 hover:text-red-700 text-sm font-medium"
