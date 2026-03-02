@@ -159,26 +159,32 @@ async function connectAndIdle(config: EmailConfig): Promise<void> {
     });
 
     // 20分ごとに再接続（IDLE接続維持のため）
-    idleTimer = setTimeout(async () => {
+    idleTimer = setTimeout(() => {
       if (!isRunning) return;
 
       console.log("[EmailPoller] 定期再接続...");
-      try {
-        if (emailService) {
-          await emailService.disconnect();
+      const reconnect = async () => {
+        try {
+          if (emailService) {
+            await emailService.disconnect();
+          }
+        } catch (e) {
+          // 切断エラーは無視
         }
-      } catch (e) {
-        // 切断エラーは無視
-      }
 
-      // 設定を再取得して接続
-      const latestConfig = emailConfigRepository.get();
-      if (latestConfig && latestConfig.enabled) {
-        await connectAndIdle(latestConfig);
-      } else {
-        isRunning = false;
-        console.log("[EmailPoller] 設定が無効化されたため停止");
-      }
+        // 設定を再取得して接続
+        const latestConfig = emailConfigRepository.get();
+        if (latestConfig && latestConfig.enabled) {
+          await connectAndIdle(latestConfig);
+        } else {
+          isRunning = false;
+          console.log("[EmailPoller] 設定が無効化されたため停止");
+        }
+      };
+      // unhandled rejection を防ぐため .catch() で明示的に捕捉
+      reconnect().catch((e: any) => {
+        console.error("[EmailPoller] 定期再接続エラー:", e.message);
+      });
     }, IDLE_RECONNECT_INTERVAL);
   } catch (error: any) {
     console.error("[EmailPoller] 接続エラー:", error.message);
@@ -186,11 +192,17 @@ async function connectAndIdle(config: EmailConfig): Promise<void> {
     // リトライ
     if (isRunning) {
       console.log(`[EmailPoller] ${RETRY_INTERVAL / 1000}秒後に再接続を試みます...`);
-      idleTimer = setTimeout(async () => {
-        const latestConfig = emailConfigRepository.get();
-        if (latestConfig && latestConfig.enabled && isRunning) {
-          await connectAndIdle(latestConfig);
-        }
+      idleTimer = setTimeout(() => {
+        const retry = async () => {
+          const latestConfig = emailConfigRepository.get();
+          if (latestConfig && latestConfig.enabled && isRunning) {
+            await connectAndIdle(latestConfig);
+          }
+        };
+        // unhandled rejection を防ぐため .catch() で明示的に捕捉
+        retry().catch((e: any) => {
+          console.error("[EmailPoller] リトライエラー:", e.message);
+        });
       }, RETRY_INTERVAL);
     }
   }

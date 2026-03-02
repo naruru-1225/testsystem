@@ -7,25 +7,39 @@ import { startEmailPoller } from './emailPoller';
 // エラーイベントをバイパスして TLSSocket 直接から emit されるため
 // uncaughtException としてプロセスがクラッシュする。
 // ここで安全に捕捉し、メール自動取込の再接続タイマーに任せる。
-function imapSocketErrorGuard(error: any) {
-  const isSocketTimeout =
+// IMAP 関連エラーを判定するヘルパー
+function isImapError(error: any): boolean {
+  return (
     error?.code === 'ETIMEOUT' ||
     error?.message === 'Socket timeout' ||
-    (typeof error?.message === 'string' && error.message.includes('Socket timeout'));
+    (typeof error?.message === 'string' && error.message.includes('Socket timeout'))
+  );
+}
 
-  if (isSocketTimeout) {
+function imapSocketErrorGuard(error: any) {
+  if (isImapError(error)) {
     console.error('[Process] IMAP Socket timeout (non-fatal, 自動再接続を待ちます):', error.message);
     return; // プロセスを終了しない
   }
-
   // 本当の致命的エラーは通常通り処理（Next.js のデフォルト動作に委ねる）
   console.error('[Process] Uncaught exception (fatal):', error);
   process.exit(1);
 }
 
+function imapRejectionGuard(reason: any) {
+  if (isImapError(reason)) {
+    console.error('[Process] IMAP unhandledRejection (non-fatal):', reason?.message ?? reason);
+    return;
+  }
+  console.error('[Process] Unhandled rejection:', reason);
+}
+
 // 同じハンドラの二重登録を防ぐ
 if (!process.listeners('uncaughtException').includes(imapSocketErrorGuard)) {
   process.on('uncaughtException', imapSocketErrorGuard);
+}
+if (!process.listeners('unhandledRejection').includes(imapRejectionGuard)) {
+  process.on('unhandledRejection', imapRejectionGuard);
 }
 
 const BACKUP_DIR = path.join(process.cwd(), 'backups');
