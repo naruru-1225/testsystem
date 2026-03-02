@@ -48,6 +48,12 @@ export class EmailService {
 
     await this.client.connect();
     console.log(`[Email] IMAP接続成功: ${this.config.imap_user}`);
+
+    // ソケットエラー（Socket timeout / ETIMEOUT）を捕捉して
+    // uncaughtException にならないよう防止する
+    this.client.on("error", (err: Error) => {
+      console.error("[Email] IMAP接続エラー (自動再接続を待ちます):", err.message);
+    });
   }
 
   /**

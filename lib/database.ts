@@ -165,9 +165,11 @@ export function initializeDatabase() {
   addColumnIfNotExists("test_attachments", "mime_type", "TEXT");
   addColumnIfNotExists("test_attachments", "file_size", "INTEGER");
 
-  addColumnIfNotExists("test_tags", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
-  addColumnIfNotExists("test_folders", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
-  addColumnIfNotExists("tags", "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+  // NOTE: SQLite (旧バージョン) では ALTER TABLE ADD COLUMN に非定数DEFAULT不可
+  // CURRENT_TIMESTAMP の代わりに DEFAULT NULL で追加し、INSERT 側で値を設定する
+  addColumnIfNotExists("test_tags", "created_at", "DATETIME");
+  addColumnIfNotExists("test_folders", "created_at", "DATETIME");
+  addColumnIfNotExists("tags", "created_at", "DATETIME");
   addColumnIfNotExists("tags", "color", "TEXT DEFAULT '#3B82F6'");
   // #80 コンテンツハッシュ（重複検知）
   addColumnIfNotExists("email_inbox", "content_hash", "TEXT");
