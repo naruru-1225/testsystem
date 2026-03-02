@@ -44,6 +44,12 @@ export class EmailService {
       },
       logger: false, // ログ出力を抑制
       connectionTimeout: 30000, // 接続タイムアウト: 30秒
+      // socketTimeout のデフォルトは 5分 (SOCKET_TIMEOUT = 300000)。
+      // IDLE_RECONNECT_INTERVAL が 20分 なので、5分ごとにソケットタイムアウトが発生し
+      // uncaughtException でプロセスがクラッシュしていた。
+      // 22分 (IDLE_RECONNECT_INTERVAL + 2分マージン) に設定して
+      // ソケットが再接続タイマー前にタイムアウトしないようにする。
+      socketTimeout: 22 * 60 * 1000,
     });
 
     await this.client.connect();
