@@ -86,6 +86,8 @@ export default function PdfViewer({
   // サーバー印刷
   const [serverPrinting, setServerPrinting] = useState(false);
   const [serverPrintError, setServerPrintError] = useState<string | null>(null);
+  const [serverPrintColor, setServerPrintColor] = useState<"color" | "mono">("mono");
+  const [serverPrintDuplex, setServerPrintDuplex] = useState<boolean>(false);
   // #16 カスタムサイズ
   const [customWidthMm, setCustomWidthMm] = useState<string>("210");
   const [customHeightMm, setCustomHeightMm] = useState<string>("297");
@@ -694,8 +696,9 @@ export default function PdfViewer({
         body: JSON.stringify({
           pdfPath: currentPdf,
           printerName: savedSettings.printerName || undefined,
-          copies: savedSettings.copies ?? 1,
-          duplex: savedSettings.duplex ?? false,
+          copies: parseInt(printCopies) || savedSettings.copies || 1,
+          duplex: serverPrintDuplex,
+          colorMode: serverPrintColor,
         }),
       });
       if (!res.ok) {
@@ -772,7 +775,7 @@ export default function PdfViewer({
         )}
 
         {/* ツールバー */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50 gap-2 overflow-x-auto">
           <div className="flex items-center gap-1 flex-wrap">
             {/* サムネイル表示トグル (#2) */}
             {currentFileType === "pdf" && numPages > 0 && (
@@ -864,7 +867,7 @@ export default function PdfViewer({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
             {/* ズームコントロール */}
             <button
               onClick={handleZoomOut}
@@ -1048,32 +1051,41 @@ export default function PdfViewer({
             )}
 
             {/* #10-13 印刷ボタン + 設定 */}
-            <div className="ml-4 border-l border-gray-300 pl-4 relative">
+            <div className="ml-2 border-l border-gray-300 pl-2 relative">
+              <div className="flex flex-col items-end gap-0.5">
               <div className="flex items-center gap-1">
                 <button
-                  onClick={handlePrint}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors"
-                  title="印刷"
+                  onClick={handleServerPrint}
+                  disabled={serverPrinting || !currentPdf}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50"
+                  title="印刷（サーバー経由）"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                    />
-                  </svg>
-                  <span>印刷</span>
+                  {serverPrinting ? (
+                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                      />
+                    </svg>
+                  )}
+                  <span>{serverPrinting ? "送信中..." : "印刷"}</span>
                 </button>
                 {/* 印刷設定ギアボタン */}
                 <button
                   onClick={() => setShowPrintSettings((v) => !v)}
-                  title="印刷設定 / サーバー印刷"
+                  title="印刷設定"
                   className={`p-2 rounded-lg transition-colors ${
                     showPrintSettings
                       ? "bg-gray-200 text-gray-800"
@@ -1087,38 +1099,44 @@ export default function PdfViewer({
                   </svg>
                 </button>
               </div>
+              {serverPrintError && (
+                <p className="text-xs text-red-500 whitespace-nowrap">❌ {serverPrintError}</p>
+              )}
+              </div>
               {/* 印刷設定パネル */}
               {showPrintSettings && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-60 text-sm">
-                  <p className="font-semibold text-gray-700 mb-2 border-b pb-1">印刷設定</p>
-                  {/* #10 ページ範囲 */}
-                  <div className="mb-2">
-                    <label className="block text-xs text-gray-500 mb-1">ページ範囲</label>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        min={1}
-                        max={numPages || 999}
-                        value={printPageFrom}
-                        onChange={(e) => setPrintPageFrom(e.target.value)}
-                        className="w-14 border border-gray-300 rounded px-1 py-0.5 text-center"
-                        placeholder="1"
-                      />
-                      <span className="text-gray-400">〜</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={numPages || 999}
-                        value={printPageTo}
-                        onChange={(e) => setPrintPageTo(e.target.value)}
-                        className="w-14 border border-gray-300 rounded px-1 py-0.5 text-center"
-                        placeholder={String(numPages || "∞")}
-                      />
-                      <span className="text-xs text-gray-400">ページ</span>
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-64 text-sm">
+                  <p className="font-semibold text-gray-700 mb-3 border-b pb-1">🖨️ サーバー印刷設定</p>
+                  {/* カラーモード */}
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-500 mb-1">カラーモード</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input type="radio" name="serverColorMode" value="mono" checked={serverPrintColor === "mono"} onChange={() => setServerPrintColor("mono")} className="accent-primary" />
+                        白黒
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input type="radio" name="serverColorMode" value="color" checked={serverPrintColor === "color"} onChange={() => setServerPrintColor("color")} className="accent-primary" />
+                        カラー
+                      </label>
                     </div>
                   </div>
-                  {/* #13 部数 */}
-                  <div className="mb-2">
+                  {/* 両面/片面 */}
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-500 mb-1">印刷面</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input type="radio" name="serverDuplex" checked={!serverPrintDuplex} onChange={() => setServerPrintDuplex(false)} className="accent-primary" />
+                        片面
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input type="radio" name="serverDuplex" checked={serverPrintDuplex} onChange={() => setServerPrintDuplex(true)} className="accent-primary" />
+                        両面
+                      </label>
+                    </div>
+                  </div>
+                  {/* 部数 */}
+                  <div className="mb-3">
                     <label className="block text-xs text-gray-500 mb-1">部数</label>
                     <input
                       type="number"
@@ -1130,37 +1148,19 @@ export default function PdfViewer({
                     />
                     <span className="text-xs text-gray-400 ml-1">部</span>
                   </div>
-                  {/* #12 両面印刷 */}
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="printDuplexCheck"
-                      checked={printDuplex}
-                      onChange={(e) => setPrintDuplex(e.target.checked)}
-                      className="rounded"
-                    />
-                    <label htmlFor="printDuplexCheck" className="text-xs text-gray-600 cursor-pointer">
-                      両面印刷（設定参照）
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">※ブラウザの印刷ダイアログで最終確認できます</p>
-                  {/* サーバー印刷ボタン（AirPrint非対応複合機向け） */}
-                  <div className="border-t border-gray-200 mt-3 pt-3">
-                    <p className="text-xs text-gray-500 mb-1.5">🖨️ サーバー（PC）経由で印刷</p>
+                  {/* iPad標準印刷 */}
+                  <div className="border-t border-gray-200 pt-3">
+                    <p className="text-xs text-gray-500 mb-1.5">📱 iPad標準印刷（AirPrint）</p>
                     <button
-                      onClick={handleServerPrint}
-                      disabled={serverPrinting || !currentPdf}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
-                      title="サーバー（PC）経由で印刷（AirPrint非対応な複合機向け）"
+                      onClick={() => { handlePrint(); setShowPrintSettings(false); }}
+                      disabled={!currentPdf}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 text-sm border border-gray-300"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
-                      <span>{serverPrinting ? "送信中..." : "サーバー印刷"}</span>
+                      <span>iPad標準印刷</span>
                     </button>
-                    {serverPrintError && (
-                      <p className="text-xs text-red-600 mt-1">❌ {serverPrintError}</p>
-                    )}
                   </div>
                 </div>
               )}

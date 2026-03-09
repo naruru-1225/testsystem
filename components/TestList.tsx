@@ -287,9 +287,9 @@ export default function TestList() {
 
   // 行高さCSSクラス
   const rowPadding: Record<string, string> = {
-    compact: "py-0.5",
-    standard: "py-2",
-    wide: "py-3",
+    compact: "py-0",
+    standard: "py-0.5",
+    wide: "py-2",
   };
 
   const fetchTests = async () => {
@@ -1162,7 +1162,7 @@ export default function TestList() {
                   <button
                     key={h}
                     onClick={() => setRowHeight(h)}
-                    title={{ compact: "コンパクト", standard: "標準", wide: "広め" }[h]}
+                    title={{ compact: "小", standard: "中（デフォルト）", wide: "大" }[h]}
                     className={`px-2 py-2.5 transition-colors ${i > 0 ? "border-l border-gray-300" : ""} ${
                       rowHeight === h ? "bg-primary text-white" : "bg-white text-gray-600 hover:bg-gray-100"
                     }`}

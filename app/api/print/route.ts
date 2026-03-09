@@ -18,7 +18,7 @@ interface PrintRequest {
 export async function POST(req: NextRequest) {
   try {
     const body: PrintRequest = await req.json();
-    const { pdfPath, printerName, copies = 1, duplex = false } = body;
+    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono" } = body;
 
     if (!pdfPath) {
       return NextResponse.json({ error: "pdfPath は必須です" }, { status: 400 });
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     if (process.platform === "win32") {
       // Windows: SumatraPDF (インストール済みの場合) または PowerShell で印刷
-      await printWindows(absolutePath, printerName, copies);
+      await printWindows(absolutePath, printerName, copies, duplex, colorMode);
     } else {
       // Linux / macOS: lp コマンドで印刷
       await printUnix(absolutePath, printerName, copies, duplex);
@@ -86,13 +86,18 @@ export async function POST(req: NextRequest) {
 async function printWindows(
   filePath: string,
   printerName: string | undefined,
-  copies: number
+  copies: number,
+  duplex: boolean = false,
+  colorMode: "color" | "mono" = "mono"
 ) {
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
     const printerArg = printerName ? `-print-to "${printerName}"` : "-print-to-default";
-    const cmd = `"${sumatraPath}" ${printerArg} -silent "${filePath}"`;
+    const colorSetting = colorMode === "color" ? "color" : "monochrome";
+    const duplexSetting = duplex ? "duplexlong" : "simplex";
+    const printSettings = `-print-settings "${colorSetting},${duplexSetting}"`;
+    const cmd = `"${sumatraPath}" ${printerArg} ${printSettings} -silent "${filePath}"`;
     for (let i = 0; i < copies; i++) {
       await execAsync(cmd, { timeout: 60000 });
     }
