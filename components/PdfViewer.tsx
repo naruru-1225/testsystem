@@ -775,8 +775,8 @@ export default function PdfViewer({
         )}
 
         {/* ツールバー */}
-        <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50 gap-2 overflow-x-auto">
-          <div className="flex items-center gap-1 flex-wrap">
+        <div className="relative z-10 flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50 gap-2">
+          <div className="flex items-center gap-1 overflow-x-auto min-w-0 flex-1">
             {/* サムネイル表示トグル (#2) */}
             {currentFileType === "pdf" && numPages > 0 && (
               <button
@@ -867,7 +867,7 @@ export default function PdfViewer({
             )}
           </div>
 
-          <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
+          <div className="flex items-center gap-1 justify-end flex-shrink-0">
             {/* ズームコントロール */}
             <button
               onClick={handleZoomOut}
@@ -1105,7 +1105,7 @@ export default function PdfViewer({
               </div>
               {/* 印刷設定パネル */}
               {showPrintSettings && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-64 text-sm">
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-[200] w-64 text-sm">
                   <p className="font-semibold text-gray-700 mb-3 border-b pb-1">🖨️ サーバー印刷設定</p>
                   {/* カラーモード */}
                   <div className="mb-3">
@@ -1226,7 +1226,7 @@ export default function PdfViewer({
         )}
 
         {/* コンテンツ表示 */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="relative z-0 flex-1 flex overflow-hidden">
           {/* サムネイルパネル (#2) */}
           {showThumbnails && currentFileType === "pdf" && numPages > 0 && currentPdf && (
             <div className="w-28 flex-shrink-0 overflow-y-auto bg-gray-200 border-r border-gray-300 flex flex-col gap-2 p-2">
