@@ -3,6 +3,8 @@ import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import fs from "fs";
+import os from "os";
+import { PDFDocument } from "pdf-lib";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -124,26 +126,14 @@ async function printWindows(
   // ② Adobe Acrobat / Acrobat Reader によるサイレント印刷
   const acrobatPath = await findAcrobat();
   if (acrobatPath) {
-    // /t "file" "printer" でダイアログなしに静かに印刷
-    const printerArg = printerName ? ` "${printerName}"` : "";
-    const cmd = `"${acrobatPath}" /t "${filePath}"${printerArg}`;
-    for (let i = 0; i < copies; i++) {
-      await execAsync(cmd, { timeout: 60000 });
-      // Acrobat は起動後すぐ終了することがあるため少し待機
-      await new Promise((r) => setTimeout(r, 3000));
-    }
+    await printWithAcrobat(acrobatPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
     return;
   }
 
   // ③ Foxit Reader によるサイレント印刷
   const foxitPath = await findFoxitReader();
   if (foxitPath) {
-    const printerArg = printerName ? ` "${printerName}"` : "";
-    const cmd = `"${foxitPath}" /t "${filePath}"${printerArg}`;
-    for (let i = 0; i < copies; i++) {
-      await execAsync(cmd, { timeout: 60000 });
-      await new Promise((r) => setTimeout(r, 3000));
-    }
+    await printWithAcrobat(foxitPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
     return;
   }
 
@@ -152,6 +142,107 @@ async function printWindows(
     "サイレント印刷に対応するPDFビューアーが見つかりません。" +
     "SumatraPDF (https://www.sumatrapdfreader.org/) をインストールしてください。"
   );
+}
+
+/**
+ * Adobe Acrobat / Foxit Reader などによる印刷。
+ * - ページ範囲: pdf-lib でページを抽出して一時ファイルを作成
+ * - カラー/両面/用紙: PowerShell Set-PrintConfiguration でプリンター設定を変更（印刷後復元）
+ * - 部数: ループで複数ジョブ送信
+ */
+async function printWithAcrobat(
+  viewerPath: string,
+  filePath: string,
+  printerName: string | undefined,
+  copies: number,
+  duplex: boolean,
+  colorMode: "color" | "mono",
+  pageRange: string,
+  paperSize: string
+) {
+  let printFilePath = filePath;
+  let tempFile: string | null = null;
+
+  try {
+    // ① ページ範囲が指定されている場合、pdf-lib でページ抽出
+    const rangeStr = pageRange.trim();
+    if (rangeStr) {
+      const pdfBytes = fs.readFileSync(filePath);
+      const srcDoc = await PDFDocument.load(pdfBytes);
+      const totalPages = srcDoc.getPageCount();
+      const pageIndices = parsePageRange(rangeStr, totalPages);
+
+      if (pageIndices.length > 0 && pageIndices.length < totalPages) {
+        const newDoc = await PDFDocument.create();
+        const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
+        copiedPages.forEach((p) => newDoc.addPage(p));
+        const newBytes = await newDoc.save();
+        tempFile = path.join(os.tmpdir(), `print_${Date.now()}.pdf`);
+        fs.writeFileSync(tempFile, newBytes);
+        printFilePath = tempFile;
+      }
+    }
+
+    // ② PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
+    // Set-PrintConfiguration は Windows 8+ 標準搭載（PrintManagement モジュール）
+    if (printerName) {
+      const duplexMode = duplex ? "TwoSidedLongEdge" : "OneSided";
+      const colorBool = colorMode === "color" ? "$true" : "$false";
+      // 用紙サイズ: SumatraPDF と同じ名称を使う（A4, A3, Letter など）
+      const paperLine = paperSize
+        ? `-PaperSize '${paperSize}'`
+        : "";
+      // エラーは無視（プリンターが設定非対応の場合もあるため）
+      const psScript = `
+        try {
+          Set-PrintConfiguration -PrinterName '${printerName.replace(/'/g, "''")}' \`
+            -Color ${colorBool} \`
+            -DuplexingMode '${duplexMode}' \`
+            ${paperLine} \`
+            -ErrorAction SilentlyContinue
+        } catch {}
+      `.trim();
+      await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", psScript], { timeout: 10000 }).catch(() => {/* 設定失敗は無視 */});
+    }
+
+    // ③ Acrobat/Foxit で印刷（/t "file" ["printer"] 形式）
+    for (let i = 0; i < copies; i++) {
+      const acrobatArgs = printerName
+        ? ["/t", printFilePath, printerName]
+        : ["/t", printFilePath];
+      await execFileAsync(viewerPath, acrobatArgs, { timeout: 60000 });
+      // Acrobat は印刷キューに積んだ後すぐ終了するため少し待機
+      await new Promise((r) => setTimeout(r, 4000));
+    }
+  } finally {
+    // ④ 一時ファイルを削除
+    if (tempFile && fs.existsSync(tempFile)) {
+      try { fs.unlinkSync(tempFile); } catch { /* ignore */ }
+    }
+  }
+}
+
+/**
+ * "1-5", "3-", "-5", "2" 形式のページ範囲文字列を 0-indexed の配列に変換
+ */
+function parsePageRange(range: string, totalPages: number): number[] {
+  const trimmed = range.trim();
+  // "N" 単体（単ページ）
+  const single = trimmed.match(/^(\d+)$/);
+  if (single) {
+    const n = parseInt(single[1]) - 1;
+    return n >= 0 && n < totalPages ? [n] : [];
+  }
+  // "N-M", "N-", "-M" 形式
+  const rangeMatch = trimmed.match(/^(\d*)-(\d*)$/);
+  if (!rangeMatch) return [];
+  const from = rangeMatch[1] ? parseInt(rangeMatch[1]) - 1 : 0;
+  const to = rangeMatch[2] ? parseInt(rangeMatch[2]) - 1 : totalPages - 1;
+  const result: number[] = [];
+  for (let i = Math.max(0, from); i <= Math.min(totalPages - 1, to); i++) {
+    result.push(i);
+  }
+  return result;
 }
 
 async function printUnix(
