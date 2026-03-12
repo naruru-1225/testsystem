@@ -83,6 +83,7 @@ export default function PdfViewer({
   const [printPageTo, setPrintPageTo] = useState<string>("");
   const [printCopies, setPrintCopies] = useState<string>("1");
   const [printDuplex, setPrintDuplex] = useState(false);
+  const [printPaperSize, setPrintPaperSize] = useState<string>(""); // 印刷用紙サイズ（表示変換とは独立）
   // サーバー印刷
   const [serverPrinting, setServerPrinting] = useState(false);
   const [serverPrintError, setServerPrintError] = useState<string | null>(null);
@@ -699,6 +700,16 @@ export default function PdfViewer({
           copies: parseInt(printCopies) || savedSettings.copies || 1,
           duplex: serverPrintDuplex,
           colorMode: serverPrintColor,
+          // ページ範囲: 両端指定・片端指定・全ページ
+          pageRange: (() => {
+            const from = parseInt(printPageFrom);
+            const to = parseInt(printPageTo);
+            if (from > 0 && to > 0) return `${from}-${to}`;
+            if (from > 0) return `${from}-`;
+            if (to > 0) return `1-${to}`;
+            return "";
+          })(),
+          paperSize: printPaperSize || undefined,
         }),
       });
       if (!res.ok) {
@@ -1050,6 +1061,53 @@ export default function PdfViewer({
 
                   {/* ── サーバー印刷設定 ── */}
                   <p className="font-semibold text-gray-700 mb-2 border-b pb-1 mt-3">🖨️ サーバー印刷設定</p>
+                  {/* ページ範囲 */}
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">印刷ページ</label>
+                    <div className="flex items-center gap-1.5">
+                      <label className="flex items-center gap-1 cursor-pointer text-xs">
+                        <input type="radio" name="pageRangeMode" checked={!printPageFrom && !printPageTo}
+                          onChange={() => { setPrintPageFrom(""); setPrintPageTo(""); }}
+                          className="accent-primary" />
+                        全ページ
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer text-xs">
+                        <input type="radio" name="pageRangeMode" checked={!!(printPageFrom || printPageTo)}
+                          onChange={() => { if (!printPageFrom && !printPageTo) setPrintPageFrom("1"); }}
+                          className="accent-primary" />
+                        範囲指定
+                      </label>
+                    </div>
+                    {(printPageFrom || printPageTo || (!printPageFrom && !printPageTo ? false : true)) && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <input type="number" min={1} value={printPageFrom}
+                          onChange={(e) => setPrintPageFrom(e.target.value)}
+                          placeholder="開始"
+                          className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-primary" />
+                        <span className="text-xs text-gray-400">〜</span>
+                        <input type="number" min={1} value={printPageTo}
+                          onChange={(e) => setPrintPageTo(e.target.value)}
+                          placeholder="終了"
+                          className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-primary" />
+                        <span className="text-xs text-gray-400">ページ</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* 用紙サイズ（印刷用） */}
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">用紙サイズ（印刷）</label>
+                    <select value={printPaperSize} onChange={(e) => setPrintPaperSize(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary">
+                      <option value="">プリンター既定</option>
+                      <option value="A3">A3</option>
+                      <option value="A4">A4</option>
+                      <option value="A5">A5</option>
+                      <option value="B4">B4</option>
+                      <option value="B5">B5</option>
+                      <option value="letter">Letter</option>
+                      <option value="legal">Legal</option>
+                    </select>
+                  </div>
                   {/* カラーモード */}
                   <div className="mb-2">
                     <label className="block text-xs text-gray-500 mb-1">カラーモード</label>

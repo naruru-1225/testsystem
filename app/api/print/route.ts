@@ -11,15 +11,17 @@ interface PrintRequest {
   pdfPath: string;         // サーバー上の PDF パス（例: /uploads/xxx.pdf）
   printerName?: string;    // プリンター名（省略時はデフォルトプリンター）
   copies?: number;         // 部数（デフォルト 1）
-  duplex?: boolean;        // 両面印刷フラグ（Linux のみ対応）
+  duplex?: boolean;        // 両面印刷フラグ
   colorMode?: "color" | "mono";  // カラー / モノクロ
+  pageRange?: string;      // 印刷ページ範囲（例: "1-3", "2-", "-5", "" で全ページ）
+  paperSize?: string;      // 用紙サイズ（例: "A4", "A3", "Letter"）
 }
 
 /** POST /api/print - サーバーサイドで PDF を印刷ジョブとして送信 */
 export async function POST(req: NextRequest) {
   try {
     const body: PrintRequest = await req.json();
-    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono" } = body;
+    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono", pageRange = "", paperSize = "" } = body;
 
     if (!pdfPath) {
       return NextResponse.json({ error: "pdfPath は必須です" }, { status: 400 });
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     if (process.platform === "win32") {
       // Windows: SumatraPDF (インストール済みの場合) または PowerShell で印刷
-      await printWindows(absolutePath, printerName, copies, duplex, colorMode);
+      await printWindows(absolutePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
     } else {
       // Linux / macOS: lp コマンドで印刷
       await printUnix(absolutePath, printerName, copies, duplex);
@@ -89,23 +91,33 @@ async function printWindows(
   printerName: string | undefined,
   copies: number,
   duplex: boolean = false,
-  colorMode: "color" | "mono" = "mono"
+  colorMode: "color" | "mono" = "mono",
+  pageRange: string = "",
+  paperSize: string = ""
 ) {
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
     const colorSetting = colorMode === "color" ? "color" : "monochrome";
     const duplexSetting = duplex ? "duplexlong" : "simplex";
-    // execFile でシェルを経由しないことで -print-settings の引数が確実に渡る
+    // 部数は Nx 形式（SumatraPDF ネイティブ）で指定。ループ不要
+    const copiesSetting = copies > 1 ? `${copies}x` : "";
+    // 用紙サイズ: paper=A4 形式
+    const paperSetting = paperSize ? `paper=${paperSize}` : "";
+    // ページ範囲: "1-3", "2-", "-5" など（空欄=全ページ）
+    const pageRangeSetting = pageRange.trim();
+    // 全設定をカンマ区切りで結合（空の項目は除外）
+    const settingsParts = [pageRangeSetting, colorSetting, duplexSetting, copiesSetting, paperSetting]
+      .filter(Boolean)
+      .join(",");
+    // execFile でシェルを経由しないことで引数が確実に渡る
     const args: string[] = [
       ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
-      "-print-settings", `${colorSetting},${duplexSetting}`,
+      "-print-settings", settingsParts,
       "-silent",
       filePath,
     ];
-    for (let i = 0; i < copies; i++) {
-      await execFileAsync(sumatraPath, args, { timeout: 60000 });
-    }
+    await execFileAsync(sumatraPath, args, { timeout: 60000 });
     return;
   }
 
