@@ -867,58 +867,38 @@ export default function PdfViewer({
             )}
           </div>
 
-          <div className="flex items-center gap-1 justify-end flex-shrink-0">
-            {/* ズームコントロール */}
-            <button
-              onClick={handleZoomOut}
-              disabled={scale <= 0.5}
-              className="p-2 text-gray-700 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="縮小"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* ズームコントロール: [-][75%][+] コンパクトグループ */}
+            <div className="flex items-center rounded-lg border border-gray-300 overflow-hidden">
+              <button
+                onClick={handleZoomOut}
+                disabled={scale <= 0.5}
+                className="px-2 py-1.5 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors border-r border-gray-300"
+                title="縮小 (-)"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
-                />
-              </svg>
-            </button>
-            <span className="text-sm text-gray-700 min-w-[60px] text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              disabled={scale >= 3.0}
-              className="p-2 text-gray-700 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="拡大"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                </svg>
+              </button>
+              <button
+                onClick={handleZoomReset}
+                className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors min-w-[44px] text-center border-r border-gray-300"
+                title="100%にリセット"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={handleZoomReset}
-              className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-              title="リセット"
-            >
-              100%
-            </button>
+                {Math.round(scale * 100)}%
+              </button>
+              <button
+                onClick={handleZoomIn}
+                disabled={scale >= 3.0}
+                className="px-2 py-1.5 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="拡大 (+)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                </svg>
+              </button>
+            </div>
+
             {/* フィット表示モード (#5) */}
             <div className="flex rounded-lg border border-gray-300 overflow-hidden">
               <button
@@ -941,91 +921,8 @@ export default function PdfViewer({
                   fitMode === "free" ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
                 }`}
                 title="自由"
-              >自由</button>
+              >自</button>
             </div>
-            {/* PDFダークモード (#6) */}
-            <button
-              onClick={() => setPdfDark((v) => !v)}
-              className={`p-2 rounded-lg transition-colors ${
-                pdfDark ? "bg-gray-800 text-white" : "text-gray-700 hover:bg-gray-200"
-              }`}
-              title="PDFビューワー ダークモード"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </button>
-
-            {/* 用紙サイズ選択（PDFファイルで表示） */}
-            {testId && currentFileType === "pdf" && (
-              <div className="ml-4 border-l border-gray-300 pl-4">
-                <select
-                  value={selectedSize || ""}
-                  onChange={(e) => {
-                    const newSize = e.target.value || null;
-                    // タブごとにサイズを保存
-                    setSizeByTab(prev => ({ ...prev, [activeTab]: newSize }));
-                    // サイズ変更時にPDFを再読み込み
-                    if (newSize) {
-                      setLoading(true);
-                      setPdfKey((prev) => prev + 1);
-                    }
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">
-                    {detectedSizeByTab[activeTab]
-                      ? `元のサイズ (${detectedSizeByTab[activeTab]})`
-                      : "元のサイズ"}
-                  </option>
-                  <option value="A3">A3</option>
-                  <option value="A4">A4</option>
-                  <option value="A5">A5</option>
-                  <option value="B4">B4</option>
-                  <option value="B5">B5</option>
-                  <option value="Letter">Letter</option>
-                  <option value="CUSTOM">カスタム...</option>
-                </select>
-                {/* #16 カスタムサイズ入力 */}
-                {selectedSize === "CUSTOM" && (
-                  <div className="flex gap-1 items-center mt-1">
-                    <input
-                      type="number"
-                      min={50}
-                      max={1000}
-                      value={customWidthMm}
-                      onChange={(e) => setCustomWidthMm(e.target.value)}
-                      className="w-16 text-sm border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="幅mm"
-                    />
-                    <span className="text-xs text-gray-500">×</span>
-                    <input
-                      type="number"
-                      min={50}
-                      max={1000}
-                      value={customHeightMm}
-                      onChange={(e) => setCustomHeightMm(e.target.value)}
-                      className="w-16 text-sm border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="高さmm"
-                    />
-                    <span className="text-xs text-gray-500">mm</span>
-                    <button
-                      onClick={() => {
-                        if (customWidthMm && customHeightMm) {
-                          setLoading(true);
-                          setPdfKey((p) => p + 1);
-                        }
-                      }}
-                      title="カスタムサイズを適用してPDFを変換"
-                      className="px-2 py-0.5 bg-primary text-white rounded text-xs hover:bg-primary-dark"
-                    >
-                      適用
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* #9 PDF内テキスト検索ボタン */}
             {currentFileType === "pdf" && (
@@ -1037,7 +934,7 @@ export default function PdfViewer({
                   }
                 }}
                 title="PDF内を検索 (Ctrl+F)"
-                className={`ml-2 p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-lg transition-colors ${
                   showPdfSearch
                     ? "bg-yellow-200 text-yellow-800"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -1050,42 +947,32 @@ export default function PdfViewer({
               </button>
             )}
 
-            {/* #10-13 印刷ボタン + 設定 */}
-            <div className="ml-2 border-l border-gray-300 pl-2 relative">
-              <div className="flex flex-col items-end gap-0.5">
+            {/* 印刷ボタン + 設定ギア */}
+            <div className="ml-1 border-l border-gray-300 pl-2 relative">
               <div className="flex items-center gap-1">
                 <button
                   onClick={handleServerPrint}
                   disabled={serverPrinting || !currentPdf}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
                   title="印刷（サーバー経由）"
                 >
                   {serverPrinting ? (
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                   ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
                   )}
                   <span>{serverPrinting ? "送信中..." : "印刷"}</span>
                 </button>
-                {/* 印刷設定ギアボタン */}
+                {/* 設定ギアボタン */}
                 <button
                   onClick={() => setShowPrintSettings((v) => !v)}
-                  title="印刷設定"
+                  title="印刷設定・表示設定"
                   className={`p-2 rounded-lg transition-colors ${
                     showPrintSettings
                       ? "bg-gray-200 text-gray-800"
@@ -1100,15 +987,71 @@ export default function PdfViewer({
                 </button>
               </div>
               {serverPrintError && (
-                <p className="text-xs text-red-500 whitespace-nowrap">❌ {serverPrintError}</p>
+                <p className="text-xs text-red-500 whitespace-nowrap mt-0.5">❌ {serverPrintError}</p>
               )}
-              </div>
-              {/* 印刷設定パネル */}
+
+              {/* 設定パネル（印刷設定 + 表示設定をまとめて） */}
               {showPrintSettings && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-[200] w-64 text-sm">
-                  <p className="font-semibold text-gray-700 mb-3 border-b pb-1">🖨️ サーバー印刷設定</p>
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-[200] w-72 text-sm">
+                  {/* ── 表示設定 ── */}
+                  <p className="font-semibold text-gray-700 mb-2 border-b pb-1">表示設定</p>
+                  {/* ダークモード */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-600">ダークモード</span>
+                    <button
+                      onClick={() => setPdfDark((v) => !v)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${pdfDark ? "bg-gray-700" : "bg-gray-300"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${pdfDark ? "translate-x-4" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  {/* 用紙サイズ変換（PDFのみ） */}
+                  {testId && currentFileType === "pdf" && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-500 mb-1">用紙サイズ変換</label>
+                      <select
+                        value={selectedSize || ""}
+                        onChange={(e) => {
+                          const newSize = e.target.value || null;
+                          setSizeByTab(prev => ({ ...prev, [activeTab]: newSize }));
+                          if (newSize) { setLoading(true); setPdfKey((prev) => prev + 1); }
+                        }}
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="">
+                          {detectedSizeByTab[activeTab]
+                            ? `元のサイズ (${detectedSizeByTab[activeTab]})`
+                            : "元のサイズ"}
+                        </option>
+                        <option value="A3">A3</option>
+                        <option value="A4">A4</option>
+                        <option value="A5">A5</option>
+                        <option value="B4">B4</option>
+                        <option value="B5">B5</option>
+                        <option value="Letter">Letter</option>
+                        <option value="CUSTOM">カスタム...</option>
+                      </select>
+                      {selectedSize === "CUSTOM" && (
+                        <div className="flex gap-1 items-center mt-1">
+                          <input type="number" min={50} max={1000} value={customWidthMm}
+                            onChange={(e) => setCustomWidthMm(e.target.value)}
+                            className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5" placeholder="幅mm" />
+                          <span className="text-xs text-gray-400">×</span>
+                          <input type="number" min={50} max={1000} value={customHeightMm}
+                            onChange={(e) => setCustomHeightMm(e.target.value)}
+                            className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5" placeholder="高さmm" />
+                          <span className="text-xs text-gray-400">mm</span>
+                          <button onClick={() => { if (customWidthMm && customHeightMm) { setLoading(true); setPdfKey((p) => p + 1); } }}
+                            className="px-2 py-0.5 bg-primary text-white rounded text-xs hover:bg-primary-dark">適用</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── サーバー印刷設定 ── */}
+                  <p className="font-semibold text-gray-700 mb-2 border-b pb-1 mt-3">🖨️ サーバー印刷設定</p>
                   {/* カラーモード */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <label className="block text-xs text-gray-500 mb-1">カラーモード</label>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-1.5 cursor-pointer text-xs">
@@ -1121,8 +1064,8 @@ export default function PdfViewer({
                       </label>
                     </div>
                   </div>
-                  {/* 両面/片面 */}
-                  <div className="mb-3">
+                  {/* 印刷面 */}
+                  <div className="mb-2">
                     <label className="block text-xs text-gray-500 mb-1">印刷面</label>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-1.5 cursor-pointer text-xs">
@@ -1138,25 +1081,20 @@ export default function PdfViewer({
                   {/* 部数 */}
                   <div className="mb-3">
                     <label className="block text-xs text-gray-500 mb-1">部数</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={99}
-                      value={printCopies}
+                    <input type="number" min={1} max={99} value={printCopies}
                       onChange={(e) => setPrintCopies(e.target.value)}
-                      className="w-16 border border-gray-300 rounded px-1 py-0.5 text-center"
-                    />
+                      className="w-16 border border-gray-300 rounded px-1 py-0.5 text-center text-xs" />
                     <span className="text-xs text-gray-400 ml-1">部</span>
                   </div>
                   {/* iPad標準印刷 */}
-                  <div className="border-t border-gray-200 pt-3">
+                  <div className="border-t border-gray-200 pt-2">
                     <p className="text-xs text-gray-500 mb-1.5">📱 iPad標準印刷（AirPrint）</p>
                     <button
                       onClick={() => { handlePrint(); setShowPrintSettings(false); }}
                       disabled={!currentPdf}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 text-sm border border-gray-300"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 text-xs border border-gray-300"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                       <span>iPad標準印刷</span>

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import fs from "fs";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 interface PrintRequest {
   pdfPath: string;         // サーバー上の PDF パス（例: /uploads/xxx.pdf）
@@ -93,13 +94,17 @@ async function printWindows(
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
-    const printerArg = printerName ? `-print-to "${printerName}"` : "-print-to-default";
     const colorSetting = colorMode === "color" ? "color" : "monochrome";
     const duplexSetting = duplex ? "duplexlong" : "simplex";
-    const printSettings = `-print-settings "${colorSetting},${duplexSetting}"`;
-    const cmd = `"${sumatraPath}" ${printerArg} ${printSettings} -silent "${filePath}"`;
+    // execFile でシェルを経由しないことで -print-settings の引数が確実に渡る
+    const args: string[] = [
+      ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
+      "-print-settings", `${colorSetting},${duplexSetting}`,
+      "-silent",
+      filePath,
+    ];
     for (let i = 0; i < copies; i++) {
-      await execAsync(cmd, { timeout: 60000 });
+      await execFileAsync(sumatraPath, args, { timeout: 60000 });
     }
     return;
   }
