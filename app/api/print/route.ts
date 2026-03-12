@@ -17,13 +17,14 @@ interface PrintRequest {
   colorMode?: "color" | "mono";  // カラー / モノクロ
   pageRange?: string;      // 印刷ページ範囲（例: "1-3", "2-", "-5", "" で全ページ）
   paperSize?: string;      // 用紙サイズ（例: "A4", "A3", "Letter"）
+  collate?: boolean;       // 丁合: true=123123...(部単位), false=111222...(ページ順)
 }
 
 /** POST /api/print - サーバーサイドで PDF を印刷ジョブとして送信 */
 export async function POST(req: NextRequest) {
   try {
     const body: PrintRequest = await req.json();
-    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono", pageRange = "", paperSize = "" } = body;
+    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono", pageRange = "", paperSize = "", collate = true } = body;
 
     if (!pdfPath) {
       return NextResponse.json({ error: "pdfPath は必須です" }, { status: 400 });
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     if (process.platform === "win32") {
       // Windows: SumatraPDF (インストール済みの場合) または PowerShell で印刷
-      await printWindows(absolutePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
+      await printWindows(absolutePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
     } else {
       // Linux / macOS: lp コマンドで印刷
       await printUnix(absolutePath, printerName, copies, duplex);
@@ -95,45 +96,45 @@ async function printWindows(
   duplex: boolean = false,
   colorMode: "color" | "mono" = "mono",
   pageRange: string = "",
-  paperSize: string = ""
+  paperSize: string = "",
+  collate: boolean = true
 ) {
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
-    const colorSetting = colorMode === "color" ? "color" : "monochrome";
-    const duplexSetting = duplex ? "duplexlong" : "simplex";
-    // 部数は Nx 形式（SumatraPDF ネイティブ）で指定。ループ不要
-    const copiesSetting = copies > 1 ? `${copies}x` : "";
-    // 用紙サイズ: paper=A4 形式
-    const paperSetting = paperSize ? `paper=${paperSize}` : "";
-    // ページ範囲: "1-3", "2-", "-5" など（空欄=全ページ）
-    const pageRangeSetting = pageRange.trim();
-    // 全設定をカンマ区切りで結合（空の項目は除外）
-    const settingsParts = [pageRangeSetting, colorSetting, duplexSetting, copiesSetting, paperSetting]
-      .filter(Boolean)
-      .join(",");
-    // execFile でシェルを経由しないことで引数が確実に渡る
-    const args: string[] = [
-      ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
-      "-print-settings", settingsParts,
-      "-silent",
-      filePath,
-    ];
-    await execFileAsync(sumatraPath, args, { timeout: 60000 });
+    // 部数・ページ範囲・丁合を一時PDFに埋め込む（SumatraPDFのNxは丁合制御不可のため）
+    const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate);
+    try {
+      const colorSetting = colorMode === "color" ? "color" : "monochrome";
+      const duplexSetting = duplex ? "duplexlong" : "simplex";
+      const paperSetting = paperSize ? `paper=${paperSize}` : "";
+      const settingsParts = [colorSetting, duplexSetting, paperSetting].filter(Boolean).join(",");
+      const args: string[] = [
+        ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
+        "-print-settings", settingsParts,
+        "-silent",
+        printPath,
+      ];
+      await execFileAsync(sumatraPath, args, { timeout: 60000 });
+    } finally {
+      if (isTemp && fs.existsSync(printPath)) {
+        try { fs.unlinkSync(printPath); } catch { /* ignore */ }
+      }
+    }
     return;
   }
 
   // ② Adobe Acrobat / Acrobat Reader によるサイレント印刷
   const acrobatPath = await findAcrobat();
   if (acrobatPath) {
-    await printWithAcrobat(acrobatPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
+    await printWithAcrobat(acrobatPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
     return;
   }
 
   // ③ Foxit Reader によるサイレント印刷
   const foxitPath = await findFoxitReader();
   if (foxitPath) {
-    await printWithAcrobat(foxitPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize);
+    await printWithAcrobat(foxitPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
     return;
   }
 
@@ -146,9 +147,7 @@ async function printWindows(
 
 /**
  * Adobe Acrobat / Foxit Reader などによる印刷。
- * - ページ範囲: pdf-lib でページを抽出して一時ファイルを作成
- * - カラー/両面/用紙: PowerShell Set-PrintConfiguration でプリンター設定を変更（印刷後復元）
- * - 部数: ループで複数ジョブ送信
+ * 部数・ページ範囲・丁合はすべて一時PDFに埋め込み、単一ジョブとして送信する。
  */
 async function printWithAcrobat(
   viewerPath: string,
@@ -158,41 +157,17 @@ async function printWithAcrobat(
   duplex: boolean,
   colorMode: "color" | "mono",
   pageRange: string,
-  paperSize: string
+  paperSize: string,
+  collate: boolean
 ) {
-  let printFilePath = filePath;
-  let tempFile: string | null = null;
+  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate);
 
   try {
-    // ① ページ範囲が指定されている場合、pdf-lib でページ抽出
-    const rangeStr = pageRange.trim();
-    if (rangeStr) {
-      const pdfBytes = fs.readFileSync(filePath);
-      const srcDoc = await PDFDocument.load(pdfBytes);
-      const totalPages = srcDoc.getPageCount();
-      const pageIndices = parsePageRange(rangeStr, totalPages);
-
-      if (pageIndices.length > 0 && pageIndices.length < totalPages) {
-        const newDoc = await PDFDocument.create();
-        const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
-        copiedPages.forEach((p) => newDoc.addPage(p));
-        const newBytes = await newDoc.save();
-        tempFile = path.join(os.tmpdir(), `print_${Date.now()}.pdf`);
-        fs.writeFileSync(tempFile, newBytes);
-        printFilePath = tempFile;
-      }
-    }
-
-    // ② PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
-    // Set-PrintConfiguration は Windows 8+ 標準搭載（PrintManagement モジュール）
+    // PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
     if (printerName) {
       const duplexMode = duplex ? "TwoSidedLongEdge" : "OneSided";
       const colorBool = colorMode === "color" ? "$true" : "$false";
-      // 用紙サイズ: SumatraPDF と同じ名称を使う（A4, A3, Letter など）
-      const paperLine = paperSize
-        ? `-PaperSize '${paperSize}'`
-        : "";
-      // エラーは無視（プリンターが設定非対応の場合もあるため）
+      const paperLine = paperSize ? `-PaperSize '${paperSize}'` : "";
       const psScript = `
         try {
           Set-PrintConfiguration -PrinterName '${printerName.replace(/'/g, "''")}' \`
@@ -202,45 +177,98 @@ async function printWithAcrobat(
             -ErrorAction SilentlyContinue
         } catch {}
       `.trim();
-      await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", psScript], { timeout: 10000 }).catch(() => {/* 設定失敗は無視 */});
+      await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", psScript], { timeout: 10000 }).catch(() => {});
     }
 
-    // ③ Acrobat/Foxit で印刷（/t "file" ["printer"] 形式）
-    for (let i = 0; i < copies; i++) {
-      const acrobatArgs = printerName
-        ? ["/t", printFilePath, printerName]
-        : ["/t", printFilePath];
-      await execFileAsync(viewerPath, acrobatArgs, { timeout: 60000 });
-      // Acrobat は印刷キューに積んだ後すぐ終了するため少し待機
-      await new Promise((r) => setTimeout(r, 4000));
-    }
+    // Acrobat/Foxit で印刷（/t "file" ["printer"] 形式、1ジョブのみ）
+    const acrobatArgs = printerName
+      ? ["/t", printFilePath, printerName]
+      : ["/t", printFilePath];
+    await execFileAsync(viewerPath, acrobatArgs, { timeout: 60000 });
+    // Acrobat は印刷キューに積んだ後すぐ終了するため少し待機
+    await new Promise((r) => setTimeout(r, 4000));
   } finally {
-    // ④ 一時ファイルを削除
-    if (tempFile && fs.existsSync(tempFile)) {
-      try { fs.unlinkSync(tempFile); } catch { /* ignore */ }
+    if (isTemp && fs.existsSync(printFilePath)) {
+      try { fs.unlinkSync(printFilePath); } catch { /* ignore */ }
     }
   }
 }
 
 /**
- * "1-5", "3-", "-5", "2" 形式のページ範囲文字列を 0-indexed の配列に変換
+ * 部数・ページ範囲・丁合方式を1つのPDFに展開して返す。
+ * 変更不要な場合（部数1・全ページ）はオリジナルをそのまま返す（isTemp=false）。
+ *
+ * collate=true  → 丁合（部単位）: 1,2,3,1,2,3,… (123123…)
+ * collate=false → 非丁合（ページ順）: 1,1,2,2,3,3,… (111222…)
+ */
+async function buildPrintPdf(
+  filePath: string,
+  pageRange: string,
+  copies: number,
+  collate: boolean
+): Promise<{ path: string; isTemp: boolean }> {
+  const pdfBytes = fs.readFileSync(filePath);
+  const srcDoc = await PDFDocument.load(pdfBytes);
+  const totalPages = srcDoc.getPageCount();
+
+  // 印刷対象ページのインデックス（0始まり）
+  const baseIndices = pageRange.trim()
+    ? parsePageRange(pageRange.trim(), totalPages)
+    : Array.from({ length: totalPages }, (_, i) => i);
+
+  if (baseIndices.length === 0) {
+    return { path: filePath, isTemp: false };
+  }
+
+  // 部数1 かつ 全ページなら一時ファイル不要
+  if (copies <= 1 && baseIndices.length === totalPages) {
+    return { path: filePath, isTemp: false };
+  }
+
+  // ページ順序を構築
+  let pageOrder: number[];
+  if (collate) {
+    // 丁合（123123…）: 全ページが揃ったセットを N 回繰り返す
+    pageOrder = [];
+    for (let c = 0; c < copies; c++) pageOrder.push(...baseIndices);
+  } else {
+    // 非丁合（111222…）: 各ページを N 枚ずつ繰り返す
+    pageOrder = [];
+    for (const idx of baseIndices)
+      for (let c = 0; c < copies; c++) pageOrder.push(idx);
+  }
+
+  const newDoc = await PDFDocument.create();
+  const copiedPages = await newDoc.copyPages(srcDoc, pageOrder);
+  copiedPages.forEach((p) => newDoc.addPage(p));
+  const newBytes = await newDoc.save();
+  const tempPath = path.join(os.tmpdir(), `print_${Date.now()}.pdf`);
+  fs.writeFileSync(tempPath, newBytes);
+  return { path: tempPath, isTemp: true };
+}
+
+/**
+ * "1-5", "3-", "-5", "2", "1-3,5,7-9" 形式のページ範囲文字列を 0-indexed の配列に変換
  */
 function parsePageRange(range: string, totalPages: number): number[] {
-  const trimmed = range.trim();
-  // "N" 単体（単ページ）
-  const single = trimmed.match(/^(\d+)$/);
-  if (single) {
-    const n = parseInt(single[1]) - 1;
-    return n >= 0 && n < totalPages ? [n] : [];
-  }
-  // "N-M", "N-", "-M" 形式
-  const rangeMatch = trimmed.match(/^(\d*)-(\d*)$/);
-  if (!rangeMatch) return [];
-  const from = rangeMatch[1] ? parseInt(rangeMatch[1]) - 1 : 0;
-  const to = rangeMatch[2] ? parseInt(rangeMatch[2]) - 1 : totalPages - 1;
   const result: number[] = [];
-  for (let i = Math.max(0, from); i <= Math.min(totalPages - 1, to); i++) {
-    result.push(i);
+  const seen = new Set<number>();
+  for (const segment of range.split(",")) {
+    const trimmed = segment.trim();
+    if (!trimmed) continue;
+    const single = trimmed.match(/^(\d+)$/);
+    if (single) {
+      const n = parseInt(single[1]) - 1;
+      if (n >= 0 && n < totalPages && !seen.has(n)) { result.push(n); seen.add(n); }
+      continue;
+    }
+    const rangeMatch = trimmed.match(/^(\d*)-(\d*)$/);
+    if (!rangeMatch) continue;
+    const from = rangeMatch[1] ? parseInt(rangeMatch[1]) - 1 : 0;
+    const to = rangeMatch[2] ? parseInt(rangeMatch[2]) - 1 : totalPages - 1;
+    for (let i = Math.max(0, from); i <= Math.min(totalPages - 1, to); i++) {
+      if (!seen.has(i)) { result.push(i); seen.add(i); }
+    }
   }
   return result;
 }

@@ -84,6 +84,7 @@ export default function PdfViewer({
   const [printCopies, setPrintCopies] = useState<string>("1");
   const [printDuplex, setPrintDuplex] = useState(false);
   const [printPaperSize, setPrintPaperSize] = useState<string>(""); // 印刷用紙サイズ（表示変換とは独立）
+  const [printCollate, setPrintCollate] = useState<boolean>(true); // 丁合: true=部単位(123123), false=ページ順(111222)
   // サーバー印刷
   const [serverPrinting, setServerPrinting] = useState(false);
   const [serverPrintError, setServerPrintError] = useState<string | null>(null);
@@ -710,6 +711,7 @@ export default function PdfViewer({
             return "";
           })(),
           paperSize: printPaperSize || undefined,
+          collate: printCollate,
         }),
       });
       if (!res.ok) {
@@ -1137,13 +1139,29 @@ export default function PdfViewer({
                     </div>
                   </div>
                   {/* 部数 */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <label className="block text-xs text-gray-500 mb-1">部数</label>
                     <input type="number" min={1} max={99} value={printCopies}
                       onChange={(e) => setPrintCopies(e.target.value)}
                       className="w-16 border border-gray-300 rounded px-1 py-0.5 text-center text-xs" />
                     <span className="text-xs text-gray-400 ml-1">部</span>
                   </div>
+                  {/* 丁合（複数部数のときのみ表示） */}
+                  {parseInt(printCopies) > 1 && (
+                    <div className="mb-3">
+                      <label className="block text-xs text-gray-500 mb-1">印刷順序</label>
+                      <div className="flex gap-3">
+                        <label className="flex items-center gap-1.5 cursor-pointer text-xs" title="1,2,3 → 1,2,3 → ...（部ごとにまとめる）">
+                          <input type="radio" name="collateMode" checked={printCollate} onChange={() => setPrintCollate(true)} className="accent-primary" />
+                          <span>丁合 <span className="text-gray-400">123｜123</span></span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer text-xs" title="1,1,1 → 2,2,2 → ...（ページごとにまとめる）">
+                          <input type="radio" name="collateMode" checked={!printCollate} onChange={() => setPrintCollate(false)} className="accent-primary" />
+                          <span>非丁合 <span className="text-gray-400">111｜222</span></span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
                   {/* iPad標準印刷 */}
                   <div className="border-t border-gray-200 pt-2">
                     <p className="text-xs text-gray-500 mb-1.5">📱 iPad標準印刷（AirPrint）</p>
