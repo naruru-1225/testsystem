@@ -179,9 +179,26 @@ async function printWithAcrobat(
     await new Promise((r) => setTimeout(r, 4000));
   } finally {
     if (isTemp && fs.existsSync(printFilePath)) {
-      try { fs.unlinkSync(printFilePath); } catch { /* ignore */ }
+      // Acrobat/Foxit は /t 実行後に別プロセスで遅延読込する場合があるため、
+      // 即時削除せず遅延削除にする。
+      scheduleTempFileCleanup(printFilePath, 10 * 60 * 1000);
     }
   }
+}
+
+/**
+ * 一時PDFの削除を遅延実行する（印刷処理の遅延読込対策）。
+ */
+function scheduleTempFileCleanup(filePath: string, delayMs: number): void {
+  const timer = setTimeout(() => {
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch {
+      /* ignore */
+    }
+  }, delayMs);
+  // Node プロセス終了をブロックしない
+  timer.unref?.();
 }
 
 /**
@@ -260,7 +277,7 @@ async function buildPrintPdf(
     : Array.from({ length: totalPages }, (_, i) => i);
 
   if (baseIndices.length === 0) {
-    return { path: filePath, isTemp: false };
+    throw new Error("ページ範囲の指定が不正です。例: 1-3, 5, 7-");
   }
 
   // 部数1 かつ 全ページなら一時ファイル不要
@@ -285,7 +302,10 @@ async function buildPrintPdf(
   const copiedPages = await newDoc.copyPages(srcDoc, pageOrder);
   copiedPages.forEach((p) => newDoc.addPage(p));
   const newBytes = await newDoc.save();
-  const tempPath = path.join(os.tmpdir(), `print_${Date.now()}.pdf`);
+  const tempPath = path.join(
+    os.tmpdir(),
+    `print_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.pdf`
+  );
   fs.writeFileSync(tempPath, newBytes);
   return { path: tempPath, isTemp: true };
 }
