@@ -99,7 +99,9 @@ export default function TestList() {
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
 
   // 表示設定（localStorageに永続化・デバイスごとに独立）
-  const [sortOrder, setSortOrder] = useLocalStorage<"newest" | "oldest" | "name">(
+  const [sortOrder, setSortOrder] = useLocalStorage<
+    "newest" | "oldest" | "name" | "updated" | "subject" | "grade" | "questions-desc" | "questions-asc"
+  >(
     "testlist-sort",
     "newest"
   );
@@ -267,8 +269,22 @@ export default function TestList() {
 
     return filtered.sort((a, b) => {
       if (sortOrder === "name") return a.name.localeCompare(b.name, "ja");
-      if (sortOrder === "oldest")
+      if (sortOrder === "subject") return (a.subject || "").localeCompare((b.subject || ""), "ja");
+      if (sortOrder === "grade") return (a.grade || "").localeCompare((b.grade || ""), "ja");
+      if (sortOrder === "updated") {
+        return new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime();
+      }
+      if (sortOrder === "questions-desc") {
+        return (b.total_questions ?? -1) - (a.total_questions ?? -1);
+      }
+      if (sortOrder === "questions-asc") {
+        const av = a.total_questions ?? Number.MAX_SAFE_INTEGER;
+        const bv = b.total_questions ?? Number.MAX_SAFE_INTEGER;
+        return av - bv;
+      }
+      if (sortOrder === "oldest") {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, [tests, sortOrder, selectedTagIds, tagFilterMode, advDateFrom, advDateTo, advMinQ, advMaxQ]);
@@ -301,9 +317,9 @@ export default function TestList() {
 
   // 行高さCSSクラス
   const rowPadding: Record<string, string> = {
-    compact: "py-0",
-    standard: "py-0.5",
-    wide: "py-1.5",
+    compact: "py-0.5",
+    standard: "py-1",
+    wide: "py-2",
   };
 
   const fetchTests = async () => {
@@ -1115,32 +1131,32 @@ export default function TestList() {
           {/* #44 詳細検索パネル（折りたたみ可能） */}
           {showAdvancedSearch && (
             <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm">
-              <div className="flex flex-wrap gap-3 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 items-end">
                 {/* 登録日範囲 */}
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs text-gray-500 mb-1">登録日（開始）</label>
                   <input type="date" value={advDateFrom} onChange={(e) => setAdvDateFrom(e.target.value)}
                     className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs text-gray-500 mb-1">登録日（終了）</label>
                   <input type="date" value={advDateTo} onChange={(e) => setAdvDateTo(e.target.value)}
                     className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
                 {/* 大問数範囲 */}
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs text-gray-500 mb-1">大問数（最小）</label>
                   <input type="number" min={0} value={advMinQ} onChange={(e) => setAdvMinQ(e.target.value)}
                     placeholder="0" className="border border-gray-300 rounded px-3 py-2 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs text-gray-500 mb-1">大問数（最大）</label>
                   <input type="number" min={0} value={advMaxQ} onChange={(e) => setAdvMaxQ(e.target.value)}
                     placeholder="∞" className="border border-gray-300 rounded px-3 py-2 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-primary bg-white" />
                 </div>
 
                 {/* #46 複数タグフィルタ */}
-                <div className="flex-1 min-w-0">
+                <div className="sm:col-span-2 lg:col-span-2 xl:col-span-3 min-w-0">
                   <label className="block text-xs text-gray-500 mb-1">
                     ラベルフィルタ
                     <span className="ml-2 inline-flex rounded border border-gray-300 overflow-hidden">
@@ -1174,7 +1190,7 @@ export default function TestList() {
                 </div>
 
                 {/* フィルタクリア・プリセット */}
-                <div className="flex gap-2">
+                <div className="sm:col-span-2 lg:col-span-2 xl:col-span-3 flex gap-2 flex-wrap xl:justify-end">
                   {hasAdvancedFilter && (
                     <button onClick={() => { setSelectedTagIds([]); setAdvDateFrom(""); setAdvDateTo(""); setAdvMinQ(""); setAdvMaxQ(""); setCurrentPage(0); }}
                       className="px-4 py-2 text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors">
@@ -1225,12 +1241,17 @@ export default function TestList() {
               </svg>
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "name")}
+                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "name" | "updated" | "subject" | "grade" | "questions-desc" | "questions-asc")}
                 className="border border-gray-300 rounded px-2 py-2 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
               >
                 <option value="newest">新しい順</option>
                 <option value="oldest">古い順</option>
                 <option value="name">名前順</option>
+                <option value="updated">更新順</option>
+                <option value="subject">科目順</option>
+                <option value="grade">学年順</option>
+                <option value="questions-desc">大問数（多い順）</option>
+                <option value="questions-asc">大問数（少ない順）</option>
               </select>
             </div>
 
@@ -1639,21 +1660,17 @@ export default function TestList() {
                     {/* PDFプレビュー */}
                     {test.pdf_path && (
                       <div
-                        className="w-full h-28 bg-gray-100 rounded overflow-hidden cursor-pointer flex-shrink-0"
+                        className="relative w-full h-28 bg-gray-100 rounded overflow-hidden cursor-pointer flex-shrink-0"
                         onClick={() => handleViewPdf(test)}
                         title="PDFを開く"
                       >
-                        <object
-                          data={test.pdf_path}
-                          type="application/pdf"
+                        <iframe
+                          src={`${test.pdf_path}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                           className="w-full h-full pointer-events-none"
-                        >
-                          <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-10 h-10 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        </object>
+                          loading="lazy"
+                          title={`${test.name} preview`}
+                        />
+                        <div className="absolute top-1 right-1 bg-white/80 text-red-500 rounded px-1 text-[10px]">PDF</div>
                       </div>
                     )}
                     {/* テスト名 */}
