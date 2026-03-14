@@ -20,15 +20,94 @@ interface PrintRequest {
   collate?: boolean;       // 丁合: true=123123...(部単位), false=111222...(ページ順)
 }
 
+type ColorMode = "color" | "mono";
+
+type NormalizedPrintRequest = {
+  pdfPath: string;
+  printerName?: string;
+  copies: number;
+  duplex: boolean;
+  colorMode: ColorMode;
+  pageRange: string;
+  paperSize: string;
+  collate: boolean;
+};
+
+class PrintApiError extends Error {
+  status: number;
+  code: string;
+  details?: unknown;
+
+  constructor(message: string, status = 500, code = "PRINT_ERROR", details?: unknown) {
+    super(message);
+    this.name = "PrintApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
+const PAGE_RANGE_PATTERN = /^\s*(\d+|\d*-\d*)(\s*,\s*(\d+|\d*-\d*))*\s*$/;
+
+function normalizePaperSize(paperSize?: string): string {
+  const value = (paperSize || "").trim();
+  if (!value) return "";
+
+  const upper = value.toUpperCase();
+  if (["A3", "A4", "A5", "B4", "B5"].includes(upper)) return upper;
+  if (upper === "LETTER") return "letter";
+  if (upper === "LEGAL") return "legal";
+
+  throw new PrintApiError(
+    `未対応の用紙サイズです: ${value}`,
+    400,
+    "PRINT_INVALID_PAPER_SIZE",
+    { allowed: ["A3", "A4", "A5", "B4", "B5", "Letter", "Legal"] }
+  );
+}
+
+function normalizePrintRequest(body: PrintRequest): NormalizedPrintRequest {
+  if (!body?.pdfPath || typeof body.pdfPath !== "string") {
+    throw new PrintApiError("pdfPath は必須です", 400, "PRINT_INVALID_PDF_PATH");
+  }
+
+  const copiesRaw = Number(body.copies ?? 1);
+  const copies = Number.isFinite(copiesRaw) ? Math.floor(copiesRaw) : 1;
+  if (copies < 1 || copies > 999) {
+    throw new PrintApiError("部数は1〜999の範囲で指定してください", 400, "PRINT_INVALID_COPIES");
+  }
+
+  const colorMode: ColorMode = body.colorMode === "color" ? "color" : "mono";
+  const duplex = Boolean(body.duplex);
+  const collate = body.collate !== false;
+  const pageRange = (body.pageRange || "").trim();
+  if (pageRange && !PAGE_RANGE_PATTERN.test(pageRange)) {
+    throw new PrintApiError(
+      "ページ範囲の形式が不正です。例: 1-3, 5, 7-",
+      400,
+      "PRINT_INVALID_PAGE_RANGE"
+    );
+  }
+
+  return {
+    pdfPath: body.pdfPath,
+    printerName: body.printerName?.trim() || undefined,
+    copies,
+    duplex,
+    colorMode,
+    pageRange,
+    paperSize: normalizePaperSize(body.paperSize),
+    collate,
+  };
+}
+
 /** POST /api/print - サーバーサイドで PDF を印刷ジョブとして送信 */
 export async function POST(req: NextRequest) {
+  const requestId = `print_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   try {
     const body: PrintRequest = await req.json();
-    const { pdfPath, printerName, copies = 1, duplex = false, colorMode = "mono", pageRange = "", paperSize = "", collate = true } = body;
-
-    if (!pdfPath) {
-      return NextResponse.json({ error: "pdfPath は必須です" }, { status: 400 });
-    }
+    const options = normalizePrintRequest(body);
+    const { pdfPath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate } = options;
 
     // public フォルダ基点の絶対パスを解決
     const publicDir = path.join(process.cwd(), "public");
@@ -81,11 +160,29 @@ export async function POST(req: NextRequest) {
       await printUnix(absolutePath, printerName, copies, duplex);
     }
 
-    return NextResponse.json({ success: true, message: "印刷ジョブを送信しました" });
+    return NextResponse.json({ success: true, message: "印刷ジョブを送信しました", requestId });
   } catch (error) {
-    console.error("印刷エラー:", error);
+    console.error("印刷エラー:", { requestId, error });
+    if (error instanceof PrintApiError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          requestId,
+          details: error.details,
+        },
+        { status: error.status }
+      );
+    }
     const message = error instanceof Error ? error.message : "不明なエラー";
-    return NextResponse.json({ error: `印刷に失敗しました: ${message}` }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: `印刷に失敗しました: ${message}`,
+        code: "PRINT_INTERNAL_ERROR",
+        requestId,
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -102,6 +199,10 @@ async function printWindows(
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
+    await ensureExecutableExists(sumatraPath, "PRINT_SUMATRA_NOT_FOUND");
+    if (printerName) {
+      await ensurePrinterExists(printerName);
+    }
     console.info("[print] backend=sumatra", { sumatraPath, printerName, duplex, colorMode, paperSize });
     // 部数・ページ範囲・丁合を一時PDFに埋め込む（両面時の並びもここで最適化）
     const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
@@ -116,7 +217,11 @@ async function printWindows(
         "-silent",
         printPath,
       ];
-      await execFileAsync(sumatraPath, args, { timeout: 60000 });
+      await runSumatraPrint(sumatraPath, args, {
+        printerName: printerName || "(default)",
+        settings: settingsParts,
+        printPath,
+      });
     } finally {
       if (isTemp && fs.existsSync(printPath)) {
         try { fs.unlinkSync(printPath); } catch { /* ignore */ }
@@ -144,6 +249,95 @@ async function printWindows(
     "サイレント印刷に対応するPDFビューアーが見つかりません。" +
     "SumatraPDF (https://www.sumatrapdfreader.org/) をインストールしてください。"
   );
+}
+
+async function ensureExecutableExists(exePath: string, code: string): Promise<void> {
+  if (!fs.existsSync(exePath)) {
+    throw new PrintApiError(`実行ファイルが見つかりません: ${exePath}`, 500, code, { exePath });
+  }
+}
+
+async function ensurePrinterExists(printerName: string): Promise<void> {
+  const escaped = printerName.replace(/'/g, "''");
+  const script = `(Get-Printer -Name '${escaped}' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -First 1)`;
+  try {
+    const { stdout } = await execFileAsync(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { timeout: 5000, windowsHide: true }
+    );
+    if (!stdout.trim()) {
+      throw new PrintApiError(
+        `指定プリンターが見つかりません: ${printerName}`,
+        400,
+        "PRINT_PRINTER_NOT_FOUND",
+        { printerName }
+      );
+    }
+  } catch (error) {
+    if (error instanceof PrintApiError) throw error;
+    throw new PrintApiError(
+      "プリンター存在確認に失敗しました",
+      500,
+      "PRINT_PRINTER_CHECK_FAILED",
+      { printerName, cause: error instanceof Error ? error.message : String(error) }
+    );
+  }
+}
+
+async function runSumatraPrint(
+  sumatraPath: string,
+  args: string[],
+  context: { printerName: string; settings: string; printPath: string }
+): Promise<void> {
+  try {
+    const { stdout, stderr } = await execFileAsync(sumatraPath, args, {
+      timeout: 60000,
+      windowsHide: true,
+      maxBuffer: 1024 * 1024,
+    });
+
+    const out = (stdout || "").trim();
+    const err = (stderr || "").trim();
+    const combined = `${out}\n${err}`.trim();
+    const suspicious = /(error|failed|cannot|invalid|unknown|not found)/i.test(combined);
+
+    if (suspicious) {
+      throw new PrintApiError(
+        "SumatraPDF実行時にエラーが検出されました",
+        500,
+        "PRINT_SUMATRA_STDERR_ERROR",
+        {
+          printerName: context.printerName,
+          settings: context.settings,
+          printPath: context.printPath,
+          stdout: out,
+          stderr: err,
+        }
+      );
+    }
+
+    console.info("[print] sumatra command completed", {
+      printerName: context.printerName,
+      settings: context.settings,
+      printPath: context.printPath,
+      stderr: err || undefined,
+    });
+  } catch (error) {
+    if (error instanceof PrintApiError) throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    throw new PrintApiError(
+      `SumatraPDF印刷に失敗しました: ${message}`,
+      500,
+      "PRINT_SUMATRA_EXEC_FAILED",
+      {
+        printerName: context.printerName,
+        settings: context.settings,
+        printPath: context.printPath,
+        args,
+      }
+    );
+  }
 }
 
 /**
