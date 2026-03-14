@@ -135,7 +135,7 @@ export default function TestList() {
   // #35 列幅リサイズ（localStorageに永続化）
   const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>(
     "testlist-col-widths",
-    { name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 100 }
+    { name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 72 }
   );
   const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
   const handleColResizeStart = useCallback((col: string, e: React.MouseEvent) => {
@@ -218,6 +218,7 @@ export default function TestList() {
   const [relatedModal, setRelatedModal] = useState<{ testId: number; testName: string } | null>(null);
   const [relatedTests, setRelatedTests] = useState<{ id: number; name: string; subject: string | null; grade: string | null }[]>([]);
   const [relatedSearchQuery, setRelatedSearchQuery] = useState("");
+  const [rowActionMenuId, setRowActionMenuId] = useState<number | null>(null);
 
   // フォルダデータを取得してパンくずリスト用に使用
   const { data: foldersData } = useFolders();
@@ -277,6 +278,19 @@ export default function TestList() {
     setCurrentPage(0);
   }, [sortedTests.length, perPage]);
 
+  // 既存localStorageで操作列が広く保存されていても、一覧性重視で初期値を補正
+  useEffect(() => {
+    setColWidths((prev) => {
+      const current = prev["actions"] ?? 72;
+      if (current <= 72) return prev;
+      return { ...prev, actions: 72 };
+    });
+  }, [setColWidths]);
+
+  useEffect(() => {
+    setRowActionMenuId(null);
+  }, [currentPage, viewMode, sortedTests.length]);
+
   // ページネーション済みデータ
   const totalPages = perPage === 0 ? 1 : Math.ceil(sortedTests.length / perPage);
   const paginatedTests = useMemo(() => {
@@ -288,8 +302,8 @@ export default function TestList() {
   // 行高さCSSクラス
   const rowPadding: Record<string, string> = {
     compact: "py-0",
-    standard: "py-0.5",
-    wide: "py-2",
+    standard: "py-0",
+    wide: "py-1",
   };
 
   const fetchTests = async () => {
@@ -426,6 +440,28 @@ export default function TestList() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  useEffect(() => {
+    if (rowActionMenuId === null) return;
+
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest("[data-row-action-wrap]")) {
+        setRowActionMenuId(null);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setRowActionMenuId(null);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [rowActionMenuId]);
 
   // PDFプレビュー表示
   const handleViewPdf = async (test: TestWithTags) => {
@@ -809,6 +845,81 @@ export default function TestList() {
       toastError("関連テストの削除に失敗しました");
     }
   };
+
+  const renderRowActionMenu = (test: TestWithTags) => (
+    <div className="relative inline-block" data-row-action-wrap>
+      <button
+        type="button"
+        onClick={() => setRowActionMenuId((prev) => (prev === test.id ? null : test.id))}
+        className="p-1.5 rounded hover:bg-gray-100 text-gray-600"
+        title="操作メニュー"
+        aria-label="操作メニュー"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6h.01M12 12h.01M12 18h.01" />
+        </svg>
+      </button>
+
+      {rowActionMenuId === test.id && (
+        <div className="absolute right-0 top-full mt-1 z-40 min-w-[160px] bg-white border border-gray-200 rounded-lg shadow-lg py-1 text-sm">
+          {test.pdf_path && (
+            <button
+              onClick={() => { setRowActionMenuId(null); handleViewPdf(test); }}
+              className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+            >
+              PDFを開く
+            </button>
+          )}
+          {test.pdf_path && (
+            <button
+              onClick={() => { setRowActionMenuId(null); handleServerPrint(test); }}
+              className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+            >
+              サーバー印刷
+            </button>
+          )}
+          <Link
+            href={`/tests/${test.id}/edit`}
+            onClick={() => setRowActionMenuId(null)}
+            className="block w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+          >
+            編集
+          </Link>
+          <button
+            onClick={() => { setRowActionMenuId(null); handleCloneTest(test.id); }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+          >
+            複製
+          </button>
+          <button
+            onClick={() => { setRowActionMenuId(null); openCommentModal(test); }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+          >
+            コメント
+          </button>
+          <button
+            onClick={() => { setRowActionMenuId(null); openHistoryModal(test); }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+          >
+            変更履歴
+          </button>
+          <button
+            onClick={() => { setRowActionMenuId(null); openRelatedModal(test); }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700"
+          >
+            関連テスト
+          </button>
+          <div className="my-1 border-t border-gray-100" />
+          <button
+            onClick={() => { setRowActionMenuId(null); handleDeleteWithUndo(test); }}
+            className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600"
+          >
+            削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex h-[100dvh] overflow-hidden">
@@ -1202,7 +1313,7 @@ export default function TestList() {
                   setPerPage(25);
                   setCurrentPage(0);
                   setVisibleColumns({ name: true, subject: true, grade: true, memo: true, tags: true, date: true, actions: true });
-                  setColWidths({ name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 100 });
+                  setColWidths({ name: 200, subject: 80, grade: 80, memo: 150, tags: 100, date: 90, actions: 72 });
                 }}
                 className="flex items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -1643,7 +1754,7 @@ export default function TestList() {
                     {visibleColumns["memo"] !== false && <col style={{ width: colWidths["memo"] ?? 180 }} />}
                     {visibleColumns["tags"] !== false && <col style={{ width: colWidths["tags"] ?? 140 }} />}
                     {visibleColumns["date"] !== false && <col style={{ width: colWidths["date"] ?? 110 }} />}
-                    {visibleColumns["actions"] !== false && <col style={{ width: colWidths["actions"] ?? 120 }} />}
+                    {visibleColumns["actions"] !== false && <col style={{ width: colWidths["actions"] ?? 72 }} />}
                   </colgroup>
                   <thead className="bg-gray-50 border-b">
                     <tr>
@@ -1786,7 +1897,7 @@ export default function TestList() {
                             {test.tags.map((tag) => (
                               <span
                                 key={tag.id}
-                                className="px-2 py-1 text-xs rounded"
+                                className="px-1.5 py-0.5 text-[11px] rounded"
                                 style={{
                                   backgroundColor: tag.color + "20",
                                   color: tag.color,
@@ -1804,71 +1915,8 @@ export default function TestList() {
                         </td>
                         )}
                         {visibleColumns["actions"] !== false && (
-                        <td className={`px-4 ${rowPadding[rowHeight]}`}>
-                          <div className="flex gap-2 flex-wrap items-center">
-                            <Link
-                              href={`/tests/${test.id}/edit`}
-                              className="text-primary hover:text-primary-dark text-sm font-medium"
-                            >
-                              編集
-                            </Link>
-                            <button
-                              onClick={() => handleCloneTest(test.id)}
-                              className="text-gray-500 hover:text-gray-700 text-sm font-medium"
-                              title="複製"
-                            >
-                              複製
-                            </button>
-                            {/* #119 コメント */}
-                            <button
-                              onClick={() => openCommentModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
-                              title="コメント"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                              </svg>
-                            </button>
-                            {/* #124 変更履歴 */}
-                            <button
-                              onClick={() => openHistoryModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
-                              title="変更履歴"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </button>
-                            {/* #118 関連テスト */}
-                            <button
-                              onClick={() => openRelatedModal(test)}
-                              className="text-gray-400 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
-                              title="関連テスト"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                              </svg>
-                            </button>
-                            {/* サーバー印刷 */}
-                            {test.pdf_path && (
-                              <button
-                                onClick={() => handleServerPrint(test)}
-                                className="text-gray-400 hover:text-purple-600 p-2 rounded hover:bg-purple-50"
-                                title="サーバーで印刷（ダイアログなし）"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteWithUndo(test)}
-                              className="text-red-600 hover:text-red-700 text-sm font-medium"
-                              title="削除（8秒以内に取り消せます）"
-                            >
-                              削除
-                            </button>
-                          </div>
+                        <td className={`px-3 ${rowPadding[rowHeight]} text-right`}>
+                          {renderRowActionMenu(test)}
                         </td>
                         )}
                       </tr>
