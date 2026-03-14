@@ -102,8 +102,9 @@ async function printWindows(
   // ① SumatraPDF によるサイレント印刷（推奨）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
-    // 部数・ページ範囲・丁合を一時PDFに埋め込む（SumatraPDFのNxは丁合制御不可のため）
-    const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate);
+    console.info("[print] backend=sumatra", { sumatraPath, printerName, duplex, colorMode, paperSize });
+    // 部数・ページ範囲・丁合を一時PDFに埋め込む（両面時の並びもここで最適化）
+    const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
     try {
       const colorSetting = colorMode === "color" ? "color" : "monochrome";
       const duplexSetting = duplex ? "duplexlong" : "simplex";
@@ -111,7 +112,7 @@ async function printWindows(
       const settingsParts = [colorSetting, duplexSetting, paperSetting].filter(Boolean).join(",");
       const args: string[] = [
         ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
-        "-print-settings", settingsParts,
+        ...(settingsParts ? ["-print-settings", settingsParts] : []),
         "-silent",
         printPath,
       ];
@@ -160,7 +161,7 @@ async function printWithAcrobat(
   paperSize: string,
   collate: boolean
 ) {
-  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate);
+  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
 
   try {
     // PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
@@ -265,7 +266,8 @@ async function buildPrintPdf(
   filePath: string,
   pageRange: string,
   copies: number,
-  collate: boolean
+  collate: boolean,
+  duplex: boolean
 ): Promise<{ path: string; isTemp: boolean }> {
   const pdfBytes = fs.readFileSync(filePath);
   const srcDoc = await PDFDocument.load(pdfBytes);
@@ -285,22 +287,52 @@ async function buildPrintPdf(
     return { path: filePath, isTemp: false };
   }
 
-  // ページ順序を構築
-  let pageOrder: number[];
+  // ページ順序を構築（null は空白ページ挿入）
+  const pageOrder: Array<number | null> = [];
+  const normalizedCopies = Math.max(1, copies);
+
   if (collate) {
-    // 丁合（123123…）: 全ページが揃ったセットを N 回繰り返す
-    pageOrder = [];
-    for (let c = 0; c < copies; c++) pageOrder.push(...baseIndices);
+    // 丁合（123123…）
+    for (let c = 0; c < normalizedCopies; c++) {
+      pageOrder.push(...baseIndices);
+      // 両面で奇数ページの場合、次の部の1ページ目が裏面に回らないよう空白を挿入
+      if (duplex && baseIndices.length % 2 === 1 && c < normalizedCopies - 1) {
+        pageOrder.push(null);
+      }
+    }
+  } else if (duplex) {
+    // 非丁合 + 両面時は「紙単位で繰り返し」
+    // 例: 1,2,3,4 を4部 -> 12,12,12,12,34,34,34,34
+    for (let i = 0; i < baseIndices.length; i += 2) {
+      const front = baseIndices[i];
+      const back = i + 1 < baseIndices.length ? baseIndices[i + 1] : null;
+      for (let c = 0; c < normalizedCopies; c++) {
+        pageOrder.push(front);
+        pageOrder.push(back);
+      }
+    }
   } else {
-    // 非丁合（111222…）: 各ページを N 枚ずつ繰り返す
-    pageOrder = [];
-    for (const idx of baseIndices)
-      for (let c = 0; c < copies; c++) pageOrder.push(idx);
+    // 非丁合（片面）: 111222…
+    for (const idx of baseIndices) {
+      for (let c = 0; c < normalizedCopies; c++) pageOrder.push(idx);
+    }
   }
 
   const newDoc = await PDFDocument.create();
-  const copiedPages = await newDoc.copyPages(srcDoc, pageOrder);
-  copiedPages.forEach((p) => newDoc.addPage(p));
+  const toCopy = pageOrder.filter((v): v is number => v !== null);
+  const copiedPages = await newDoc.copyPages(srcDoc, toCopy);
+  let copyCursor = 0;
+  for (const idx of pageOrder) {
+    if (idx === null) {
+      // 空白ページは最後に使ったページサイズを踏襲し、無ければA4
+      const refIdx = baseIndices[baseIndices.length - 1] ?? 0;
+      const refPage = srcDoc.getPage(refIdx);
+      const { width, height } = refPage.getSize();
+      newDoc.addPage([width, height]);
+      continue;
+    }
+    newDoc.addPage(copiedPages[copyCursor++]);
+  }
   const newBytes = await newDoc.save();
   const tempPath = path.join(
     os.tmpdir(),
@@ -351,15 +383,19 @@ async function printUnix(
 
 /** SumatraPDF の実行ファイルパスを探す */
 async function findSumatraPDF(): Promise<string | null> {
+  const localApp = process.env.LOCALAPPDATA || "";
+  const userProfile = process.env.USERPROFILE || "";
   const candidates = [
     "C:\\Program Files\\SumatraPDF\\SumatraPDF.exe",
     "C:\\Program Files (x86)\\SumatraPDF\\SumatraPDF.exe",
+    localApp ? path.join(localApp, "SumatraPDF", "SumatraPDF.exe") : "",
+    userProfile ? path.join(userProfile, "AppData", "Local", "SumatraPDF", "SumatraPDF.exe") : "",
   ];
   for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+    if (p && fs.existsSync(p)) return p;
   }
   try {
-    const { stdout } = await execAsync("where SumatraPDF", { timeout: 3000 });
+    const { stdout } = await execAsync("where SumatraPDF.exe", { timeout: 3000 });
     const found = stdout.trim().split("\n")[0];
     if (found && fs.existsSync(found.trim())) return found.trim();
   } catch { /* 見つからない */ }
