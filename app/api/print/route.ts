@@ -164,20 +164,10 @@ async function printWithAcrobat(
 
   try {
     // PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
-    if (printerName) {
-      const duplexMode = duplex ? "TwoSidedLongEdge" : "OneSided";
-      const colorBool = colorMode === "color" ? "$true" : "$false";
-      const paperLine = paperSize ? `-PaperSize '${paperSize}'` : "";
-      const psScript = `
-        try {
-          Set-PrintConfiguration -PrinterName '${printerName.replace(/'/g, "''")}' \`
-            -Color ${colorBool} \`
-            -DuplexingMode '${duplexMode}' \`
-            ${paperLine} \`
-            -ErrorAction SilentlyContinue
-        } catch {}
-      `.trim();
-      await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", psScript], { timeout: 10000 }).catch(() => {});
+    // 指定がなければ既定プリンターに適用を試みる
+    const effectivePrinter = await resolvePrinterName(printerName);
+    if (effectivePrinter) {
+      await applyPrinterConfiguration(effectivePrinter, duplex, colorMode, paperSize);
     }
 
     // Acrobat/Foxit で印刷（/t "file" ["printer"] 形式、1ジョブのみ）
@@ -191,6 +181,59 @@ async function printWithAcrobat(
     if (isTemp && fs.existsSync(printFilePath)) {
       try { fs.unlinkSync(printFilePath); } catch { /* ignore */ }
     }
+  }
+}
+
+/**
+ * 指定プリンター名があればそれを使用し、なければ既定プリンター名を取得する。
+ */
+async function resolvePrinterName(printerName?: string): Promise<string | null> {
+  if (printerName?.trim()) return printerName.trim();
+  try {
+    const script = "(Get-Printer | Where-Object { $_.Default -eq $true } | Select-Object -ExpandProperty Name -First 1)";
+    const { stdout } = await execFileAsync(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { timeout: 5000 }
+    );
+    const name = stdout.trim();
+    return name || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Adobe/Foxit 経路でも設定反映させるため、プリンター設定を明示適用する。
+ */
+async function applyPrinterConfiguration(
+  printerName: string,
+  duplex: boolean,
+  colorMode: "color" | "mono",
+  paperSize: string
+): Promise<void> {
+  const duplexMode = duplex ? "TwoSidedLongEdge" : "OneSided";
+  const colorValue = colorMode === "color" ? "$true" : "$false";
+  const escapedPrinter = printerName.replace(/'/g, "''");
+
+  // 空パラメータで壊れないように1行で組み立てる
+  const cmdParts = [
+    `Set-PrintConfiguration -PrinterName '${escapedPrinter}'`,
+    `-Color ${colorValue}`,
+    `-DuplexingMode ${duplexMode}`,
+    paperSize ? `-PaperSize ${paperSize}` : "",
+    "-ErrorAction SilentlyContinue",
+  ].filter(Boolean);
+  const script = `try { ${cmdParts.join(" ")} } catch {}`;
+
+  try {
+    await execFileAsync(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { timeout: 10000 }
+    );
+  } catch {
+    // 非対応プリンターでも印刷自体は継続
   }
 }
 
