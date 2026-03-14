@@ -302,8 +302,8 @@ export default function TestList() {
   // 行高さCSSクラス
   const rowPadding: Record<string, string> = {
     compact: "py-0",
-    standard: "py-0",
-    wide: "py-1",
+    standard: "py-0.5",
+    wide: "py-1.5",
   };
 
   const fetchTests = async () => {
