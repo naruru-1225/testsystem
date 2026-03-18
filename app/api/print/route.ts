@@ -54,15 +54,23 @@ function normalizePaperSize(paperSize?: string): string {
   if (!value) return "";
 
   const upper = value.toUpperCase();
-  if (["A3", "A4", "A5", "B4", "B5"].includes(upper)) return upper;
+  // Sumatra と PowerShell が認識できる値に統一（すべて小文字）
+  // SumatraPDF 公式サポート値: a3, a4, a5, a6, letter, legal, tabloid, statement
+  // B4/B5 は Sumatra 非対応のため除外
+  if (upper === "A3") return "a3";
+  if (upper === "A4") return "a4";
+  if (upper === "A5") return "a5";
+  if (upper === "A6") return "a6";
   if (upper === "LETTER") return "letter";
   if (upper === "LEGAL") return "legal";
+  if (upper === "TABLOID") return "tabloid";
+  if (upper === "STATEMENT") return "statement";
 
   throw new PrintApiError(
     `未対応の用紙サイズです: ${value}`,
     400,
     "PRINT_INVALID_PAPER_SIZE",
-    { allowed: ["A3", "A4", "A5", "B4", "B5", "Letter", "Legal"] }
+    { allowed: ["A3", "A4", "A5", "A6", "Letter", "Legal", "Tabloid", "Statement"] }
   );
 }
 
@@ -428,12 +436,29 @@ async function applyPrinterConfiguration(
   const colorValue = colorMode === "color" ? "$true" : "$false";
   const escapedPrinter = printerName.replace(/'/g, "''");
 
+  // PowerShell の Set-PrintConfiguration に渡す紙サイズを変換
+  // Sumatra 内部値（小文字）から PowerShell 期待値（大文字または固有名）に変換
+  let powerShellPaperSize = "";
+  if (paperSize) {
+    const psMap: Record<string, string> = {
+      "a3": "A3",
+      "a4": "A4",
+      "a5": "A5",
+      "a6": "A6",
+      "letter": "Letter",
+      "legal": "Legal",
+      "tabloid": "Tabloid",
+      "statement": "Statement",
+    };
+    powerShellPaperSize = psMap[paperSize.toLowerCase()] || "";
+  }
+
   // 空パラメータで壊れないように1行で組み立てる
   const cmdParts = [
     `Set-PrintConfiguration -PrinterName '${escapedPrinter}'`,
     `-Color ${colorValue}`,
     `-DuplexingMode ${duplexMode}`,
-    paperSize ? `-PaperSize ${paperSize}` : "",
+    powerShellPaperSize ? `-PaperSize '${powerShellPaperSize}'` : "",
     "-ErrorAction SilentlyContinue",
   ].filter(Boolean);
   const script = `try { ${cmdParts.join(" ")} } catch {}`;

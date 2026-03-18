@@ -1039,9 +1039,11 @@ export default function PdfViewer({
                         <option value="A3">A3</option>
                         <option value="A4">A4</option>
                         <option value="A5">A5</option>
-                        <option value="B4">B4</option>
-                        <option value="B5">B5</option>
+                        <option value="A6">A6</option>
                         <option value="Letter">Letter</option>
+                        <option value="Legal">Legal</option>
+                        <option value="Tabloid">Tabloid</option>
+                        <option value="Statement">Statement</option>
                         <option value="CUSTOM">カスタム...</option>
                       </select>
                       {selectedSize === "CUSTOM" && (
@@ -1104,10 +1106,11 @@ export default function PdfViewer({
                       <option value="A3">A3</option>
                       <option value="A4">A4</option>
                       <option value="A5">A5</option>
-                      <option value="B4">B4</option>
-                      <option value="B5">B5</option>
+                      <option value="A6">A6</option>
                       <option value="letter">Letter</option>
                       <option value="legal">Legal</option>
+                      <option value="tabloid">Tabloid</option>
+                      <option value="statement">Statement</option>
                     </select>
                   </div>
                   {/* カラーモード */}

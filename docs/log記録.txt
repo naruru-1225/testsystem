@@ -1,0 +1,1060 @@
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>node -e "require('better-sqlite3')" && echo OK || echo FAIL
+OK
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm rebuild better-sqlite3
+npm error code 1
+npm error path C:\Users\管理者ユーザー\Desktop\test-system - コピー\node_modules\better-sqlite3
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c prebuild-install || node-gyp rebuild --release
+npm error prebuild-install warn install EBUSY: resource busy or locked, open 'C:\Users\管理者ユーザー\Desktop\test-system - コピー\node_modules\better-sqlite3\build\Release\better_sqlite3.node'
+npm error gyp info it worked if it ends with ok
+npm error gyp info using node-gyp@11.2.0
+npm error gyp info using node@22.21.0 | win32 | x64
+npm error gyp ERR! clean error
+npm error gyp ERR! stack Error: EPERM: operation not permitted, unlink 'C:\Users\管理者ユーザー\Desktop\test-system - コピー\node_modules\better-sqlite3\build\Release\better_sqlite3.node'
+npm error gyp ERR! System Windows_NT 10.0.26100
+npm error gyp ERR! command "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\node_modules\\node-gyp\\bin\\node-gyp.js" "rebuild" "--release"
+npm error gyp ERR! cwd C:\Users\管理者ユーザー\Desktop\test-system - コピー\node_modules\better-sqlite3
+npm error gyp ERR! node -v v22.21.0
+npm error gyp ERR! node-gyp -v v11.2.0
+npm error gyp ERR! not ok
+npm error A complete log of this run can be found in: C:\Users\管理者ユーザー\AppData\Local\npm-cache\_logs\2026-03-02T09_10_11_091Z-debug-0.log
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm install --build-from-source better-sqlite3
+
+up to date, audited 621 packages in 2s
+
+187 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (2 moderate, 5 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>rd /s /q .next
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm run build
+
+> test-management-system@0.1.0 build
+> node scripts/copy-pdf-worker.js && next build
+
+✅ PDF.js worker file copied successfully to public/pdfjs/
+   ▲ Next.js 15.5.6
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 18.5s
+
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+./node_modules/libheif-js/wasm-bundle.js
+./node_modules/heic-decode/index.js
+./node_modules/heic-convert/index.js
+./lib/services/fileService.ts
+./app/api/upload/route.ts
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 22.5s
+ ✓ Linting and checking validity of types
+   Collecting page data  .Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 2511 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:1:530)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8153)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8123) {
+  code: 'SQLITE_ERROR'
+}
+   Collecting page data  ..Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3432.js:53:1780)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 92925 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-fetch\route.js:1:2501)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-fetch\route.js:1:8074)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-fetch\route.js:1:8044) {
+  code: 'SQLITE_ERROR'
+}
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+   Collecting page data  .Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 75505 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\qr\route.js:1:44778)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\qr\route.js:1:65627)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\qr\route.js:1:65597) {
+  code: 'SQLITE_ERROR'
+}
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 24484 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:954)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:8418)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:8388) {
+  code: 'SQLITE_ERROR'
+}
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Adding created_at column to tags table...
+Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+  code: 'SQLITE_ERROR'
+}
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+  code: 'SQLITE_ERROR'
+}
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Adding created_at column to tags table...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\folders\route.js:1:7543)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 96335 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\subjects\replace\route.js:1:2555)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\subjects\replace\route.js:1:8434)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\subjects\replace\route.js:1:8404) {
+  code: 'SQLITE_ERROR'
+}
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[EmailPoller] メール自動取込を開始...
+Migrated 202 test-folder relationships.
+   Collecting page data  ..========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Startup] Server started at 2026/3/2 18:11:41
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+ ✓ Collecting page data
+   Generating static pages (0/35)  [    ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [=   ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [==  ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [=== ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+Adding created_at column to tags table...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:45
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3432.js:53:1780)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 37948 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-settings\route.js:1:1236)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-settings\route.js:1:9068)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\email-settings\route.js:1:9038) {
+  code: 'SQLITE_ERROR'
+}
+Adding created_at column to tags table...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 18:11:45
+[Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+    at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3432.js:53:1780)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+    at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at 24484 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:954)
+    at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:8418)
+    at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+    at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\grades\replace\route.js:1:8388) {
+  code: 'SQLITE_ERROR'
+}
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+ ✓ Generating static pages (35/35)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+   Finalizing page optimization  .   Collecting build traces  .[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+ ✓ Collecting build traces
+ ✓ Finalizing page optimization
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    19.7 kB         126 kB
+├ ○ /_not-found                            997 B         104 kB
+├ ƒ /api/audit-log                         232 B         103 kB
+├ ƒ /api/backup/create                     232 B         103 kB
+├ ƒ /api/backup/list                       232 B         103 kB
+├ ƒ /api/backup/restore                    232 B         103 kB
+├ ƒ /api/backup/restore-test               232 B         103 kB
+├ ƒ /api/categories                        232 B         103 kB
+├ ƒ /api/email-fetch                       232 B         103 kB
+├ ƒ /api/email-settings                    232 B         103 kB
+├ ƒ /api/export/tests                      232 B         103 kB
+├ ƒ /api/export/zip                        232 B         103 kB
+├ ƒ /api/folders                           232 B         103 kB
+├ ƒ /api/folders/[id]                      232 B         103 kB
+├ ƒ /api/grades                            232 B         103 kB
+├ ƒ /api/grades/[id]                       232 B         103 kB
+├ ƒ /api/grades/replace                    232 B         103 kB
+├ ƒ /api/inbox                             232 B         103 kB
+├ ƒ /api/inbox/[id]                        232 B         103 kB
+├ ƒ /api/inbox/seed                        232 B         103 kB
+├ ƒ /api/init-db                           232 B         103 kB
+├ ƒ /api/pdf/[...path]                     232 B         103 kB
+├ ƒ /api/pdf/detect-size                   232 B         103 kB
+├ ƒ /api/pdf/sized                         232 B         103 kB
+├ ƒ /api/print                             232 B         103 kB
+├ ƒ /api/print/printers                    232 B         103 kB
+├ ƒ /api/seed/demo                         232 B         103 kB
+├ ƒ /api/stats/summary                     232 B         103 kB
+├ ƒ /api/subjects                          232 B         103 kB
+├ ƒ /api/subjects/[id]                     232 B         103 kB
+├ ƒ /api/subjects/replace                  232 B         103 kB
+├ ƒ /api/tags                              232 B         103 kB
+├ ƒ /api/tags/[id]                         232 B         103 kB
+├ ƒ /api/tests                             232 B         103 kB
+├ ƒ /api/tests/[id]                        232 B         103 kB
+├ ƒ /api/tests/[id]/attachments            232 B         103 kB
+├ ƒ /api/tests/[id]/clone                  232 B         103 kB
+├ ƒ /api/tests/[id]/comments               232 B         103 kB
+├ ƒ /api/tests/[id]/history                232 B         103 kB
+├ ƒ /api/tests/[id]/qr                     232 B         103 kB
+├ ƒ /api/tests/[id]/related                232 B         103 kB
+├ ƒ /api/tests/bulk                        232 B         103 kB
+├ ƒ /api/upload                            232 B         103 kB
+├ ○ /dashboard                           4.75 kB         111 kB
+├ ○ /inbox                               7.17 kB         110 kB
+├ ƒ /tests/[id]/edit                     8.36 kB         111 kB
+└ ƒ /tests/new                           9.43 kB         112 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-64d514cdae386b7c.js      45.7 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.56 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs --lines 50
+[TAILING] Tailing last 50 lines for [all] processes (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\pm2.log last 50 lines:
+PM2        | 2026-02-27T16:23:32: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T16:23:33: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-27T17:41:32: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-02-27T17:41:33: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-02-27T17:41:33: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-02-27T17:41:33: PM2 log: pid=41384 msg=process killed
+PM2        | 2026-02-27T17:41:33: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:41:33: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-27T17:52:32: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-02-27T17:52:33: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-02-27T17:52:33: PM2 log: pid=6420 msg=process killed
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-27T17:57:18: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-02-27T17:57:19: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-02-27T17:57:19: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-02-27T17:57:19: PM2 log: pid=35904 msg=process killed
+PM2        | 2026-02-27T17:57:19: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:57:20: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-28T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-02-28T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-01T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-03-01T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-02T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-03-02T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-02T17:02:42: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T17:02:42: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T17:02:43: PM2 log: pid=45732 msg=process killed
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T17:13:35: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T17:13:35: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T17:13:35: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T17:13:35: PM2 log: pid=28684 msg=process killed
+PM2        | 2026-03-02T17:13:35: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T17:13:36: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T18:05:24: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T18:05:25: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T18:05:25: PM2 log: pid=408 msg=process killed
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T18:08:16: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T18:08:16: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T18:08:16: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T18:08:16: PM2 log: pid=31980 msg=process killed
+PM2        | 2026-03-02T18:08:16: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T18:08:17: PM2 log: App [test-system2:4] online
+
+C:\Users\管理者ユーザー\.pm2\logs\pdf-system-error-0.log last 50 lines:
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+C:\Users\管理者ユーザー\.pm2\logs\pdf-system-out-0.log last 50 lines:
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.3s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 13.3s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.6s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 2.2s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 2s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 1913ms
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 11.6s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.5s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 7.3s
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system-error-2.log last 50 lines:
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1gd7tlro4z4ro7335jsy'
+2|test-sys | }
+2|test-sys |  ⨯ uncaughtException:  Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1gd7tlro4z4ro7335jsy'
+2|test-sys | }
+2|test-sys | Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898)
+2|test-sys |     at TLSSocket.emit (node:events:519:28)
+2|test-sys |     at Socket._onTimeout (node:net:604:8)
+2|test-sys |     at listOnTimeout (node:internal/timers:588:17)
+2|test-sys |     at process.processTimers (node:internal/timers:523:7)
+2|test-sys | Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1fl7g2c8zb5ilmc18yuy'
+2|test-sys | }
+2|test-sys |  ⨯ uncaughtException:  Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1fl7g2c8zb5ilmc18yuy'
+2|test-sys | }
+2|test-sys | API Error: SqliteError: no such table: email_config
+2|test-sys |     at Object.get (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3013)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:687)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\backup\create\route.js:18:318) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+2|test-sys | API Error: SqliteError: no such table: email_config
+2|test-sys |     at Object.get (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3013)
+2|test-sys |     at Object.save (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3089)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:1250)
+2|test-sys |     at async (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\backup\create\route.js:18:312)
+2|test-sys |     at async k (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:4432) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+2|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+2|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\categories\route.js:53:7216)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\648.js:169:558)
+2|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\648.js:172:1648)
+2|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:143)
+2|test-sys |     at 15897 (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:844)
+2|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:143)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:7639)
+2|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:1291)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:7613) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system-out-2.log last 50 lines:
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | PDF API - リクエストされたパス: pdfs/1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system
+2|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system\public\uploads\pdfs\1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - ファイルが存在します
+2|test-sys | PDF API - ファイル読み込み成功、サイズ: 1112074 bytes
+2|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+2|test-sys | PDF API - リクエストされたパス: pdfs/1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system
+2|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system\public\uploads\pdfs\1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - ファイルが存在します
+2|test-sys | PDF API - ファイル読み込み成功、サイズ: 1112074 bytes
+2|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 50 lines:
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 50 lines:
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.3s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:05:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:08:23
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+
+^C
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 restart test-system2
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [test-system2](ids: [ 4 ])
+[PM2] [test-system2](4) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ pdf-system         │ cluster  │ 0    │ online    │ 0%       │ 53.7mb   │
+│ 2  │ test-system        │ cluster  │ 0    │ online    │ 0%       │ 128.4mb  │
+│ 4  │ test-system2       │ cluster  │ 214  │ online    │ 0%       │ 55.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs --lines 50
+[TAILING] Tailing last 50 lines for [all] processes (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\pm2.log last 50 lines:
+PM2        | 2026-02-27T17:41:33: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:41:33: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-27T17:52:32: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-02-27T17:52:33: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-02-27T17:52:33: PM2 log: pid=6420 msg=process killed
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:52:33: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-27T17:57:18: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-02-27T17:57:19: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-02-27T17:57:19: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-02-27T17:57:19: PM2 log: pid=35904 msg=process killed
+PM2        | 2026-02-27T17:57:19: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-02-27T17:57:20: PM2 log: App [test-system2:4] online
+PM2        | 2026-02-28T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-02-28T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-01T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-03-01T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-02T15:31:13: PM2 log: [PM2] This PM2 is not UP TO DATE
+PM2        | 2026-03-02T15:31:13: PM2 log: [PM2] Upgrade to version 6.0.14
+PM2        | 2026-03-02T17:02:42: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T17:02:42: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T17:02:43: PM2 log: pid=45732 msg=process killed
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T17:02:43: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T17:13:35: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T17:13:35: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T17:13:35: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T17:13:35: PM2 log: pid=28684 msg=process killed
+PM2        | 2026-03-02T17:13:35: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T17:13:36: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T18:05:24: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T18:05:25: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T18:05:25: PM2 log: pid=408 msg=process killed
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T18:05:25: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T18:08:16: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T18:08:16: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T18:08:16: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T18:08:16: PM2 log: pid=31980 msg=process killed
+PM2        | 2026-03-02T18:08:16: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T18:08:17: PM2 log: App [test-system2:4] online
+PM2        | 2026-03-02T18:12:25: PM2 log: Stopping app:test-system2 id:4
+PM2        | 2026-03-02T18:12:26: PM2 log: App name:test-system2 id:4 disconnected
+PM2        | 2026-03-02T18:12:26: PM2 log: App [test-system2:4] exited with code [1] via signal [SIGINT]
+PM2        | 2026-03-02T18:12:26: PM2 log: pid=6904 msg=process killed
+PM2        | 2026-03-02T18:12:26: PM2 log: App [test-system2:4] starting in -cluster mode-
+PM2        | 2026-03-02T18:12:26: PM2 log: App [test-system2:4] online
+
+C:\Users\管理者ユーザー\.pm2\logs\pdf-system-error-0.log last 50 lines:
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+0|pdf-syst | [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+C:\Users\管理者ユーザー\.pm2\logs\pdf-system-out-0.log last 50 lines:
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.3s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 13.3s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.6s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 2.2s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 2s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 1913ms
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 11.6s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 6.5s
+0|pdf-syst |    ▲ Next.js 16.0.1
+0|pdf-syst |    - Local:        http://localhost:3001
+0|pdf-syst |    - Network:      http://192.168.1.64:3001
+0|pdf-syst |
+0|pdf-syst |  ✓ Starting...
+0|pdf-syst |  ✓ Ready in 7.3s
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system-error-2.log last 50 lines:
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1gd7tlro4z4ro7335jsy'
+2|test-sys | }
+2|test-sys |  ⨯ uncaughtException:  Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1gd7tlro4z4ro7335jsy'
+2|test-sys | }
+2|test-sys | Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898)
+2|test-sys |     at TLSSocket.emit (node:events:519:28)
+2|test-sys |     at Socket._onTimeout (node:net:604:8)
+2|test-sys |     at listOnTimeout (node:internal/timers:588:17)
+2|test-sys |     at process.processTimers (node:internal/timers:523:7)
+2|test-sys | Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1fl7g2c8zb5ilmc18yuy'
+2|test-sys | }
+2|test-sys |  ⨯ uncaughtException:  Error: Socket timeout
+2|test-sys |     at TLSSocket._socketTimeout (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\844.js:3:176898) {
+2|test-sys |   code: 'ETIMEOUT',
+2|test-sys |   _connId: '1fl7g2c8zb5ilmc18yuy'
+2|test-sys | }
+2|test-sys | API Error: SqliteError: no such table: email_config
+2|test-sys |     at Object.get (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3013)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:687)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\backup\create\route.js:18:318) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+2|test-sys | API Error: SqliteError: no such table: email_config
+2|test-sys |     at Object.get (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3013)
+2|test-sys |     at Object.save (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\29.js:56:3089)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:1250)
+2|test-sys |     at async (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\backup\create\route.js:18:312)
+2|test-sys |     at async k (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-settings\route.js:1:4432) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+2|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+2|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\categories\route.js:53:7216)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\648.js:169:558)
+2|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\chunks\648.js:172:1648)
+2|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:143)
+2|test-sys |     at 15897 (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:844)
+2|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:143)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:7639)
+2|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\webpack-runtime.js:1:1291)
+2|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system\.next\server\app\api\email-fetch\route.js:1:7613) {
+2|test-sys |   code: 'SQLITE_ERROR'
+2|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system-out-2.log last 50 lines:
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+2|test-sys | PDF API - リクエストされたパス: pdfs/1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system
+2|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system\public\uploads\pdfs\1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - ファイルが存在します
+2|test-sys | PDF API - ファイル読み込み成功、サイズ: 1112074 bytes
+2|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+2|test-sys | PDF API - リクエストされたパス: pdfs/1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system
+2|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system\public\uploads\pdfs\1762489746728-u7najabfdj8.pdf
+2|test-sys | PDF API - ファイルが存在します
+2|test-sys | PDF API - ファイル読み込み成功、サイズ: 1112074 bytes
+2|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+2|test-sys | [EmailPoller] 定期再接続...
+2|test-sys | [Email] IMAP切断
+2|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+2|test-sys | [Email] INBOXを開いています...
+2|test-sys | [Email] INBOXを開きました
+2|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+2|test-sys | [Email] 0件のメールが見つかりました
+2|test-sys | [Email] 対象メールなし、終了
+2|test-sys | [Email] INBOXロック解放
+2|test-sys | [Email] IDLE待機開始
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 50 lines:
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 50 lines:
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:08:23
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:12:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+
+^C
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>

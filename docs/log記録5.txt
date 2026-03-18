@@ -1,0 +1,2276 @@
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>git pull
+remote: Enumerating objects: 7, done.
+remote: Counting objects: 100% (7/7), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 4 (delta 3), reused 4 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 2.10 KiB | 55.00 KiB/s, done.
+From https://github.com/naruru-1225/testsystem
+   b4bec6d..b553bad  main       -> origin/main
+Updating b4bec6d..b553bad
+Fast-forward
+ lib/emailPoller.ts | 181 ++++++++++++++++++-----------------------------------
+ 1 file changed, 62 insertions(+), 119 deletions(-)
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm install
+
+> test-management-system@0.1.0 postinstall
+> node scripts/copy-pdf-worker.js
+
+✅ PDF.js worker file copied successfully to public/pdfjs/
+
+up to date, audited 621 packages in 3s
+
+187 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (2 moderate, 5 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm run build
+
+> test-management-system@0.1.0 build
+> node scripts/copy-pdf-worker.js && next build
+
+✅ PDF.js worker file copied successfully to public/pdfjs/
+   ▲ Next.js 15.5.6
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 13.8s
+
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+./node_modules/libheif-js/wasm-bundle.js
+./node_modules/heic-decode/index.js
+./node_modules/heic-convert/index.js
+./lib/services/fileService.ts
+./app/api/upload/route.ts
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 24.9s
+ ✓ Linting and checking validity of types
+   Collecting page data  ..Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+   Collecting page data  ...[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+   Collecting page data  ..Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+   Collecting page data  ...[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+[Startup] Server started at 2026/3/2 19:50:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+ ✓ Collecting page data
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [    ][Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+   Generating static pages (0/35)  [=   ][Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+   Generating static pages (0/35)  [==  ][Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+   Generating static pages (0/35)  [=== ][Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+   Generating static pages (0/35)  [ ===][Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] IMAP切断
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+   Generating static pages (2/35)  [  ==][Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IMAP切断
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:51:03
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+[Startup] Server started at 2026/3/2 19:51:03
+[Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+[Startup] All startup tasks completed.
+========================================
+[Email] IMAP切断
+[Email] IMAP切断
+[Email] IMAP切断
+[Email] IMAP切断
+ ✓ Generating static pages (35/35)
+ ✓ Collecting build traces
+ ✓ Finalizing page optimization
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    19.7 kB         126 kB
+├ ○ /_not-found                            997 B         104 kB
+├ ƒ /api/audit-log                         232 B         103 kB
+├ ƒ /api/backup/create                     232 B         103 kB
+├ ƒ /api/backup/list                       232 B         103 kB
+├ ƒ /api/backup/restore                    232 B         103 kB
+├ ƒ /api/backup/restore-test               232 B         103 kB
+├ ƒ /api/categories                        232 B         103 kB
+├ ƒ /api/email-fetch                       232 B         103 kB
+├ ƒ /api/email-settings                    232 B         103 kB
+├ ƒ /api/export/tests                      232 B         103 kB
+├ ƒ /api/export/zip                        232 B         103 kB
+├ ƒ /api/folders                           232 B         103 kB
+├ ƒ /api/folders/[id]                      232 B         103 kB
+├ ƒ /api/grades                            232 B         103 kB
+├ ƒ /api/grades/[id]                       232 B         103 kB
+├ ƒ /api/grades/replace                    232 B         103 kB
+├ ƒ /api/inbox                             232 B         103 kB
+├ ƒ /api/inbox/[id]                        232 B         103 kB
+├ ƒ /api/inbox/seed                        232 B         103 kB
+├ ƒ /api/init-db                           232 B         103 kB
+├ ƒ /api/pdf/[...path]                     232 B         103 kB
+├ ƒ /api/pdf/detect-size                   232 B         103 kB
+├ ƒ /api/pdf/sized                         232 B         103 kB
+├ ƒ /api/print                             232 B         103 kB
+├ ƒ /api/print/printers                    232 B         103 kB
+├ ƒ /api/seed/demo                         232 B         103 kB
+├ ƒ /api/stats/summary                     232 B         103 kB
+├ ƒ /api/subjects                          232 B         103 kB
+├ ƒ /api/subjects/[id]                     232 B         103 kB
+├ ƒ /api/subjects/replace                  232 B         103 kB
+├ ƒ /api/tags                              232 B         103 kB
+├ ƒ /api/tags/[id]                         232 B         103 kB
+├ ƒ /api/tests                             232 B         103 kB
+├ ƒ /api/tests/[id]                        232 B         103 kB
+├ ƒ /api/tests/[id]/attachments            232 B         103 kB
+├ ƒ /api/tests/[id]/clone                  232 B         103 kB
+├ ƒ /api/tests/[id]/comments               232 B         103 kB
+├ ƒ /api/tests/[id]/history                232 B         103 kB
+├ ƒ /api/tests/[id]/qr                     232 B         103 kB
+├ ƒ /api/tests/[id]/related                232 B         103 kB
+├ ƒ /api/tests/bulk                        232 B         103 kB
+├ ƒ /api/upload                            232 B         103 kB
+├ ○ /dashboard                           4.75 kB         111 kB
+├ ○ /inbox                               7.17 kB         110 kB
+├ ƒ /tests/[id]/edit                     8.36 kB         111 kB
+└ ƒ /tests/new                           9.43 kB         112 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-64d514cdae386b7c.js      45.7 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.56 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 restart test-system2
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [test-system2](ids: [ 4 ])
+[PM2] [test-system2](4) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ pdf-system         │ cluster  │ 0    │ online    │ 0%       │ 58.5mb   │
+│ 2  │ test-system        │ cluster  │ 0    │ online    │ 0%       │ 76.6mb   │
+│ 4  │ test-system2       │ cluster  │ 219  │ online    │ 76.6%    │ 55.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs test-system2 --lines 70
+[TAILING] Tailing last 70 lines for [test-system2] process (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 70 lines:
+4|test-sys | TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys |  ⨯ unhandledRejection:  TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 70 lines:
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 4.8s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:36:17
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.6 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 5s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:51:37
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IMAP切断
+
+^C
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs test-system2 --lines 250
+[TAILING] Tailing last 250 lines for [test-system2] process (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 250 lines:
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: ENOENT: no such file or directory, open 'C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\prerender-manifest.json'] {
+4|test-sys |   errno: -4058,
+4|test-sys |   code: 'ENOENT',
+4|test-sys |   syscall: 'open',
+4|test-sys |   path: 'C:\\Users\\管理者ユーザー\\Desktop\\test-system - コピー\\.next\\prerender-manifest.json'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 2511 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:1:530)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8153)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8123) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 2511 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:1:530)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8153)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8123) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | You have triggered an unhandledRejection, you may have forgotten to catch a Promise rejection:
+4|test-sys | TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097)
+4|test-sys |     at PassThrough.emit (node:events:519:28)
+4|test-sys |     at emitReadable_ (node:internal/streams/readable:834:12)
+4|test-sys |     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+4|test-sys | TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys |  ⨯ unhandledRejection:  TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 250 lines:
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.3s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:05:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:08:23
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:12:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:27:12
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.4 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 5s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:41:30
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.7 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 5.2s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:13:53
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 4.8s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:36:17
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.6 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 5s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:51:37
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IMAP切断
+
+^C
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs test-system2 --lines 1000
+[TAILING] Tailing last 1000 lines for [test-system2] process (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 1000 lines:
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+4|test-sys | [Error: ENOENT: no such file or directory, open 'C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\prerender-manifest.json'] {
+4|test-sys |   errno: -4058,
+4|test-sys |   code: 'ENOENT',
+4|test-sys |   syscall: 'open',
+4|test-sys |   path: 'C:\\Users\\管理者ユーザー\\Desktop\\test-system - コピー\\.next\\prerender-manifest.json'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 2511 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:1:530)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8153)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8123) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 2511 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:1:530)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8153)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\related\route.js:11:8123) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | You have triggered an unhandledRejection, you may have forgotten to catch a Promise rejection:
+4|test-sys | TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097)
+4|test-sys |     at PassThrough.emit (node:events:519:28)
+4|test-sys |     at emitReadable_ (node:internal/streams/readable:834:12)
+4|test-sys |     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+4|test-sys | TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys |  ⨯ unhandledRejection:  TypeError: Cannot read properties of null (reading 'read')
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:179844)
+4|test-sys |     at PassThrough.<anonymous> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\2844.js:3:180097) {
+4|test-sys |   _connId: 's3mpod356ou5iwy53dor'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 59051 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:1:1533)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 1000 lines:
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/22 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.4s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 17:02:50
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (0.0 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | PDF API - リクエストされたパス: pdfs/1769671391391-a7c06rd9f5o.pdf
+4|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system - コピー
+4|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system - コピー\public\uploads\pdfs\1769671391391-a7c06rd9f5o.pdf
+4|test-sys | PDF API - ファイルが存在します
+4|test-sys | PDF API - ファイル読み込み成功、サイズ: 1545102 bytes
+4|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+4|test-sys | PDF API - リクエストされたパス: pdfs/1769671391391-a7c06rd9f5o.pdf
+4|test-sys | PDF API - process.cwd(): C:\Users\管理者ユーザー\Desktop\test-system - コピー
+4|test-sys | PDF API - フルパス: C:\Users\管理者ユーザー\Desktop\test-system - コピー\public\uploads\pdfs\1769671391391-a7c06rd9f5o.pdf
+4|test-sys | PDF API - ファイルが存在します
+4|test-sys | PDF API - ファイル読み込み成功、サイズ: 1545102 bytes
+4|test-sys | PDF API - Content-Type: application/pdf 拡張子: pdf
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.3s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 17:13:43
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (0.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.3s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:05:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:08:23
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.1 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4s
+4|test-sys | Adding created_at column to tags table...
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:12:32
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 4.2s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:27:12
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.4 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 5s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 18:41:30
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (1.7 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 5.2s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:13:53
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [EmailPoller] 定期再接続...
+4|test-sys | [Email] IMAP切断
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 4.8s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:36:17
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.6 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開���
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys | [Guard] uncaughtException / unhandledRejection 保護ハンドラを登録しました
+4|test-sys |  ✓ Ready in 5s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:51:37
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.8 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始 (5分間隔ポーリング)...
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IMAP切断

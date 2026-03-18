@@ -1,0 +1,313 @@
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>git pull
+Already up to date.
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>git pull
+Already up to date.
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>git pull
+Already up to date.
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>npm run build
+
+> test-management-system@0.1.0 build
+> node scripts/copy-pdf-worker.js && next build
+
+✅ PDF.js worker file copied successfully to public/pdfjs/
+   ▲ Next.js 15.5.6
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 12.7s
+
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/libheif-js/libheif-wasm/libheif-bundle.js
+./node_modules/libheif-js/wasm-bundle.js
+./node_modules/heic-decode/index.js
+./node_modules/heic-convert/index.js
+./lib/services/fileService.ts
+./app/api/upload/route.ts
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 17.7s
+ ✓ Linting and checking validity of types
+   Collecting page data  ..Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:12:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:12:58
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+   Collecting page data  .Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:12:59
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:12:59
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Startup] Server started at 2026/3/2 19:12:59
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Startup] Server started at 2026/3/2 19:12:59
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+ ✓ Collecting page data
+   Generating static pages (0/35)  [    ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [=   ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+   Generating static pages (0/35)  [==  ][Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+[Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+[Email] INBOXを開いています...
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:13:02
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+Migrated 202 test-folder relationships.
+========================================
+[Startup] Running startup tasks...
+[Startup] Server started at 2026/3/2 19:13:02
+[Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+[Startup] Backup: Skipped (within 24 hours)
+[Startup] Cleaning up PDF cache (max age: 30 days)...
+[Startup] PDF cache cleanup: No files to remove
+[EmailPoller] メール自動取込を開始...
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] INBOXを開きました
+[Email] メール検索中... (2026/2/23 以降、既読含む)
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+[Email] 0件のメールが見つかりました
+[Email] 対象メールなし、終了
+[Email] INBOXロック解放
+[Email] IDLE待機開始
+[Startup] All startup tasks completed.
+========================================
+ ✓ Generating static pages (35/35)
+ ✓ Collecting build traces
+ ✓ Finalizing page optimization
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    19.7 kB         126 kB
+├ ○ /_not-found                            997 B         104 kB
+├ ƒ /api/audit-log                         232 B         103 kB
+├ ƒ /api/backup/create                     232 B         103 kB
+├ ƒ /api/backup/list                       232 B         103 kB
+├ ƒ /api/backup/restore                    232 B         103 kB
+├ ƒ /api/backup/restore-test               232 B         103 kB
+├ ƒ /api/categories                        232 B         103 kB
+├ ƒ /api/email-fetch                       232 B         103 kB
+├ ƒ /api/email-settings                    232 B         103 kB
+├ ƒ /api/export/tests                      232 B         103 kB
+├ ƒ /api/export/zip                        232 B         103 kB
+├ ƒ /api/folders                           232 B         103 kB
+├ ƒ /api/folders/[id]                      232 B         103 kB
+├ ƒ /api/grades                            232 B         103 kB
+├ ƒ /api/grades/[id]                       232 B         103 kB
+├ ƒ /api/grades/replace                    232 B         103 kB
+├ ƒ /api/inbox                             232 B         103 kB
+├ ƒ /api/inbox/[id]                        232 B         103 kB
+├ ƒ /api/inbox/seed                        232 B         103 kB
+├ ƒ /api/init-db                           232 B         103 kB
+├ ƒ /api/pdf/[...path]                     232 B         103 kB
+├ ƒ /api/pdf/detect-size                   232 B         103 kB
+├ ƒ /api/pdf/sized                         232 B         103 kB
+├ ƒ /api/print                             232 B         103 kB
+├ ƒ /api/print/printers                    232 B         103 kB
+├ ƒ /api/seed/demo                         232 B         103 kB
+├ ƒ /api/stats/summary                     232 B         103 kB
+├ ƒ /api/subjects                          232 B         103 kB
+├ ƒ /api/subjects/[id]                     232 B         103 kB
+├ ƒ /api/subjects/replace                  232 B         103 kB
+├ ƒ /api/tags                              232 B         103 kB
+├ ƒ /api/tags/[id]                         232 B         103 kB
+├ ƒ /api/tests                             232 B         103 kB
+├ ƒ /api/tests/[id]                        232 B         103 kB
+├ ƒ /api/tests/[id]/attachments            232 B         103 kB
+├ ƒ /api/tests/[id]/clone                  232 B         103 kB
+├ ƒ /api/tests/[id]/comments               232 B         103 kB
+├ ƒ /api/tests/[id]/history                232 B         103 kB
+├ ƒ /api/tests/[id]/qr                     232 B         103 kB
+├ ƒ /api/tests/[id]/related                232 B         103 kB
+├ ƒ /api/tests/bulk                        232 B         103 kB
+├ ƒ /api/upload                            232 B         103 kB
+├ ○ /dashboard                           4.75 kB         111 kB
+├ ○ /inbox                               7.17 kB         110 kB
+├ ƒ /tests/[id]/edit                     8.36 kB         111 kB
+└ ƒ /tests/new                           9.43 kB         112 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-64d514cdae386b7c.js      45.7 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.56 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 restart test-system2
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [test-system2](ids: [ 4 ])
+[PM2] [test-system2](4) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ pdf-system         │ cluster  │ 0    │ online    │ 1.6%     │ 59.9mb   │
+│ 2  │ test-system        │ cluster  │ 0    │ online    │ 1.6%     │ 76.7mb   │
+│ 4  │ test-system2       │ cluster  │ 217  │ online    │ 76.6%    │ 55.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+
+C:\Users\管理者ユーザー\Desktop\test-system - コピー>pm2 logs test-system2 --lines 30
+[TAILING] Tailing last 30 lines for [test-system2] process (change the value with --lines option)
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-error-4.log last 30 lines:
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6120)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\history\route.js:7:6090) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+4|test-sys | Error adding column created_at to tags: SqliteError: Cannot add a column with non-constant default
+4|test-sys |     at e (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:1:734)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:158:604)
+4|test-sys |     at 73836 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\chunks\3520.js:161:1648)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at 41410 (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:1288)
+4|test-sys |     at c (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:143)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9270)
+4|test-sys |     at c.X (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\webpack-runtime.js:1:1291)
+4|test-sys |     at <unknown> (C:\Users\管理者ユーザー\Desktop\test-system - コピー\.next\server\app\api\tests\[id]\comments\route.js:1:9240) {
+4|test-sys |   code: 'SQLITE_ERROR'
+4|test-sys | }
+
+C:\Users\管理者ユーザー\.pm2\logs\test-system2-out-4.log last 30 lines:
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys |    ▲ Next.js 15.5.6
+4|test-sys |    - Local:        http://localhost:3002
+4|test-sys |    - Network:      http://192.168.1.64:3002
+4|test-sys |
+4|test-sys |  ✓ Starting...
+4|test-sys |  ✓ Ready in 5.2s
+4|test-sys | Migrated 202 test-folder relationships.
+4|test-sys | ========================================
+4|test-sys | [Startup] Running startup tasks...
+4|test-sys | [Startup] Server started at 2026/3/2 19:13:53
+4|test-sys | [Startup] Last backup: 2026/3/2 17:02:10 (2.2 hours ago)
+4|test-sys | [Startup] Backup: Skipped (within 24 hours)
+4|test-sys | [Startup] Cleaning up PDF cache (max age: 30 days)...
+4|test-sys | [Startup] PDF cache cleanup: No files to remove
+4|test-sys | [EmailPoller] メール自動取込を開始...
+4|test-sys | [Email] IMAP接続成功: 303278meikokamioooka.pdf@gmail.com
+4|test-sys | [Email] INBOXを開いています...
+4|test-sys | [Email] INBOXを開きました
+4|test-sys | [Email] メール検索中... (2026/2/23 以降、既読含む)
+4|test-sys | [Email] 0件のメールが見つかりました
+4|test-sys | [Email] 対象メールなし、終了
+4|test-sys | [Email] INBOXロック解放
+4|test-sys | [Email] IDLE待機開始
+4|test-sys | [Startup] All startup tasks completed.
+4|test-sys | ========================================
