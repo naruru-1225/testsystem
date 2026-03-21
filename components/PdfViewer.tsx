@@ -57,11 +57,6 @@ export default function PdfViewer({
   >("pdf");
   const [workerReady, setWorkerReady] = useState(false); // Worker設定完了フラグ
   const [useFallback, setUseFallback] = useState(false); // Safari 16フォールバックフラグ
-  const [sizeByTab, setSizeByTab] = useState<Record<number, string | null>>({}); // タブごとの用紙サイズ
-  const [detectedSizeByTab, setDetectedSizeByTab] = useState<Record<number, string>>({}); // タブごとの検出された元サイズ
-
-  // 現在のタブのサイズ選択を取得
-  const selectedSize = sizeByTab[activeTab] || null;
 
   // 表示・操作の改善 (#1-9)
   const [rotation, setRotation] = useState<number>(0); // 回転 0/90/180/270
@@ -90,9 +85,6 @@ export default function PdfViewer({
   const [serverPrintError, setServerPrintError] = useState<string | null>(null);
   const [serverPrintColor, setServerPrintColor] = useState<"color" | "mono">("mono");
   const [serverPrintDuplex, setServerPrintDuplex] = useState<boolean>(false);
-  // #16 カスタムサイズ
-  const [customWidthMm, setCustomWidthMm] = useState<string>("210");
-  const [customHeightMm, setCustomHeightMm] = useState<string>("297");
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -1018,52 +1010,6 @@ export default function PdfViewer({
                       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${pdfDark ? "translate-x-4" : "translate-x-1"}`} />
                     </button>
                   </div>
-                  {/* 用紙サイズ変換（PDFのみ） */}
-                  {testId && currentFileType === "pdf" && (
-                    <div className="mb-2">
-                      <label className="block text-xs text-gray-500 mb-1">用紙サイズ変換</label>
-                      <select
-                        value={selectedSize || ""}
-                        onChange={(e) => {
-                          const newSize = e.target.value || null;
-                          setSizeByTab(prev => ({ ...prev, [activeTab]: newSize }));
-                          if (newSize) { setLoading(true); setPdfKey((prev) => prev + 1); }
-                        }}
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                      >
-                        <option value="">
-                          {detectedSizeByTab[activeTab]
-                            ? `元のサイズ (${detectedSizeByTab[activeTab]})`
-                            : "元のサイズ"}
-                        </option>
-                        <option value="A3">A3</option>
-                        <option value="A4">A4</option>
-                        <option value="A5">A5</option>
-                        <option value="A6">A6</option>
-                        <option value="B4">B4</option>
-                        <option value="B5">B5</option>
-                        <option value="Letter">Letter</option>
-                        <option value="Legal">Legal</option>
-                        <option value="Tabloid">Tabloid</option>
-                        <option value="Statement">Statement</option>
-                        <option value="CUSTOM">カスタム...</option>
-                      </select>
-                      {selectedSize === "CUSTOM" && (
-                        <div className="flex gap-1 items-center mt-1">
-                          <input type="number" min={50} max={1000} value={customWidthMm}
-                            onChange={(e) => setCustomWidthMm(e.target.value)}
-                            className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5" placeholder="幅mm" />
-                          <span className="text-xs text-gray-400">×</span>
-                          <input type="number" min={50} max={1000} value={customHeightMm}
-                            onChange={(e) => setCustomHeightMm(e.target.value)}
-                            className="w-14 text-xs border border-gray-300 rounded px-1 py-0.5" placeholder="高さmm" />
-                          <span className="text-xs text-gray-400">mm</span>
-                          <button onClick={() => { if (customWidthMm && customHeightMm) { setLoading(true); setPdfKey((p) => p + 1); } }}
-                            className="px-2 py-0.5 bg-primary text-white rounded text-xs hover:bg-primary-dark">適用</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {/* ── サーバー印刷設定 ── */}
                   <p className="font-semibold text-gray-700 mb-2 border-b pb-1 mt-3">🖨️ サーバー印刷設定</p>
@@ -1101,7 +1047,7 @@ export default function PdfViewer({
                   </div>
                   {/* 用紙サイズ（印刷用） */}
                   <div className="mb-2">
-                    <label className="block text-xs text-gray-500 mb-1">用紙サイズ（印刷）</label>
+                    <label className="block text-xs text-gray-500 mb-1">用紙サイズ</label>
                     <select value={printPaperSize} onChange={(e) => setPrintPaperSize(e.target.value)}
                       className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary">
                       <option value="">プリンター既定</option>
