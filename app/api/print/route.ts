@@ -54,13 +54,15 @@ function normalizePaperSize(paperSize?: string): string {
   if (!value) return "";
 
   const upper = value.toUpperCase();
-  // Sumatra と PowerShell が認識できる値に統一（すべて小文字）
-  // SumatraPDF 公式サポート値: a3, a4, a5, a6, letter, legal, tabloid, statement
-  // B4/B5 は Sumatra 非対応のため除外
+  // Sumatra と PowerShell 層での一貫性を決めるため、内部値は小文字統一
+  // Sumatra 公式非対応: b4, b5
+  // PowerShell 符を後掺: "B4" → "b4" に変換しPowerShell致まで一貫性を維持
   if (upper === "A3") return "a3";
   if (upper === "A4") return "a4";
   if (upper === "A5") return "a5";
   if (upper === "A6") return "a6";
+  if (upper === "B4") return "b4";
+  if (upper === "B5") return "b5";
   if (upper === "LETTER") return "letter";
   if (upper === "LEGAL") return "legal";
   if (upper === "TABLOID") return "tabloid";
@@ -70,7 +72,7 @@ function normalizePaperSize(paperSize?: string): string {
     `未対応の用紙サイズです: ${value}`,
     400,
     "PRINT_INVALID_PAPER_SIZE",
-    { allowed: ["A3", "A4", "A5", "A6", "Letter", "Legal", "Tabloid", "Statement"] }
+    { allowed: ["A3", "A4", "A5", "A6", "B4", "B5", "Letter", "Legal", "Tabloid", "Statement"] }
   );
 }
 
@@ -437,7 +439,7 @@ async function applyPrinterConfiguration(
   const escapedPrinter = printerName.replace(/'/g, "''");
 
   // PowerShell の Set-PrintConfiguration に渡す紙サイズを変換
-  // Sumatra 内部値（小文字）から PowerShell 期待値（大文字または固有名）に変換
+  // Sumatra 内部値（小文字）から PowerShell 期待値（大文字）に変換
   let powerShellPaperSize = "";
   if (paperSize) {
     const psMap: Record<string, string> = {
@@ -445,6 +447,8 @@ async function applyPrinterConfiguration(
       "a4": "A4",
       "a5": "A5",
       "a6": "A6",
+      "b4": "B4",
+      "b5": "B5",
       "letter": "Letter",
       "legal": "Legal",
       "tabloid": "Tabloid",

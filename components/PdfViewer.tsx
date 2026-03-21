@@ -1040,6 +1040,8 @@ export default function PdfViewer({
                         <option value="A4">A4</option>
                         <option value="A5">A5</option>
                         <option value="A6">A6</option>
+                        <option value="B4">B4</option>
+                        <option value="B5">B5</option>
                         <option value="Letter">Letter</option>
                         <option value="Legal">Legal</option>
                         <option value="Tabloid">Tabloid</option>
@@ -1107,6 +1109,8 @@ export default function PdfViewer({
                       <option value="A4">A4</option>
                       <option value="A5">A5</option>
                       <option value="A6">A6</option>
+                      <option value="B4">B4</option>
+                      <option value="B5">B5</option>
                       <option value="letter">Letter</option>
                       <option value="legal">Legal</option>
                       <option value="tabloid">Tabloid</option>
