@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
         resolvedPdfPath = url.pathname + (url.search || "");
       } catch { /* ignore */ }
     }
+      console.info("[print] API received options", { copies, pageRange, collate, duplex, colorMode, paperSize });
 
     // ② /api/pdf/sized?pdfPath=... → クエリパラメーターから抽出
     if (resolvedPdfPath.startsWith("/api/pdf/sized") || resolvedPdfPath.includes("/api/pdf/sized")) {
@@ -164,7 +165,9 @@ export async function POST(req: NextRequest) {
 
     if (process.platform === "win32") {
       // Windows: SumatraPDF (インストール済みの場合) または PowerShell で印刷
+      console.info("[print] windows print start", { printerName, copies, duplex, colorMode, pageRange, paperSize, collate });
       await printWindows(absolutePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
+      console.info("[print] windows print complete");
     } else {
       // Linux / macOS: lp コマンドで印刷
       await printUnix(absolutePath, printerName, copies, duplex);
@@ -213,10 +216,11 @@ async function printWindows(
     if (printerName) {
       await ensurePrinterExists(printerName);
     }
-    console.info("[print] backend=sumatra", { sumatraPath, printerName, duplex, colorMode, paperSize, copies });
+    console.info("[print] backend=sumatra", { sumatraPath, printerName, duplex, colorMode, paperSize });
+      console.info("[print] buildPrintPdf input", { copies, pageRange, collate, duplex, filePath });
     // 部数・ページ範囲・丁合を一時PDFに埋め込む（両面時の並びもここで最適化）
-    // 注意: 部数は 1 に固定（Sumatra がコピーを処理するため、テンポラリPDFは単一部にする）
-    const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, 1, collate, duplex);
+    const { path: printPath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
+      console.info("[print] buildPrintPdf output", { printPath, isTemp, pdfWasModified: isTemp });
     try {
       const colorSetting = colorMode === "color" ? "color" : "monochrome";
       const duplexSetting = duplex ? "duplexlong" : "simplex";
@@ -224,11 +228,7 @@ async function printWindows(
       const settingsParts = [colorSetting, duplexSetting, paperSetting].filter(Boolean).join(",");
       const args: string[] = [
         ...(printerName ? ["-print-to", printerName] : ["-print-to-default"]),
-        // ※ Sumatra に -print-settings で部数指定はできないため、部数は copies として渡す必要があるが
-        //    現在の実装では部数1のPDFを複数ジョブとして投入する形になる
         ...(settingsParts ? ["-print-settings", settingsParts] : []),
-        // 部数支援: Sumatra が部数をサポートしない場合、複数回同じPDFを指定
-        ...(copies > 1 ? [`${copies}x`] : []),
         "-silent",
         printPath,
       ];
@@ -357,7 +357,7 @@ async function runSumatraPrint(
 
 /**
  * Adobe Acrobat / Foxit Reader などによる印刷。
- * ページ範囲・丁合は一時PDFに埋め込み、部数と設定はPowerShellで適用する。
+ * 部数・ページ範囲・丁合はすべて一時PDFに埋め込み、単一ジョブとして送信する。
  */
 async function printWithAcrobat(
   viewerPath: string,
@@ -370,15 +370,14 @@ async function printWithAcrobat(
   paperSize: string,
   collate: boolean
 ) {
-  // 部数は 1 に固定（PowerShell で設定するため、テンポラリPDFは単一部にする）
-  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, 1, collate, duplex);
+  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
 
   try {
-    // PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ・部数）
+    // PowerShell でプリンター設定を変更（カラー・両面・用紙サイズ）
     // 指定がなければ既定プリンターに適用を試みる
     const effectivePrinter = await resolvePrinterName(printerName);
     if (effectivePrinter) {
-      await applyPrinterConfiguration(effectivePrinter, duplex, colorMode, paperSize, copies);
+      await applyPrinterConfiguration(effectivePrinter, duplex, colorMode, paperSize);
     }
 
     // Acrobat/Foxit で印刷（/t "file" ["printer"] 形式、1ジョブのみ）
@@ -438,8 +437,7 @@ async function applyPrinterConfiguration(
   printerName: string,
   duplex: boolean,
   colorMode: "color" | "mono",
-  paperSize: string,
-  copies: number = 1
+  paperSize: string
 ): Promise<void> {
   const duplexMode = duplex ? "TwoSidedLongEdge" : "OneSided";
   const colorValue = colorMode === "color" ? "$true" : "$false";
@@ -470,7 +468,6 @@ async function applyPrinterConfiguration(
     `-Color ${colorValue}`,
     `-DuplexingMode ${duplexMode}`,
     powerShellPaperSize ? `-PaperSize '${powerShellPaperSize}'` : "",
-    copies > 1 ? `-Copies ${copies}` : "",
     "-ErrorAction SilentlyContinue",
   ].filter(Boolean);
   const script = `try { ${cmdParts.join(" ")} } catch {}`;

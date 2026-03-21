@@ -57,6 +57,11 @@ export default function PdfViewer({
   >("pdf");
   const [workerReady, setWorkerReady] = useState(false); // Worker設定完了フラグ
   const [useFallback, setUseFallback] = useState(false); // Safari 16フォールバックフラグ
+  const [sizeByTab, setSizeByTab] = useState<Record<number, string | null>>({}); // タブごとの用紙サイズ
+  const [detectedSizeByTab, setDetectedSizeByTab] = useState<Record<number, string>>({}); // タブごとの検出された元サイズ
+
+  // 現在のタブのサイズ選択を取得
+  const selectedSize = sizeByTab[activeTab] || null;
 
   // 表示・操作の改善 (#1-9)
   const [rotation, setRotation] = useState<number>(0); // 回転 0/90/180/270
@@ -85,6 +90,9 @@ export default function PdfViewer({
   const [serverPrintError, setServerPrintError] = useState<string | null>(null);
   const [serverPrintColor, setServerPrintColor] = useState<"color" | "mono">("mono");
   const [serverPrintDuplex, setServerPrintDuplex] = useState<boolean>(false);
+  // #16 カスタムサイズ
+  const [customWidthMm, setCustomWidthMm] = useState<string>("210");
+  const [customHeightMm, setCustomHeightMm] = useState<string>("297");
 
   // Safari/iPadOSバージョン検出
   const detectOldSafari = () => {
@@ -684,14 +692,18 @@ export default function PdfViewer({
         const saved = localStorage.getItem("printer-settings");
         if (saved) savedSettings = JSON.parse(saved);
       } catch { /* ignore */ }
+      // UI の値を優先、次に localStorage、最後にデフォルト
+      const uiCopies = parseInt(printCopies) || 1;
+      const uiDuplex = serverPrintDuplex;
+      console.log("[print-ui] sendingRequest", { copies: uiCopies, duplex: uiDuplex, paperSize: printPaperSize || "undefined", colorMode: serverPrintColor });
       const res = await fetch("/api/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pdfPath: currentPdf,
           printerName: savedSettings.printerName || undefined,
-          copies: parseInt(printCopies) || savedSettings.copies || 1,
-          duplex: serverPrintDuplex,
+          copies: uiCopies,
+          duplex: uiDuplex,
           colorMode: serverPrintColor,
           // ページ範囲: 両端指定・片端指定・全ページ
           pageRange: (() => {
