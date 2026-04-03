@@ -28,6 +28,7 @@
     "mailparser": "^3.9.3",
     "next": "^15.1.6",
     "pdf-lib": "^1.17.1",
+    "pdf-to-printer": "^5.7.0",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

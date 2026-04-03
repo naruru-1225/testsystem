@@ -209,7 +209,19 @@ async function printWindows(
   paperSize: string = "",
   collate: boolean = true
 ) {
-  // ① SumatraPDF によるサイレント印刷（推奨）
+  // ① npm: pdf-to-printer を優先利用（Qiita記事の実装方針）
+  try {
+    console.info("[print] backend=pdf-to-printer(start)", { printerName, duplex, colorMode, paperSize, copies, pageRange, collate });
+    await printWithPdfToPrinter(filePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
+    console.info("[print] backend=pdf-to-printer(done)");
+    return;
+  } catch (error) {
+    console.warn("[print] pdf-to-printer failed, fallback to legacy backends", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // ② SumatraPDF によるサイレント印刷（フォールバック）
   const sumatraPath = await findSumatraPDF();
   if (sumatraPath) {
     await ensureExecutableExists(sumatraPath, "PRINT_SUMATRA_NOT_FOUND");
@@ -245,25 +257,96 @@ async function printWindows(
     return;
   }
 
-  // ② Adobe Acrobat / Acrobat Reader によるサイレント印刷
+  // ③ Adobe Acrobat / Acrobat Reader によるサイレント印刷
   const acrobatPath = await findAcrobat();
   if (acrobatPath) {
     await printWithAcrobat(acrobatPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
     return;
   }
 
-  // ③ Foxit Reader によるサイレント印刷
+  // ④ Foxit Reader によるサイレント印刷
   const foxitPath = await findFoxitReader();
   if (foxitPath) {
     await printWithAcrobat(foxitPath, filePath, printerName, copies, duplex, colorMode, pageRange, paperSize, collate);
     return;
   }
 
-  // ④ どのPDFビューアーも見つからない場合
+  // ⑤ どのPDFビューアーも見つからない場合
   throw new Error(
     "サイレント印刷に対応するPDFビューアーが見つかりません。" +
-    "SumatraPDF (https://www.sumatrapdfreader.org/) をインストールしてください。"
+    "pdf-to-printer(npm) / SumatraPDF / Adobe / Foxit のいずれかを利用可能にしてください。"
   );
+}
+
+async function printWithPdfToPrinter(
+  filePath: string,
+  printerName: string | undefined,
+  copies: number,
+  duplex: boolean,
+  colorMode: "color" | "mono",
+  pageRange: string,
+  paperSize: string,
+  collate: boolean
+) {
+  const { print, getPrinters } = await import("pdf-to-printer");
+  const { path: printFilePath, isTemp } = await buildPrintPdf(filePath, pageRange, copies, collate, duplex);
+
+  try {
+    if (printerName) {
+      await ensurePrinterExists(printerName);
+
+      // 指定されたプリンターが用紙サイズをサポートしているかをログ化（失敗はさせない）
+      if (paperSize) {
+        try {
+          const printers = await getPrinters();
+          const p = printers.find((v) => v.name === printerName);
+          if (p?.paperSizes?.length) {
+            const supported = p.paperSizes.some((s) => s.toLowerCase() === toPdfToPrinterPaperSize(paperSize).toLowerCase());
+            console.info("[print] printer paper support", {
+              printerName,
+              requested: toPdfToPrinterPaperSize(paperSize),
+              supported,
+              sample: p.paperSizes.slice(0, 12),
+            });
+          }
+        } catch {
+          /* ignore capability inspection errors */
+        }
+      }
+    }
+
+    await print(printFilePath, {
+      printer: printerName,
+      monochrome: colorMode !== "color",
+      side: duplex ? "duplexlong" : "simplex",
+      paperSize: paperSize ? toPdfToPrinterPaperSize(paperSize) : undefined,
+      // buildPrintPdf で部数・ページ範囲・丁合は展開済みなので固定1
+      copies: 1,
+      silent: true,
+    });
+
+    // 印刷ジョブがスプーラに渡るまで少し待機
+    await new Promise((r) => setTimeout(r, 2000));
+  } finally {
+    if (isTemp && fs.existsSync(printFilePath)) {
+      scheduleTempFileCleanup(printFilePath, 10 * 60 * 1000);
+    }
+  }
+}
+
+function toPdfToPrinterPaperSize(paperSize: string): string {
+  const v = paperSize.toLowerCase();
+  if (v === "a3") return "A3";
+  if (v === "a4") return "A4";
+  if (v === "a5") return "A5";
+  if (v === "a6") return "A6";
+  if (v === "b4") return "B4";
+  if (v === "b5") return "B5";
+  if (v === "letter") return "letter";
+  if (v === "legal") return "legal";
+  if (v === "tabloid") return "tabloid";
+  if (v === "statement") return "statement";
+  return paperSize;
 }
 
 async function ensureExecutableExists(exePath: string, code: string): Promise<void> {
